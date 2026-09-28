@@ -2,36 +2,73 @@
 
 # iPod Sync
 
-**Drag and drop music onto your iPod classic. No iTunes needed.**
+**Manage your iPod classic — with the stock iPod OS or with Rockbox.**
 
-A desktop app for Windows and macOS. **Completely free** — no ads, no paid features, no account needed
+A music manager for iPods that supports both iPod OS (Apple's firmware) and Rockbox.<br>
+Drag and drop songs onto your iPod, and tidy up the music files on your PC too. No iTunes needed.
+
+For Windows and macOS. **Completely free** — no ads, no paid features, no account needed
 
 [**Download**](https://github.com/ishiichan-dayo/iPod-Sync/releases/latest) · [日本語](README.md)
 
 <a href="https://ko-fi.com/ishiichan_dayo"><img src="https://img.shields.io/badge/Ko--fi-Support%20me-FF5E5B?logo=kofi&logoColor=white" alt="Support me on Ko-fi"></a>
 
-<img src="docs/images/demo.gif" alt="Dragging songs onto the iPod" width="800">
+<img src="docs/images/demo.gif" alt="Switching between iPod OS and Rockbox, transferring songs, and renaming files in bulk" width="800">
 
-[Watch the full demo (54 s, with sound)](https://github.com/ishiichan-dayo/iPod-Sync/releases/download/v0.6.0/ipod-sync-demo.mp4)
+[Watch the intro video (72 s, with sound)](https://github.com/ishiichan-dayo/iPod-Sync/releases/download/v1.0.0/ipod-sync-intro-en.mp4)
 
 </div>
 
 ---
+
+## iPod OS or Rockbox — your choice
+
+<img src="docs/images/modes-en.png" alt="The same iPod opened in iPod OS mode and in Rockbox mode" width="800">
+
+Switch between "iPod OS | Rockbox" at the top left to manage the same iPod in two ways. In both modes you can drop songs to transfer them, edit song info, and create and reorder playlists.
+
+- **iPod OS**: songs are added to Apple's firmware library (iTunesDB), just like with iTunes
+- **Rockbox**: songs are kept as plain files, neatly organized as `Music/Artist/Album/01 Title.flac`. **FLAC, Ogg and Opus go over as-is** — no conversion
+- **Both on one iPod**: on a dual-boot iPod with Rockbox installed, you can keep songs for iPod OS and songs for Rockbox side by side. The mode is remembered per iPod
+
+### The Rockbox database, built on your PC
+
+<img src="docs/images/rockbox-en.png" alt="Albums view in Rockbox mode" width="800">
+
+Building the database on the iPod itself can take a long time with a large library. iPod Sync **builds a database in the same format as Rockbox 4.0 on your PC** every time you add songs. Eject the iPod and you can browse by artist and album under "Database" right away.
+
+- Play counts and ratings recorded on the iPod are kept when the database is rebuilt
+- Adding or removing songs in iPod OS mode also updates the Rockbox database
+- Album art is saved as `cover.jpg` (baseline JPEG) in each album folder, in a format Rockbox can read
+- Playlists are written to `Playlists/Name.m3u8` for Rockbox
+
+## Tidy up your music files, too
+
+<img src="docs/images/organize-en.png" alt="Songs in a music folder on the PC" width="800">
+
+Add your music folders on the PC and browse them in the same window as your iPod — then tidy them up right there. You don't even need an iPod for this.
+
+- **Edit tags**: title, artist, album, track number and more are written to the original files. Custom tags added by download stores are kept
+- **Get song info online**: find the album on MusicBrainz and fill in titles and track numbers in one go
+- **Artwork**: set it from an image file, or search online (iTunes / Deezer / MusicBrainz)
+- **Rename files in bulk**: name files from their tags, like "01 - Title". Review the new names first and uncheck any rows you want to keep
+- **See what's already on the iPod**: songs on the iPod are marked, so you can send just the missing ones
+
+<img src="docs/images/rename-en.png" alt="Renaming song files in bulk" width="800">
 
 ## Features
 
 <img src="docs/images/songs-en.png" alt="Song list on the iPod" width="800">
 
 - **Just drop to transfer**: drop songs or album folders onto the window. Drop onto a playlist to add them there too
-- **Any format**: MP3 / AAC / ALAC / WAV / AIFF go over as-is. FLAC / Ogg / Opus / WMA and others are converted automatically (lossless → ALAC, lossy → AAC 256 kbps)
-- **Artwork included**: uses embedded images, or `cover.jpg` / `folder.jpg` in the same folder. Missing covers can be searched online (iTunes / Deezer / MusicBrainz)
+- **Any format**: in iPod OS mode, MP3 / AAC / ALAC / WAV / AIFF go over as-is, and FLAC / Ogg / Opus / WMA and others are converted automatically (lossless → ALAC, lossy → AAC 256 kbps — you can pick the format). In Rockbox mode, most formats go over as-is
+- **Artwork included**: uses embedded images, or `cover.jpg` / `folder.jpg` in the same folder
 - **Browse and tidy your iPod**: switch between Songs / Albums / Artists, play songs, edit song info, create and reorder playlists, copy songs back to your PC
-- **Your PC music folders in the same window**: songs already on the iPod are marked, so you can send just the missing ones
 - **Automatic updates**: the app tells you when a new version is out and updates in one click
 
 ## Japanese titles sorted correctly
 
-The iPod sorts by "sort names". Japanese songs without them end up lumped together at the end of the list on the device.
+iPod OS sorts by "sort names". Japanese songs without them end up lumped together at the end of the list on the device.
 
 iPod Sync adds Japanese readings as sort names when transferring (e.g. 椎名林檎 → シイナリンゴ), using a built-in dictionary (IPADIC) — no internet needed.
 
@@ -49,16 +86,17 @@ iPod Sync adds Japanese readings as sort names when transferring (e.g. 椎名林
 
 ## Supported iPods
 
-| Model | Support |
-| --- | --- |
-| iPod classic 6G / 6.5G / 7G (80 / 120 / 160 GB) | Yes |
-| iPod video 5G / 5.5G | Yes |
-| iPod nano 3G / 4G | Yes |
-| iPod photo, iPod nano 1G / 2G | Yes |
-| iPod 1G–4G (monochrome), iPod mini 1G / 2G | Yes (music only — the screen can't show artwork) |
-| iPod nano 5G and later, iPod touch | No (read-only) |
-| iPod shuffle | No |
+| Model | iPod OS | Rockbox |
+| --- | --- | --- |
+| iPod classic 6G / 6.5G / 7G (80 / 120 / 160 GB) | Yes | Yes |
+| iPod video 5G / 5.5G | Yes | Yes |
+| iPod nano 3G / 4G | Yes | No |
+| iPod photo, iPod nano 1G / 2G | Yes | Yes |
+| iPod 1G–4G (monochrome), iPod mini 1G / 2G | Yes (music only — the screen can't show artwork) | Yes |
+| iPod nano 5G and later, iPod touch | No (read-only) | No |
+| iPod shuffle | No | No |
 
+- Rockbox mode works on iPods with Rockbox 4.0 or later installed. It has been tested on a real iPod classic. To install Rockbox, use Rockbox Utility from the [official Rockbox site](https://www.rockbox.org/) (this app doesn't install Rockbox itself or its bootloader)
 - iPods modded with iFlash or other SD adapters work just like stock ones
 - **On Windows, the iPod must be Windows-formatted (FAT32).** Mac-formatted (HFS+) iPods can't be read by Windows — restore it in iTunes to reformat it for Windows. On macOS, both formats work
 - iPod 1G / 2G connect over FireWire only, so you'll need an adapter for modern PCs
@@ -83,7 +121,7 @@ The app isn't code-signed yet, so you'll see a warning the first time.
 
 ### About ffmpeg
 
-Converting FLAC and other formats requires ffmpeg (not needed for MP3 / AAC / ALAC / WAV / AIFF).
+Converting FLAC and other formats in iPod OS mode requires ffmpeg (not needed for MP3 / AAC / ALAC / WAV / AIFF, and usually not needed in Rockbox mode).
 
 - **Windows / macOS**: install it in one click from the app's Settings
 - **FLAC on macOS** is converted by macOS itself, even without ffmpeg (Ogg / Opus / WMA and others still need ffmpeg)
@@ -91,15 +129,17 @@ Converting FLAC and other formats requires ffmpeg (not needed for MP3 / AAC / AL
 ## How to use
 
 1. Connect your iPod over USB and start the app. It finds the iPod automatically
-2. Drag and drop songs or album folders onto the window
-3. When you're done, click "Eject" before unplugging
+2. If Rockbox is installed, choose the mode with "iPod OS | Rockbox" at the top left
+3. Drag and drop songs or album folders onto the window
+4. When you're done, click "Eject" before unplugging
 
-Right-click for delete, export, add to playlist, edit song info and sort names, and set artwork.
+Right-click for delete, export, add to playlist, edit song info and sort names, rename files, and set artwork.
 
 ## Safety
 
-- The first time an iPod is opened, its original database is saved as `iPod_Control/iTunes/iTunesDB.ipodsync-backup`. If anything goes wrong, copy it back to `iTunesDB` to restore
-- The database is written to a temporary file first and then swapped in, so an interrupted write is unlikely to corrupt it
+- iPod OS: the first time an iPod is opened, its original database is saved as `iPod_Control/iTunes/iTunesDB.ipodsync-backup`. If anything goes wrong, copy it back to `iTunesDB` to restore
+- Rockbox: before the database is rebuilt for the first time, the original database is saved in `.rockbox/ipodsync-db-backup/`. If something doesn't look right, you can also rebuild it on the iPod with "Database → Update Now"
+- Databases are written to a temporary file first and then swapped in, so an interrupted write is unlikely to corrupt them
 - If iTunes / Music.app is set to sync automatically, it may remove songs added with this app. Set it to "Manually manage music"
 - The app only goes online for artwork / song info searches, installing ffmpeg, and checking for updates (searches send the artist and album name to each service)
 
@@ -107,10 +147,11 @@ Right-click for delete, export, add to playlist, edit song info and sort names, 
 
 - Podcast grouping and editing smart playlists aren't supported (existing smart playlists are kept as they are)
 - Videos can't be transferred
+- To install Rockbox itself, its bootloader or themes, use the official Rockbox Utility
 
 ## Bug reports and requests
 
-Please use [Issues](https://github.com/ishiichan-dayo/iPod-Sync/issues). Including your iPod model (shown at the top left of the window) and OS helps a lot.
+Please use [Issues](https://github.com/ishiichan-dayo/iPod-Sync/issues). Including your iPod model (shown at the top left of the window), the mode (iPod OS / Rockbox) and your OS helps a lot.
 
 ## Support
 
@@ -118,4 +159,4 @@ iPod Sync is a free app made by one person. If you find it useful, you can [buy 
 
 ---
 
-iPod and iTunes are trademarks of Apple Inc. This software is not affiliated with Apple.
+iPod and iTunes are trademarks of Apple Inc. This software is not affiliated with Apple or the Rockbox project.

@@ -63,6 +63,7 @@ Add your music folders on the PC and browse them in the same window as your iPod
 - **Just drop to transfer**: drop songs or album folders onto the window. Drop onto a playlist to add them there too
 - **Any format**: in iPod OS mode, MP3 / AAC / ALAC / WAV / AIFF go over as-is, and FLAC / Ogg / Opus / WMA and others are converted automatically (lossless → ALAC, lossy → AAC 256 kbps — you can pick the format). In Rockbox mode, most formats go over as-is
 - **Artwork included**: uses embedded images, or `cover.jpg` / `folder.jpg` in the same folder
+- **Ratings, podcasts and audiobooks**: rate songs with stars. Podcasts and audiobooks are recognized from their tags when you transfer them; in iPod OS mode they go in as podcasts and audiobooks that remember where you stopped, and in Rockbox mode they're placed in `Podcasts` / `Audiobooks` folders. You can change the category later in Edit Info
 - **Browse and tidy your iPod**: switch between Songs / Albums / Artists, play songs, edit song info, create and reorder playlists, copy songs back to your PC
 - **Automatic updates**: the app tells you when a new version is out and updates in one click
 
@@ -145,7 +146,7 @@ Right-click for delete, export, add to playlist, edit song info and sort names, 
 
 ## Limitations
 
-- Podcast grouping and editing smart playlists aren't supported (existing smart playlists are kept as they are)
+- Creating or editing smart playlists isn't supported (existing smart playlists are kept as they are)
 - Videos can't be transferred
 - To install Rockbox itself, its bootloader or themes, use the official Rockbox Utility
 

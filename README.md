@@ -1,6 +1,6 @@
 <div align="center">
 
-# ZenPod
+# ZenPod：iPod OS と Rockbox に対応した iPod classic 管理アプリ
 
 **iPod classic の曲を、純正の iPod OS でも Rockbox でも。**
 

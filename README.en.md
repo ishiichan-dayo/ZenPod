@@ -1,6 +1,6 @@
 <div align="center">
 
-# ZenPod
+# ZenPod: iPod classic Manager for iPod OS & Rockbox
 
 **Manage your iPod classic — with the stock iPod OS or with Rockbox.**
 

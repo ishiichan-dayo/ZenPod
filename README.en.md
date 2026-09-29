@@ -1,6 +1,6 @@
 <div align="center">
 
-# iPod Sync
+# ZenPod
 
 **Manage your iPod classic — with the stock iPod OS or with Rockbox.**
 
@@ -9,13 +9,13 @@ Drag and drop songs onto your iPod, and tidy up the music files on your PC too. 
 
 For Windows and macOS. **Completely free** — no ads, no paid features, no account needed
 
-[**Download**](https://github.com/ishiichan-dayo/iPod-Sync/releases/latest) · [日本語](README.md)
+[**Download**](https://github.com/ishiichan-dayo/ZenPod/releases/latest) · [日本語](README.md)
 
 <a href="https://ko-fi.com/ishiichan_dayo"><img src="https://img.shields.io/badge/Ko--fi-Support%20me-FF5E5B?logo=kofi&logoColor=white" alt="Support me on Ko-fi"></a>
 
 <img src="docs/images/demo.gif" alt="Switching between iPod OS and Rockbox, transferring songs, and renaming files in bulk" width="800">
 
-[Watch the intro video (72 s, with sound)](https://github.com/ishiichan-dayo/iPod-Sync/releases/download/v1.0.0/ipod-sync-intro-en.mp4)
+[Watch the intro video (72 s, with sound)](https://github.com/ishiichan-dayo/ZenPod/releases/download/v1.0.0/zenpod-intro-en.mp4)
 
 </div>
 
@@ -35,7 +35,7 @@ Switch between "iPod OS | Rockbox" at the top left to manage the same iPod in tw
 
 <img src="docs/images/rockbox-en.png" alt="Albums view in Rockbox mode" width="800">
 
-Building the database on the iPod itself can take a long time with a large library. iPod Sync **builds a database in the same format as Rockbox 4.0 on your PC** every time you add songs. Eject the iPod and you can browse by artist and album under "Database" right away.
+Building the database on the iPod itself can take a long time with a large library. ZenPod **builds a database in the same format as Rockbox 4.0 on your PC** every time you add songs. Eject the iPod and you can browse by artist and album under "Database" right away.
 
 - Play counts and ratings recorded on the iPod are kept when the database is rebuilt
 - Adding or removing songs in iPod OS mode also updates the Rockbox database
@@ -71,7 +71,7 @@ Add your music folders on the PC and browse them in the same window as your iPod
 
 iPod OS sorts by "sort names". Japanese songs without them end up lumped together at the end of the list on the device.
 
-iPod Sync adds Japanese readings as sort names when transferring (e.g. 椎名林檎 → シイナリンゴ), using a built-in dictionary (IPADIC) — no internet needed.
+ZenPod adds Japanese readings as sort names when transferring (e.g. 椎名林檎 → シイナリンゴ), using a built-in dictionary (IPADIC) — no internet needed.
 
 <img src="docs/images/yomi-en.png" alt="Reviewing sort name changes" width="800">
 
@@ -104,12 +104,12 @@ iPod Sync adds Japanese readings as sort names when transferring (e.g. 椎名林
 
 ## Download
 
-Get the file for your OS from the [latest release](https://github.com/ishiichan-dayo/iPod-Sync/releases/latest).
+Get the file for your OS from the [latest release](https://github.com/ishiichan-dayo/ZenPod/releases/latest).
 
 | OS | File |
 | --- | --- |
-| Windows 10 / 11 (64-bit) | `iPod.Sync_x.y.z_x64-setup.exe` |
-| macOS (Intel / Apple Silicon) | `iPod.Sync_x.y.z_universal.dmg` |
+| Windows 10 / 11 (64-bit) | `ZenPod_x.y.z_x64-setup.exe` |
+| macOS (Intel / Apple Silicon) | `ZenPod_x.y.z_universal.dmg` |
 
 Once installed, the app lets you know when a new version is available.
 
@@ -152,11 +152,11 @@ Right-click for delete, export, add to playlist, edit song info and sort names, 
 
 ## Bug reports and requests
 
-Please use [Issues](https://github.com/ishiichan-dayo/iPod-Sync/issues). Including your iPod model (shown at the top left of the window), the mode (iPod OS / Rockbox) and your OS helps a lot.
+Please use [Issues](https://github.com/ishiichan-dayo/ZenPod/issues). Including your iPod model (shown at the top left of the window), the mode (iPod OS / Rockbox) and your OS helps a lot.
 
 ## Support
 
-iPod Sync is a free app made by one person. If you find it useful, you can [buy me a coffee on Ko-fi](https://ko-fi.com/ishiichan_dayo). It helps keep development going.
+ZenPod is a free app made by one person. If you find it useful, you can [buy me a coffee on Ko-fi](https://ko-fi.com/ishiichan_dayo). It helps keep development going.
 
 ---
 

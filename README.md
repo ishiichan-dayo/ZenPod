@@ -1,6 +1,6 @@
 <div align="center">
 
-# iPod Sync
+# ZenPod
 
 **iPod classic の曲を、純正の iPod OS でも Rockbox でも。**
 
@@ -9,13 +9,13 @@ iPod OS（Apple のファームウェア）と Rockbox の両方に対応した�
 
 Windows / macOS 用。**完全無料**（広告なし・有料機能なし・アカウント登録不要）
 
-[**ダウンロード**](https://github.com/ishiichan-dayo/iPod-Sync/releases/latest) ・ [English](README.en.md)
+[**ダウンロード**](https://github.com/ishiichan-dayo/ZenPod/releases/latest) ・ [English](README.en.md)
 
 <a href="https://ko-fi.com/ishiichan_dayo"><img src="https://img.shields.io/badge/Ko--fi-%E5%BF%9C%E6%8F%B4%E3%81%99%E3%82%8B-FF5E5B?logo=kofi&logoColor=white" alt="Ko-fi で応援する"></a>
 
 <img src="docs/images/demo.gif" alt="iPod OS と Rockbox の切り替え、曲の転送、ファイル名の一括変更の様子" width="800">
 
-[紹介動画（72 秒・音あり）](https://github.com/ishiichan-dayo/iPod-Sync/releases/download/v1.0.0/ipod-sync-intro-ja.mp4)
+[紹介動画（72 秒・音あり）](https://github.com/ishiichan-dayo/ZenPod/releases/download/v1.0.0/zenpod-intro-ja.mp4)
 
 </div>
 
@@ -35,7 +35,7 @@ Windows / macOS 用。**完全無料**（広告なし・有料機能なし・ア
 
 <img src="docs/images/rockbox-ja.png" alt="Rockbox モードのアルバムの一覧" width="800">
 
-Rockbox 本体でデータベースを作ると、曲が多いときは長い時間がかかります。iPod Sync は曲を入れるたびに、**Rockbox 4.0 と同じ形のデータベースを PC で作って**書き込みます。iPod を取り出せば、すぐに「データベース」からアーティスト・アルバムで曲を探せます。
+Rockbox 本体でデータベースを作ると、曲が多いときは長い時間がかかります。ZenPod は曲を入れるたびに、**Rockbox 4.0 と同じ形のデータベースを PC で作って**書き込みます。iPod を取り出せば、すぐに「データベース」からアーティスト・アルバムで曲を探せます。
 
 - 本体で付いた再生回数・評価は、作り直しても引き継ぎます
 - iPod OS モードで曲を入れたり消したりしたときも、Rockbox のデータベースを合わせて更新します
@@ -71,7 +71,7 @@ PC の音楽フォルダを登録すると、iPod と同じ画面で PC の曲�
 
 iPod OS は曲名やアーティスト名の「読み」で並べ替えます。読みが無い日本語の曲は、本体の一覧で後ろにまとめて押しやられてしまいます。
 
-iPod Sync は転送するときに読みを自動で付けます（「椎名林檎」→「シイナリンゴ」）。辞書（IPADIC）を内蔵しているので、ネットにはつながりません。
+ZenPod は転送するときに読みを自動で付けます（「椎名林檎」→「シイナリンゴ」）。辞書（IPADIC）を内蔵しているので、ネットにはつながりません。
 
 <img src="docs/images/yomi-ja.png" alt="読みの変更を確認する画面" width="800">
 
@@ -104,12 +104,12 @@ iPod Sync は転送するときに読みを自動で付けます（「椎名林�
 
 ## ダウンロード
 
-[最新版のリリース](https://github.com/ishiichan-dayo/iPod-Sync/releases/latest) から、お使いの OS 用のファイルをダウンロードしてください。
+[最新版のリリース](https://github.com/ishiichan-dayo/ZenPod/releases/latest) から、お使いの OS 用のファイルをダウンロードしてください。
 
 | OS | ファイル |
 | --- | --- |
-| Windows 10 / 11（64 bit） | `iPod.Sync_x.y.z_x64-setup.exe` |
-| macOS（Intel / Apple Silicon） | `iPod.Sync_x.y.z_universal.dmg` |
+| Windows 10 / 11（64 bit） | `ZenPod_x.y.z_x64-setup.exe` |
+| macOS（Intel / Apple Silicon） | `ZenPod_x.y.z_universal.dmg` |
 
 一度インストールすれば、以降はアプリが新しいバージョンを知らせてくれます。
 
@@ -152,11 +152,11 @@ iPod OS モードで FLAC などを変換して転送するには ffmpeg が必�
 
 ## 不具合の報告・要望
 
-[Issues](https://github.com/ishiichan-dayo/iPod-Sync/issues) にお寄せください。iPod の機種（画面の左上に表示されます）・モード（iPod OS / Rockbox）・OS を書いていただけると助かります。
+[Issues](https://github.com/ishiichan-dayo/ZenPod/issues) にお寄せください。iPod の機種（画面の左上に表示されます）・モード（iPod OS / Rockbox）・OS を書いていただけると助かります。
 
 ## 応援
 
-iPod Sync は個人で開発している無料のアプリです。気に入っていただけたら、[Ko-fi](https://ko-fi.com/ishiichan_dayo) で応援していただけるとうれしいです。開発を続ける励みになります。
+ZenPod は個人で開発している無料のアプリです。気に入っていただけたら、[Ko-fi](https://ko-fi.com/ishiichan_dayo) で応援していただけるとうれしいです。開発を続ける励みになります。
 
 ---
 

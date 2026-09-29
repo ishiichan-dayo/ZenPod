@@ -28,7 +28,7 @@ For Windows and macOS. **Completely free** — no ads, no paid features, no acco
 Switch between "iPod OS | Rockbox" at the top left to manage the same iPod in two ways. In both modes you can drop songs to transfer them, edit song info, and create and reorder playlists.
 
 - **iPod OS**: songs are added to Apple's firmware library (iTunesDB), just like with iTunes
-- **Rockbox**: songs are kept as plain files, neatly organized as `Music/Artist/Album/01 Title.flac`. **FLAC, Ogg and Opus go over as-is** — no conversion
+- **Rockbox**: songs are kept as plain files, neatly organized as `Music/Artist/Album/01 Title.flac`. **FLAC, Ogg and Opus go over as-is** — no conversion. You can change the folder layout under "Transfer" in Settings, and for an iPod that already has songs, the app suggests a layout that matches how they're organized
 - **Both on one iPod**: on a dual-boot iPod with Rockbox installed, you can keep songs for iPod OS and songs for Rockbox side by side. The mode is remembered per iPod
 
 ### The Rockbox database, built on your PC
@@ -129,7 +129,7 @@ Converting FLAC and other formats in iPod OS mode requires ffmpeg (not needed fo
 
 ## How to use
 
-1. Connect your iPod over USB and start the app. It finds the iPod automatically
+1. Connect your iPod over USB and start the app. It finds the iPod automatically (on first launch, a short guide helps you set up your PC music folders and more)
 2. If Rockbox is installed, choose the mode with "iPod OS | Rockbox" at the top left
 3. Drag and drop songs or album folders onto the window
 4. When you're done, click "Eject" before unplugging

@@ -1,6 +1,6 @@
 <div align="center">
 
-# ZenPod
+# ZenPod：iPod OS と Rockbox に対応した iPod classic 管理アプリ
 
 **iPod classic の曲を、純正の iPod OS でも Rockbox でも。**
 
@@ -11,7 +11,7 @@ Windows / macOS 用。**完全無料**（広告なし・有料機能なし・ア
 
 [**ダウンロード**](https://github.com/ishiichan-dayo/ZenPod/releases/latest) ・ [English](README.en.md)
 
-<a href="https://ko-fi.com/ishiichan_dayo"><img src="https://img.shields.io/badge/Ko--fi-%E5%BF%9C%E6%8F%B4%E3%81%99%E3%82%8B-FF5E5B?logo=kofi&logoColor=white" alt="Ko-fi で応援する"></a>
+<a href="https://ko-fi.com/ishiichan_dayo"><img src="https://storage.ko-fi.com/cdn/kofi2.png?v=3" height="40" alt="Ko-fi で応援する"></a>
 
 <img src="docs/images/demo.gif" alt="iPod OS と Rockbox の切り替え、曲の転送、ファイル名の一括変更の様子" width="800">
 

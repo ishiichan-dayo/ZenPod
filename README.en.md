@@ -1,6 +1,6 @@
 <div align="center">
 
-# ZenPod
+# ZenPod: iPod classic Manager for iPod OS & Rockbox
 
 **Manage your iPod classic — with the stock iPod OS or with Rockbox.**
 
@@ -11,7 +11,7 @@ For Windows and macOS. **Completely free** — no ads, no paid features, no acco
 
 [**Download**](https://github.com/ishiichan-dayo/ZenPod/releases/latest) · [日本語](README.md)
 
-<a href="https://ko-fi.com/ishiichan_dayo"><img src="https://img.shields.io/badge/Ko--fi-Support%20me-FF5E5B?logo=kofi&logoColor=white" alt="Support me on Ko-fi"></a>
+<a href="https://ko-fi.com/ishiichan_dayo"><img src="https://storage.ko-fi.com/cdn/kofi2.png?v=3" height="40" alt="Support me on Ko-fi"></a>
 
 <img src="docs/images/demo.gif" alt="Switching between iPod OS and Rockbox, transferring songs, and renaming files in bulk" width="800">
 

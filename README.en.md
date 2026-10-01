@@ -28,7 +28,7 @@ For Windows and macOS. **Completely free** — no ads, no paid features, no acco
 Switch between "iPod OS | Rockbox" at the top left to manage the same iPod in two ways. In both modes you can drop songs to transfer them, edit song info, and create and reorder playlists.
 
 - **iPod OS**: songs are added to Apple's firmware library (iTunesDB), just like with iTunes
-- **Rockbox**: songs are kept as plain files, neatly organized as `Music/Artist/Album/01 Title.flac`. **FLAC, Ogg and Opus go over as-is** — no conversion. You can change the folder layout under "Transfer" in Settings, and for an iPod that already has songs, the app suggests a layout that matches how they're organized
+- **Rockbox**: songs are kept as plain files, neatly organized as `Music/Artist/Album/01 Title.flac`. **FLAC, Ogg and Opus go over as-is** — no conversion. You can rearrange the folder layout under "Transfer" in Settings by dragging parts such as artist and album (or pick one of the common layouts), and for an iPod that already has songs, the app suggests a layout that matches how they're organized
 - **Both on one iPod**: on a dual-boot iPod with Rockbox installed, you can keep songs for iPod OS and songs for Rockbox side by side. The mode is remembered per iPod
 
 ### The Rockbox database, built on your PC
@@ -41,6 +41,7 @@ Building the database on the iPod itself can take a long time with a large libra
 - Adding or removing songs in iPod OS mode also updates the Rockbox database
 - Album art is saved as `cover.jpg` (baseline JPEG) in each album folder, in a format Rockbox can read
 - Playlists are written to `Playlists/Name.m3u8` for Rockbox
+- Lyrics files with the same name as the song (`.lrc` / `.lrc8`) are sent along with it, and follow the song when you rename or delete it
 
 ## Tidy up your music files, too
 
@@ -51,7 +52,7 @@ Add your music folders on the PC and browse them in the same window as your iPod
 - **Edit tags**: title, artist, album, track number and more are written to the original files. Custom tags added by download stores are kept
 - **Get song info online**: find the album on MusicBrainz and fill in titles and track numbers in one go
 - **Artwork**: set it from an image file, or search online (iTunes / Deezer / MusicBrainz)
-- **Rename files in bulk**: name files from their tags, like "01 - Title". Review the new names first and uncheck any rows you want to keep
+- **Rename files in bulk**: drag parts such as track number and title into place to name files from their tags, like "01 - Title". Review the new names first and uncheck any rows you want to keep
 - **See what's already on the iPod**: songs on the iPod are marked, so you can send just the missing ones
 
 <img src="docs/images/rename-en.png" alt="Renaming song files in bulk" width="800">
@@ -65,6 +66,7 @@ Add your music folders on the PC and browse them in the same window as your iPod
 - **Artwork included**: uses embedded images, or `cover.jpg` / `folder.jpg` in the same folder
 - **Ratings, podcasts and audiobooks**: rate songs with stars. Podcasts and audiobooks are recognized from their tags when you transfer them; in iPod OS mode they go in as podcasts and audiobooks that remember where you stopped, and in Rockbox mode they're placed in `Podcasts` / `Audiobooks` folders. You can change the category later in Edit Info
 - **Browse and tidy your iPod**: switch between Songs / Albums / Artists, play songs, edit song info, create and reorder playlists, copy songs back to your PC
+- **Display size**: change it in Settings → General, or with Ctrl + / Ctrl − (⌘ on Mac)
 - **Automatic updates**: the app tells you when a new version is out and updates in one click
 
 ## Japanese titles sorted correctly
@@ -124,7 +126,7 @@ The app isn't code-signed yet, so you'll see a warning the first time.
 
 Converting FLAC and other formats in iPod OS mode requires ffmpeg (not needed for MP3 / AAC / ALAC / WAV / AIFF, and usually not needed in Rockbox mode).
 
-- **Windows / macOS**: install it in one click from the app's Settings
+- **Windows / macOS**: install it in one click from the welcome guide or from Settings → Conversion (ffmpeg)
 - **FLAC on macOS** is converted by macOS itself, even without ffmpeg (Ogg / Opus / WMA and others still need ffmpeg)
 
 ## How to use
@@ -142,7 +144,8 @@ Right-click for delete, export, add to playlist, edit song info and sort names, 
 - Rockbox: before the database is rebuilt for the first time, the original database is saved in `.rockbox/ipodsync-db-backup/`. If something doesn't look right, you can also rebuild it on the iPod with "Database → Update Now"
 - Databases are written to a temporary file first and then swapped in, so an interrupted write is unlikely to corrupt them
 - If iTunes / Music.app is set to sync automatically, it may remove songs added with this app. Set it to "Manually manage music"
-- The app only goes online for artwork / song info searches, installing ffmpeg, and checking for updates (searches send the artist and album name to each service)
+- The app only goes online for artwork / song info searches, installing ffmpeg, checking for updates, and sending anonymous usage data (searches send the artist and album name to each service)
+- Anonymous usage data: to improve the app, once a day it sends only the app version, language, OS, the mode (iPod OS / Rockbox) and model of the iPod you open, a rough range of its song count, how long it took to open, and what you chose in the welcome guide (whether you installed ffmpeg and whether you use Rockbox), to a server in Japan run by the developer. No personal information such as names, file locations, song titles, or iPod names or serial numbers is sent, and IP addresses are not stored. You can turn it off at any time in Settings → About
 
 ## Limitations
 

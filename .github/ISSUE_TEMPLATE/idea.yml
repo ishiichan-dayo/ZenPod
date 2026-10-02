@@ -1,0 +1,11 @@
+name: 要望 / Idea
+description: ほしい機能・直してほしいところ / A feature or change you'd like
+labels: [enhancement]
+body:
+  - type: textarea
+    id: idea
+    attributes:
+      label: どんなことができるとうれしいですか / What would you like?
+      description: 一言でも大丈夫です。日本語でも英語でも。 / A single sentence is fine.
+    validations:
+      required: true

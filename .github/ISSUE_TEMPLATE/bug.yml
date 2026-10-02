@@ -1,0 +1,46 @@
+name: 不具合 / Bug
+description: うまく動かないこと / Something isn't working
+labels: [bug]
+body:
+  - type: textarea
+    id: what
+    attributes:
+      label: 何が起きましたか / What happened?
+      description: 一言でも大丈夫です。日本語でも英語でも。 / A single sentence is fine.
+      placeholder: 例) プレイリストの曲が一部しか出ない / e.g. Only some songs in a playlist show up
+    validations:
+      required: true
+  - type: dropdown
+    id: os
+    attributes:
+      label: OS
+      options:
+        - Windows
+        - macOS
+    validations:
+      required: false
+  - type: dropdown
+    id: mode
+    attributes:
+      label: モード / Mode
+      options:
+        - iPod OS (Apple)
+        - Rockbox
+        - わからない / Not sure
+    validations:
+      required: false
+  - type: input
+    id: version
+    attributes:
+      label: ZenPod のバージョン / ZenPod version
+      description: 設定 → このアプリについて / Settings → About
+      placeholder: "2.5.1"
+    validations:
+      required: false
+  - type: textarea
+    id: files
+    attributes:
+      label: スクリーンショット・ファイル / Screenshots or files
+      description: あれば、ここにドラッグしてください (プレイリストなど)。 / If you have any, drag them here (e.g. a playlist).
+    validations:
+      required: false

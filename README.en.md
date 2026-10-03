@@ -120,7 +120,8 @@ Once installed, the app lets you know when a new version is available.
 The app isn't code-signed yet, so you'll see a warning the first time.
 
 - **Windows**: if you see "Windows protected your PC", click "More info" → "Run anyway"
-- **macOS**: right-click the app in Finder → "Open"
+- **macOS 15 (Sequoia) or later**: try opening the app once and close the warning, then go to System Settings → Privacy & Security, scroll down, and click "Open Anyway" (enter your password if asked)
+- **macOS 14 or earlier**: right-click the app in Finder → "Open"
 
 ### About ffmpeg
 

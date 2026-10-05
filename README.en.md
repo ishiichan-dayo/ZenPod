@@ -7,7 +7,7 @@
 A music manager for iPods that supports both iPod OS (Apple's firmware) and Rockbox.<br>
 Drag and drop songs onto your iPod, and tidy up the music files on your PC too. No iTunes needed.
 
-For Windows and macOS. **Completely free** — no ads, no paid features, no account needed
+For Windows, macOS and Linux. **Completely free** — no ads, no paid features, no account needed
 
 [**Download**](https://github.com/ishiichan-dayo/ZenPod/releases/latest) · [日本語](README.md)
 
@@ -65,6 +65,7 @@ Add your music folders on the PC and browse them in the same window as your iPod
 - **Any format**: in iPod OS mode, MP3 / AAC / ALAC / WAV / AIFF go over as-is, and FLAC / Ogg / Opus / WMA and others are converted automatically (lossless → ALAC, lossy → AAC 256 kbps — you can pick the format). In Rockbox mode, most formats go over as-is
 - **Artwork included**: uses embedded images, or `cover.jpg` / `folder.jpg` in the same folder
 - **Ratings, podcasts and audiobooks**: rate songs with stars. Podcasts and audiobooks are recognized from their tags when you transfer them; in iPod OS mode they go in as podcasts and audiobooks that remember where you stopped, and in Rockbox mode they're placed in `Podcasts` / `Audiobooks` folders. You can change the category later in Edit Info
+- **Podcast subscriptions**: add a podcast by its feed (RSS) URL to download episodes to your PC and send them to your iPod. Choose how many episodes to keep on the iPod for each podcast, and Sync sends that many unplayed episodes and removes played ones. You can review the episodes to send and remove before anything happens. Works in both iPod OS and Rockbox modes
 - **Browse and tidy your iPod**: switch between Songs / Albums / Artists, play songs, edit song info, create and reorder playlists, copy songs back to your PC
 - **Display size**: change it in Settings → General, or with Ctrl + / Ctrl − (⌘ on Mac)
 - **Automatic updates**: the app tells you when a new version is out and updates in one click
@@ -101,7 +102,7 @@ ZenPod adds Japanese readings as sort names when transferring (e.g. 椎名林檎
 
 - Rockbox mode works on iPods with Rockbox 4.0 or later installed. It has been tested on a real iPod classic. To install Rockbox, use Rockbox Utility from the [official Rockbox site](https://www.rockbox.org/) (this app doesn't install Rockbox itself or its bootloader)
 - iPods modded with iFlash or other SD adapters work just like stock ones
-- **On Windows, the iPod must be Windows-formatted (FAT32).** Mac-formatted (HFS+) iPods can't be read by Windows — restore it in iTunes to reformat it for Windows. On macOS, both formats work
+- **On Windows, the iPod must be Windows-formatted (FAT32).** Mac-formatted (HFS+) iPods can't be read by Windows — restore it in iTunes to reformat it for Windows. On macOS, both formats work. On Linux, Windows format (FAT32) is recommended
 - iPod 1G / 2G connect over FireWire only, so you'll need an adapter for modern PCs
 
 ## Download
@@ -112,8 +113,11 @@ Get the file for your OS from the [latest release](https://github.com/ishiichan-
 | --- | --- |
 | Windows 10 / 11 (64-bit) | `ZenPod_x.y.z_x64-setup.exe` |
 | macOS (Intel / Apple Silicon) | `ZenPod_x.y.z_universal.dmg` |
+| Linux (x86_64) | `ZenPod_x.y.z_amd64.AppImage` (or `ZenPod_x.y.z_amd64.deb` for Debian / Ubuntu) |
 
 Once installed, the app lets you know when a new version is available.
+
+The Linux version is experimental. It hasn't been tested much with real iPods yet, so if something doesn't work, please let me know in [Issues](https://github.com/ishiichan-dayo/ZenPod/issues).
 
 ### First launch
 
@@ -122,6 +126,7 @@ The app isn't code-signed yet, so you'll see a warning the first time.
 - **Windows**: if you see "Windows protected your PC", click "More info" → "Run anyway"
 - **macOS 15 (Sequoia) or later**: try opening the app once and close the warning, then go to System Settings → Privacy & Security, scroll down, and click "Open Anyway" (enter your password if asked)
 - **macOS 14 or earlier**: right-click the app in Finder → "Open"
+- **Linux (AppImage)**: make the file executable before opening it (`chmod +x ZenPod_*.AppImage`)
 
 ### About ffmpeg
 
@@ -129,6 +134,7 @@ Converting FLAC and other formats in iPod OS mode requires ffmpeg (not needed fo
 
 - **Windows / macOS**: install it in one click from the welcome guide or from Settings → Conversion (ffmpeg)
 - **FLAC on macOS** is converted by macOS itself, even without ffmpeg (Ogg / Opus / WMA and others still need ffmpeg)
+- **Linux**: install it from your distribution's packages (e.g. `sudo apt install ffmpeg`)
 
 ## How to use
 

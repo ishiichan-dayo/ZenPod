@@ -7,7 +7,7 @@
 iPod OS（Apple のファームウェア）と Rockbox の両方に対応した、iPod のための音楽管理アプリ。<br>
 ドラッグ＆ドロップで曲を入れられて、PC の音楽ファイルの整理にも使えます。iTunes はいりません。
 
-Windows / macOS 用。**完全無料**（広告なし・有料機能なし・アカウント登録不要）
+Windows / macOS / Linux 用。**完全無料**（広告なし・有料機能なし・アカウント登録不要）
 
 [**ダウンロード**](https://github.com/ishiichan-dayo/ZenPod/releases/latest) ・ [English](README.en.md)
 
@@ -65,6 +65,7 @@ PC の音楽フォルダを登録すると、iPod と同じ画面で PC の曲�
 - **どんな形式でも入る**：iPod OS では MP3 / AAC / ALAC / WAV / AIFF はそのまま、FLAC / Ogg / Opus / WMA などは自動で変換します（可逆 → ALAC、非可逆 → AAC 256kbps。変換後の形式は選べます）。Rockbox ではほとんどの形式をそのまま入れます
 - **アートワークも一緒に**：曲に埋め込まれた画像、なければ同じフォルダの `cover.jpg` などを使います
 - **評価・ポッドキャスト・オーディオブック**：曲に ★ の評価を付けられます。ポッドキャストとオーディオブックは転送のときにタグなどから見分け、iPod OS では「ポッドキャスト」「オーディオブック」として、再生した位置を覚えるように入れます。Rockbox では `Podcasts` / `Audiobooks` のフォルダに置きます。分類は「情報を編集」からあとで変えられます
+- **ポッドキャストの購読**：フィード（RSS）の URL で番組を登録すると、回を PC に取得して iPod に送れます。番組ごとに「iPod に置く回」を決めておくと、同期でまだ聞いていない回をその数だけ送り、聞き終わった回を iPod から消します。送る回と消す回は、実行する前に一覧で確かめられます。iPod OS と Rockbox の両方で使えます
 - **iPod の中身を見る・整える**：曲 / アルバム / アーティストの表示切り替え、再生、曲情報の編集、プレイリストの作成と並べ替え、PC への書き出し
 - **表示の大きさ**：設定の「一般」か、Ctrl + / Ctrl −（Mac は ⌘）で変えられます
 - **自動アップデート**：新しい版が出ると起動時にお知らせ。ワンクリックで更新できます
@@ -101,7 +102,7 @@ ZenPod は転送するときに読みを自動で付けます（「椎名林檎�
 
 - Rockbox モードは、iPod に Rockbox（4.0 以降）が入っていれば使えます。実機での確認は iPod classic で行っています。Rockbox の入れ方は [Rockbox 公式サイト](https://www.rockbox.org/) の Rockbox Utility を使ってください（このアプリは Rockbox 本体やブートローダーは入れません）
 - iFlash などで SD カードに換装した iPod も、普通の iPod と同じように使えます
-- **Windows では Windows 形式（FAT32）の iPod が必要です。** Mac 形式（HFS+）の iPod は Windows から読めないため、iTunes で「復元」して Windows 形式に初期化してください。macOS ではどちらの形式でも使えます
+- **Windows では Windows 形式（FAT32）の iPod が必要です。** Mac 形式（HFS+）の iPod は Windows から読めないため、iTunes で「復元」して Windows 形式に初期化してください。macOS ではどちらの形式でも使えます。Linux では Windows 形式（FAT32）をおすすめします
 - iPod 1G / 2G は FireWire 接続のため、今の PC につなぐには別の機器が必要です
 
 ## ダウンロード
@@ -112,8 +113,11 @@ ZenPod は転送するときに読みを自動で付けます（「椎名林檎�
 | --- | --- |
 | Windows 10 / 11（64 bit） | `ZenPod_x.y.z_x64-setup.exe` |
 | macOS（Intel / Apple Silicon） | `ZenPod_x.y.z_universal.dmg` |
+| Linux（x86_64） | `ZenPod_x.y.z_amd64.AppImage`（Debian / Ubuntu は `ZenPod_x.y.z_amd64.deb` も可） |
 
 一度インストールすれば、以降はアプリが新しいバージョンを知らせてくれます。
+
+Linux 版は試験的な提供です。実機の iPod での確認はまだ十分ではないので、うまく動かないときは [Issues](https://github.com/ishiichan-dayo/ZenPod/issues) で教えてください。
 
 ### 初回起動時の注意
 
@@ -122,6 +126,7 @@ ZenPod は転送するときに読みを自動で付けます（「椎名林檎�
 - **Windows**：「Windows によって PC が保護されました」と表示されたら「詳細情報」→「実行」
 - **macOS 15（Sequoia）以降**：一度アプリを開いて警告を閉じたあと、「システム設定」→「プライバシーとセキュリティ」の下のほうにある「このまま開く」を押す（パスワードを求められたら入力）
 - **macOS 14 以前**：Finder でアプリを右クリック →「開く」
+- **Linux（AppImage）**：ファイルに実行の許可を付けてから開く（`chmod +x ZenPod_*.AppImage`）
 
 ### ffmpeg について
 
@@ -129,6 +134,7 @@ iPod OS モードで FLAC などを変換して転送するには ffmpeg が必�
 
 - **Windows / macOS**：はじめの案内か、アプリの設定の「変換 (ffmpeg)」から、ワンクリックで入れられます
 - **macOS の FLAC** は、ffmpeg が無くても Mac の機能で変換します（Ogg / Opus / WMA などには ffmpeg が必要）
+- **Linux**：ディストリビューションのパッケージで入れてください（例：`sudo apt install ffmpeg`）
 
 ## 使い方
 

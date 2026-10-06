@@ -67,6 +67,7 @@ Add your music folders on the PC and browse them in the same window as your iPod
 - **Ratings, podcasts and audiobooks**: rate songs with stars. Podcasts and audiobooks are recognized from their tags when you transfer them; in iPod OS mode they go in as podcasts and audiobooks that remember where you stopped, and in Rockbox mode they're placed in `Podcasts` / `Audiobooks` folders. You can change the category later in Edit Info
 - **Podcast subscriptions**: add a podcast by its feed (RSS) URL to download episodes to your PC and send them to your iPod. Choose how many episodes to keep on the iPod for each podcast, and Sync sends that many unplayed episodes and removes played ones. You can review the episodes to send and remove before anything happens. Works in both iPod OS and Rockbox modes
 - **Browse and tidy your iPod**: switch between Songs / Albums / Artists, play songs, edit song info, create and reorder playlists, copy songs back to your PC
+- **Smart playlists**: create and edit smart playlists by combining rules, just like in iTunes. Works in both iPod OS and Rockbox modes (in Rockbox mode, the matching songs are written to an `.m3u8`). You can import playlists from iTunes / Music XML and `.m3u` / `.m3u8` files (songs missing from the iPod can be sent from your PC first), and export smart playlists as XML for iTunes
 - **Display size**: change it in Settings → General, or with Ctrl + / Ctrl − (⌘ on Mac)
 - **Automatic updates**: the app tells you when a new version is out and updates in one click
 
@@ -147,16 +148,15 @@ Right-click for delete, export, add to playlist, edit song info and sort names, 
 
 ## Safety
 
-- iPod OS: the first time an iPod is opened, its original database is saved as `iPod_Control/iTunes/iTunesDB.ipodsync-backup`. If anything goes wrong, copy it back to `iTunesDB` to restore
-- Rockbox: before the database is rebuilt for the first time, the original database is saved in `.rockbox/ipodsync-db-backup/`. If something doesn't look right, you can also rebuild it on the iPod with "Database → Update Now"
+- iPod OS: the first time an iPod is opened, its original database is saved as `iPod_Control/iTunes/iTunesDB.zenpod-backup`. If anything goes wrong, copy it back to `iTunesDB` to restore
+- Rockbox: before the database is rebuilt for the first time, the original database is saved in `.rockbox/zenpod-db-backup/`. If something doesn't look right, you can also rebuild it on the iPod with "Database → Update Now"
 - Databases are written to a temporary file first and then swapped in, so an interrupted write is unlikely to corrupt them
 - If iTunes / Music.app is set to sync automatically, it may remove songs added with this app. Set it to "Manually manage music"
-- The app only goes online for artwork / song info searches, installing ffmpeg, checking for updates, and sending anonymous usage data (searches send the artist and album name to each service)
-- Anonymous usage data: to improve the app, once a day it sends only the app version, language, OS, the mode (iPod OS / Rockbox) and model of the iPod you open, a rough range of its song count, how long it took to open, and what you chose in the welcome guide (whether you installed ffmpeg and whether you use Rockbox), to a server in Japan run by the developer. No personal information such as names, file locations, song titles, or iPod names or serial numbers is sent, and IP addresses are not stored. You can turn it off at any time in Settings → About
+- The app only goes online for artwork / song info / artist alias searches, fetching podcast feeds and episodes, installing ffmpeg, checking for updates, and sending anonymous usage data (searches send the artist and album name to each service)
+- Anonymous usage data: to improve the app, once a day it sends only the app version, language, OS, the mode (iPod OS / Rockbox) and model of the iPod you open, a rough range of its song count, how long it took to open and where that time went, what you chose in the welcome guide (whether you installed ffmpeg and whether you use Rockbox), whether a connected iPod didn't show up as a drive or no iPod was opened for a while, how transfers went (whether they succeeded, and rough ranges of the song and error counts), how far you got with the online lookups (whether you searched and applied a result, rough ranges of the number of results and the time taken, and which service the chosen result came from), and how installing ffmpeg from Settings went, to a server in Japan run by the developer. No personal information such as names, file locations, song titles, or iPod names or serial numbers is sent, and IP addresses are not stored. You can turn it off at any time in Settings → About
 
 ## Limitations
 
-- Creating or editing smart playlists isn't supported (existing smart playlists are kept as they are)
 - Videos can't be transferred
 - To install Rockbox itself, its bootloader or themes, use the official Rockbox Utility
 

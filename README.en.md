@@ -66,6 +66,8 @@ Add your music folders on the PC and browse them in the same window as your iPod
 - **Artwork included**: uses embedded images, or `cover.jpg` / `folder.jpg` in the same folder
 - **Ratings, podcasts and audiobooks**: rate songs with stars. Podcasts and audiobooks are recognized from their tags when you transfer them; in iPod OS mode they go in as podcasts and audiobooks that remember where you stopped, and in Rockbox mode they're placed in `Podcasts` / `Audiobooks` folders. You can change the category later in Edit Info
 - **Podcast subscriptions**: add a podcast by its feed (RSS) URL to download episodes to your PC and send them to your iPod. Choose how many episodes to keep on the iPod for each podcast, and Sync sends that many unplayed episodes and removes played ones. You can review the episodes to send and remove before anything happens. Works in both iPod OS and Rockbox modes
+- **Videos**: drop videos onto the window. In iPod OS mode, videos the iPod can play go over as-is and others are converted, sorted into Movies, TV Shows and Music Videos (iPod video 5G, classic, nano 3G / 4G). In Rockbox mode, videos are converted to MPEG-2 (320×240) for the video plugin and placed in the `Videos` folder. You can edit the title, kind, show, season and episode later, and play iPod videos right in ZenPod
+- **Photos**: drop photos or folders onto the window. In iPod OS mode they go into the iPod's Photos (color-screen models from iPod photo on), and in Rockbox mode into the `Pictures` folder. Folder names become albums, and you can create and rename albums later
 - **Browse and tidy your iPod**: switch between Songs / Albums / Artists, play songs, edit song info, create and reorder playlists, copy songs back to your PC
 - **Smart playlists**: create and edit smart playlists by combining rules, just like in iTunes. Works in both iPod OS and Rockbox modes (in Rockbox mode, the matching songs are written to an `.m3u8`). You can import playlists from iTunes / Music XML and `.m3u` / `.m3u8` files (songs missing from the iPod can be sent from your PC first), and export smart playlists as XML for iTunes
 - **Display size**: change it in Settings → General, or with Ctrl + / Ctrl − (⌘ on Mac)
@@ -131,7 +133,7 @@ The app isn't code-signed yet, so you'll see a warning the first time.
 
 ### About ffmpeg
 
-Converting FLAC and other formats in iPod OS mode requires ffmpeg (not needed for MP3 / AAC / ALAC / WAV / AIFF, and usually not needed in Rockbox mode).
+Converting FLAC and other formats in iPod OS mode requires ffmpeg (not needed for MP3 / AAC / ALAC / WAV / AIFF, and usually not needed for songs in Rockbox mode). It's also used to convert videos (videos the iPod can't play, and any video sent in Rockbox mode) and to play Rockbox videos in ZenPod.
 
 - **Windows / macOS**: install it in one click from the welcome guide or from Settings → Conversion (ffmpeg)
 - **FLAC on macOS** is converted by macOS itself, even without ffmpeg (Ogg / Opus / WMA and others still need ffmpeg)
@@ -157,7 +159,7 @@ Right-click for delete, export, add to playlist, edit song info and sort names, 
 
 ## Limitations
 
-- Videos can't be transferred
+- In iPod OS mode, photos are stored only as images resized for the iPod's screen (the original full-size images aren't copied)
 - To install Rockbox itself, its bootloader or themes, use the official Rockbox Utility
 
 ## Bug reports and requests

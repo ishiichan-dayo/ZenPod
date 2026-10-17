@@ -13,9 +13,7 @@ For Windows, macOS and Linux. **Completely free** — no ads, no paid features, 
 
 <a href="https://ko-fi.com/ishiichan_dayo"><img src="https://storage.ko-fi.com/cdn/kofi2.png?v=3" height="40" alt="Support me on Ko-fi"></a>
 
-<img src="docs/images/demo.gif" alt="Switching between iPod OS and Rockbox, transferring songs, and renaming files in bulk" width="800">
-
-[Watch the intro video (72 s, with sound)](https://github.com/ishiichan-dayo/ZenPod/releases/download/v1.0.0/zenpod-intro-en.mp4)
+https://github.com/user-attachments/assets/2299ad84-81b5-4767-9473-17d8b059194f
 
 </div>
 
@@ -72,6 +70,8 @@ Add your music folders on the PC and browse them in the same window as your iPod
 - **Smart playlists**: create and edit smart playlists by combining rules, just like in iTunes. Works in both iPod OS and Rockbox modes (in Rockbox mode, the matching songs are written to an `.m3u8`). You can import playlists from iTunes / Music XML and `.m3u` / `.m3u8` files (songs missing from the iPod can be sent from your PC first), and export smart playlists as XML for iTunes
 - **Display size**: change it in Settings → General, or with Ctrl + / Ctrl − (⌘ on Mac)
 - **Automatic updates**: the app tells you when a new version is out and updates in one click
+
+<img src="docs/images/media-en.png" alt="Videos and photos on the iPod" width="800">
 
 ## Japanese titles sorted correctly
 

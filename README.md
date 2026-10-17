@@ -13,9 +13,7 @@ Windows / macOS / Linux 用。**完全無料**（広告なし・有料機能な�
 
 <a href="https://ko-fi.com/ishiichan_dayo"><img src="https://storage.ko-fi.com/cdn/kofi2.png?v=3" height="40" alt="Ko-fi で応援する"></a>
 
-<img src="docs/images/demo.gif" alt="iPod OS と Rockbox の切り替え、曲の転送、ファイル名の一括変更の様子" width="800">
-
-[紹介動画（72 秒・音あり）](https://github.com/ishiichan-dayo/ZenPod/releases/download/v1.0.0/zenpod-intro-ja.mp4)
+https://github.com/user-attachments/assets/ec41166c-ef58-4174-b428-4b8eb114418e
 
 </div>
 
@@ -72,6 +70,8 @@ PC の音楽フォルダを登録すると、iPod と同じ画面で PC の曲�
 - **スマートプレイリスト**：iTunes と同じように、条件を組み合わせて作成・編集できます。iPod OS と Rockbox の両方で使えます（Rockbox では条件に合う曲を `.m3u8` に書きます）。iTunes / ミュージックの XML と `.m3u` / `.m3u8` からプレイリストを取り込めて（iPod に無い曲は PC から転送してから取り込めます）、スマートプレイリストを iTunes 用の XML に書き出すこともできます
 - **表示の大きさ**：設定の「一般」か、Ctrl + / Ctrl −（Mac は ⌘）で変えられます
 - **自動アップデート**：新しい版が出ると起動時にお知らせ。ワンクリックで更新できます
+
+<img src="docs/images/media-ja.png" alt="iPod の動画と写真の一覧" width="800">
 
 ## 日本語の曲が、iPod でちゃんと並ぶ
 

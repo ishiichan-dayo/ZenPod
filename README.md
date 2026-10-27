@@ -9,7 +9,7 @@ iPod OS（Apple のファームウェア）と Rockbox の両方に対応した�
 
 Windows / macOS / Linux 用。**完全無料**（広告なし・有料機能なし・アカウント登録不要）
 
-[**ダウンロード**](https://github.com/ishiichan-dayo/ZenPod/releases/latest) ・ [English](README.en.md)
+[**サイト**](https://ishiichan-dayo.github.io/ZenPod/) ・ [**ダウンロード**](https://github.com/ishiichan-dayo/ZenPod/releases/latest) ・ [English](README.en.md)
 
 <a href="https://ko-fi.com/ishiichan_dayo"><img src="https://storage.ko-fi.com/cdn/kofi2.png?v=3" height="40" alt="Ko-fi で応援する"></a>
 
@@ -19,77 +19,18 @@ https://github.com/user-attachments/assets/ec41166c-ef58-4174-b428-4b8eb114418e
 
 ---
 
-## iPod OS と Rockbox、どちらでも
-
 <img src="docs/images/modes-ja.png" alt="同じ iPod を iPod OS と Rockbox で開いた画面" width="800">
 
-左上の「iPod OS | Rockbox」を押すだけで、同じ iPod の曲を 2 つのやり方で管理できます。どちらのモードも、ドロップするだけで転送、曲情報の編集、プレイリストの作成と並べ替えができます。
+## 主な機能
 
-- **iPod OS**：Apple のファームウェアの曲の一覧（iTunesDB）に登録します。今までの iTunes と同じように使えます
-- **Rockbox**：曲をファイルのまま `Music/アーティスト/アルバム/01 曲名.flac` に整理して置きます。**FLAC・Ogg・Opus もそのまま**入ります（変換しません）。フォルダの形は設定の「転送」で、アーティスト・アルバムなどの部品をドラッグして組み替えられます（よく使う形から選ぶこともできます）。すでに曲が入っている iPod では、今の並びに合う形を提案します
-- **1 台の iPod で両方**：Rockbox を入れた iPod（デュアルブート）なら、iPod OS 用の曲と Rockbox 用の曲を同じ iPod に入れて使い分けられます。モードは iPod ごとに覚えます
+- **iPod OS と Rockbox の両方に対応**：左上の「iPod OS | Rockbox」で切り替え。Rockbox を入れた iPod なら、両方の曲を 1 台に入れて使い分けられます
+- **ドロップするだけで転送**：FLAC・Ogg・Opus などは iPod OS 用に自動で変換（Rockbox にはそのまま）。アートワーク・歌詞も一緒に
+- **Rockbox のデータベースを PC で作成**：取り出せばすぐ「データベース」から曲を探せます
+- **日本語の曲がちゃんと並ぶ**：転送するときに読みを自動で付けます（辞書は内蔵）
+- **PC の音楽ファイルの整理**：タグの編集、曲情報とアートワークのネット検索、ファイル名の一括変更
+- **ポッドキャスト・動画・写真・スマートプレイリスト**にも対応
 
-### Rockbox のデータベースを、PC で
-
-<img src="docs/images/rockbox-ja.png" alt="Rockbox モードのアルバムの一覧" width="800">
-
-Rockbox 本体でデータベースを作ると、曲が多いときは長い時間がかかります。ZenPod は曲を入れるたびに、**Rockbox 4.0 と同じ形のデータベースを PC で作って**書き込みます。iPod を取り出せば、すぐに「データベース」からアーティスト・アルバムで曲を探せます。
-
-- 本体で付いた再生回数・評価は、作り直しても引き継ぎます
-- iPod OS モードで曲を入れたり消したりしたときも、Rockbox のデータベースを合わせて更新します
-- ジャケットは Rockbox が読める形（ベースライン JPEG の `cover.jpg`）でアルバムのフォルダに置きます
-- プレイリストは Rockbox の `Playlists/名前.m3u8` に書きます
-- 歌詞ファイル（曲と同じ名前の `.lrc` / `.lrc8`）も一緒に送ります。曲の名前を変えたり消したりしたときも、歌詞ファイルがついていきます
-
-## 音楽ファイルの整理にも
-
-<img src="docs/images/organize-ja.png" alt="PC の音楽フォルダの曲の一覧" width="800">
-
-PC の音楽フォルダを登録すると、iPod と同じ画面で PC の曲を見て、そのまま整理できます。iPod を持っていなくても使えます。
-
-- **タグの編集**：曲名・アーティスト・アルバム・曲順などを、元のファイルに書き込みます。配信サイトが入れた独自のタグは消しません
-- **曲情報をネットで取得**：MusicBrainz でアルバムを探して、曲名や曲順をまとめて入れられます
-- **アートワーク**：画像ファイルから設定したり、ネットで探したりできます（iTunes / Deezer / MusicBrainz）
-- **ファイル名の一括変更**：曲順・曲名などの部品をドラッグで並べて、「01 - 曲名」のような名前をまとめて付けられます。変える前に一覧で確かめられて、行ごとに外せます
-- **iPod に入れ済みかが分かる**：iPod にある曲には印が付くので、足りない曲だけ選んで送れます
-
-<img src="docs/images/rename-ja.png" alt="ファイル名の一括変更の画面" width="800">
-
-## できること
-
-<img src="docs/images/songs-ja.png" alt="iPod の曲の一覧" width="800">
-
-- **ドロップするだけで転送**：曲やアルバムのフォルダをウィンドウに落とすだけ。プレイリストの上に落とせば、そのプレイリストにも入ります
-- **どんな形式でも入る**：iPod OS では MP3 / AAC / ALAC / WAV / AIFF はそのまま、FLAC / Ogg / Opus / WMA などは自動で変換します（可逆 → ALAC、非可逆 → AAC 256kbps。変換後の形式は選べます）。Rockbox ではほとんどの形式をそのまま入れます
-- **アートワークも一緒に**：曲に埋め込まれた画像、なければ同じフォルダの `cover.jpg` などを使います
-- **評価・ポッドキャスト・オーディオブック**：曲に ★ の評価を付けられます。ポッドキャストとオーディオブックは転送のときにタグなどから見分け、iPod OS では「ポッドキャスト」「オーディオブック」として、再生した位置を覚えるように入れます。Rockbox では `Podcasts` / `Audiobooks` のフォルダに置きます。分類は「情報を編集」からあとで変えられます
-- **ポッドキャストの購読**：フィード（RSS）の URL で番組を登録すると、回を PC に取得して iPod に送れます。番組ごとに「iPod に置く回」を決めておくと、同期でまだ聞いていない回をその数だけ送り、聞き終わった回を iPod から消します。送る回と消す回は、実行する前に一覧で確かめられます。iPod OS と Rockbox の両方で使えます
-- **動画**：動画をドロップすると、iPod OS では iPod で再生できる動画はそのまま、それ以外は変換して入れ、「ムービー」「テレビ番組」「ミュージックビデオ」に分けて置きます（iPod video 5G・classic・nano 3G / 4G）。Rockbox では動画のプラグインで再生できる MPEG-2（320×240）に変換して `Videos` フォルダに置きます。題名・種類・番組・シーズン・話数はあとから編集でき、iPod の動画は ZenPod の中で再生もできます
-- **写真**：写真やフォルダをドロップすると、iPod OS では iPod の「写真」に（iPod photo 以降のカラー画面の機種）、Rockbox では `Pictures` フォルダに入れます。フォルダの名前がアルバムになり、アルバムはあとから作ったり名前を変えたりできます
-- **iPod の中身を見る・整える**：曲 / アルバム / アーティストの表示切り替え、再生、曲情報の編集、プレイリストの作成と並べ替え、PC への書き出し
-- **スマートプレイリスト**：iTunes と同じように、条件を組み合わせて作成・編集できます。iPod OS と Rockbox の両方で使えます（Rockbox では条件に合う曲を `.m3u8` に書きます）。iTunes / ミュージックの XML と `.m3u` / `.m3u8` からプレイリストを取り込めて（iPod に無い曲は PC から転送してから取り込めます）、スマートプレイリストを iTunes 用の XML に、プレイリストを `.m3u8` に書き出すこともできます（別の iPod へ移すときなど）
-- **表示の大きさ**：設定の「一般」か、Ctrl + / Ctrl −（Mac は ⌘）で変えられます
-- **自動アップデート**：新しい版が出ると起動時にお知らせ。ワンクリックで更新できます
-
-<img src="docs/images/media-ja.png" alt="iPod の動画と写真の一覧" width="800">
-
-## 日本語の曲が、iPod でちゃんと並ぶ
-
-iPod OS は曲名やアーティスト名の「読み」で並べ替えます。読みが無い日本語の曲は、本体の一覧で後ろにまとめて押しやられてしまいます。
-
-ZenPod は転送するときに読みを自動で付けます（「椎名林檎」→「シイナリンゴ」）。辞書（IPADIC）を内蔵しているので、ネットにはつながりません。
-
-<img src="docs/images/yomi-ja.png" alt="読みの変更を確認する画面" width="800">
-
-- iTunes で入れた曲など、すでに iPod にある曲にもまとめて読みを付けられます
-- 付ける前に「元の表記・今の読み・変更後」を一覧で確認できます。行ごとに外したり、読みを書き換えたりもできます
-- 人名などで読みを誤ることがあります（例：米津玄師 → ヨネツゲンシ）。曲情報の編集画面でいつでも直せます
-
-<img src="docs/images/info-ja.png" alt="曲情報の編集画面" width="800">
-
-## アルバム表示
-
-<img src="docs/images/albums-ja.png" alt="アルバムの一覧" width="800">
+機能の詳しい説明・画面・よくある質問は **[サイト](https://ishiichan-dayo.github.io/ZenPod/)** にあります。
 
 ## 対応機種
 
@@ -110,17 +51,15 @@ ZenPod は転送するときに読みを自動で付けます（「椎名林檎�
 
 ## ダウンロード
 
-[最新版のリリース](https://github.com/ishiichan-dayo/ZenPod/releases/latest) から、お使いの OS 用のファイルをダウンロードしてください。
+[最新版のリリース](https://github.com/ishiichan-dayo/ZenPod/releases/latest) から、お使いの OS 用のファイルをダウンロードしてください（[サイト](https://ishiichan-dayo.github.io/ZenPod/#download) からも直接ダウンロードできます）。
 
 | OS | ファイル |
 | --- | --- |
 | Windows 10 / 11（64 bit） | `ZenPod_x.y.z_x64-setup.exe` |
 | macOS（Intel / Apple Silicon） | `ZenPod_x.y.z_universal.dmg` |
-| Linux（x86_64） | `ZenPod_x.y.z_amd64.AppImage`（Debian / Ubuntu は `ZenPod_x.y.z_amd64.deb` も可） |
+| Linux（x86_64、試験的） | `ZenPod_x.y.z_amd64.AppImage`（Debian / Ubuntu は `.deb` も可） |
 
-一度インストールすれば、以降はアプリが新しいバージョンを知らせてくれます。
-
-Linux 版は試験的な提供です。実機の iPod での確認はまだ十分ではないので、うまく動かないときは [Issues](https://github.com/ishiichan-dayo/ZenPod/issues) で教えてください。
+一度インストールすれば、以降はアプリが新しいバージョンを知らせてくれます。iPod OS モードで FLAC などを変換するには ffmpeg が必要です（Windows / macOS はアプリからワンクリックで入れられます）。
 
 ### 初回起動時の注意
 
@@ -130,23 +69,6 @@ Linux 版は試験的な提供です。実機の iPod での確認はまだ十�
 - **macOS 15（Sequoia）以降**：一度アプリを開いて警告を閉じたあと、「システム設定」→「プライバシーとセキュリティ」の下のほうにある「このまま開く」を押す（パスワードを求められたら入力）
 - **macOS 14 以前**：Finder でアプリを右クリック →「開く」
 - **Linux（AppImage）**：ファイルに実行の許可を付けてから開く（`chmod +x ZenPod_*.AppImage`）
-
-### ffmpeg について
-
-iPod OS モードで FLAC などを変換して転送するには ffmpeg が必要です（MP3 / AAC / ALAC / WAV / AIFF だけなら不要。Rockbox モードの曲には基本的に要りません）。動画の変換（iPod で再生できない動画を入れるとき・Rockbox に動画を入れるとき）と、Rockbox の動画を ZenPod の中で再生するときにも使います。
-
-- **Windows / macOS**：はじめの案内か、アプリの設定の「変換 (ffmpeg)」から、ワンクリックで入れられます
-- **macOS の FLAC** は、ffmpeg が無くても Mac の機能で変換します（Ogg / Opus / WMA などには ffmpeg が必要）
-- **Linux**：ディストリビューションのパッケージで入れてください（例：`sudo apt install ffmpeg`）
-
-## 使い方
-
-1. iPod を USB でつないでアプリを起動します。iPod は自動で見つかります（初めて起動したときは、はじめの案内で PC の音楽フォルダなどを設定できます）
-2. Rockbox が入っている iPod は、左上の「iPod OS | Rockbox」でモードを選びます
-3. 曲・アルバムのフォルダをウィンドウにドラッグ＆ドロップします
-4. 終わったら「取り出し」を押してからケーブルを抜きます
-
-右クリックメニューから、削除・書き出し・プレイリストへの追加・曲情報や読みの編集・ファイル名の変更・アートワークの設定ができます。
 
 ## 安心して使うために
 

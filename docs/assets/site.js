@@ -15,6 +15,11 @@
     track("theme-toggle", { to: root.dataset.theme });
   });
 
+  // Language: the script at the top of <head> follows the browser until the visitor picks one, then remembers it
+  $$("[data-umami-event='lang-switch']").forEach((a) => a.addEventListener("click", () => {
+    try { localStorage.setItem("lang", a.dataset.umamiEventTo); } catch (e) {}
+  }));
+
   // iPod OS | Rockbox switch above the app window
   const seg = $("[data-mode-seg]");
   const win = $(".window");

@@ -80,6 +80,8 @@ body {
 html:lang(en) body { line-height: 1.6; }
 h1, h2, h3, p, ul, ol, figure, dl, dd { margin: 0; }
 h1, h2, h3 { font-weight: 700; text-wrap: balance; font-feature-settings: "palt" 1; }
+/* Japanese headings break only at spaces and <wbr> (otherwise "データ / ベース" on phones) */
+html:lang(ja) h1, html:lang(ja) h2, html:lang(ja) .feature h3 { word-break: keep-all; overflow-wrap: break-word; }
 p { text-wrap: pretty; }
 img, video { display: block; max-width: 100%; height: auto; }
 a { color: var(--accent); text-underline-offset: 3px; }
@@ -229,6 +231,9 @@ html:lang(en) .hero h1 { line-height: 1.15; letter-spacing: -0.02em; }
   .seg button { min-width: 0; }
   .window { border-radius: 8px; }
 }
+@media (max-width: 400px) {
+  .hero h1 { font-size: 28px; }
+}
 
 /* Sections */
 .section { padding: 112px 0; }
@@ -309,11 +314,19 @@ td small { display: block; color: var(--sub); font-size: 14px; font-weight: 400;
   th, td { padding: 12px 16px; font-size: 15px; }
   .compare, .compare thead, .compare tbody, .compare tr, .compare th, .compare td { display: block; width: auto; }
   .compare thead { display: none; }
-  .compare tbody th { padding-bottom: 4px; border-bottom: 0; background: var(--alt); }
+  .compare tbody th { width: auto; padding-top: 8px; padding-bottom: 8px; border-bottom: 0; background: var(--alt); white-space: normal; }
   .compare td { border-bottom: 0; padding-top: 8px; padding-bottom: 8px; }
   .compare td::before { content: attr(data-label); display: block; font-size: 13px; font-weight: 700; color: var(--sub); }
   .compare tr { border-bottom: 1px solid var(--line); padding-bottom: 8px; }
   .compare tbody tr:last-child { border-bottom: 0; }
+  /* Supported iPods: one block per model, the two modes side by side under the name */
+  .models, .models tbody, .models th, .models td { display: block; width: auto; }
+  .models thead { display: none; }
+  .models tr { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0 16px; padding: 16px; border-bottom: 1px solid var(--line); }
+  .models tbody tr:last-child { border-bottom: 0; }
+  .models tbody th { grid-column: 1 / -1; padding: 0 0 8px; border-bottom: 0; }
+  .models td { padding: 0; border-bottom: 0; white-space: normal; }
+  .models td::before { content: attr(data-label); display: block; font-size: 13px; font-weight: 700; color: var(--sub); }
 }
 
 /* Download */

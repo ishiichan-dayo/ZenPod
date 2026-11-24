@@ -350,8 +350,8 @@ fn read_with(dir: &Path, want: &[usize], stats_only: bool) -> Option<Db> {
     for i in 0..count {
         let base = MASTER_HEADER_SIZE + i * ENTRY_SIZE;
         let mut e = DbEntry::default();
-        for t in 0..TAG_COUNT {
-            e.seek[t] = rd(&m, base + t * 4)?;
+        for (t, seek) in e.seek.iter_mut().enumerate() {
+            *seek = rd(&m, base + t * 4)?;
         }
         e.flag = rd(&m, base + TAG_COUNT * 4)?;
         if stats_only && (e.flag & FLAG_DELETED != 0 || STAT_TAGS.iter().all(|&t| e.seek[t] == 0)) {

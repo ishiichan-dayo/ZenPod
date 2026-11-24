@@ -77,6 +77,7 @@ python3 scripts/third-party-licenses.py
 
 - 不具合と要望は [Issues](https://github.com/ishiichan-dayo/ZenPod/issues) へ。iPod の機種・モード (iPod OS / Rockbox)・OS を書いていただけると助かります
 - 大きな変更は、先に Issue で相談してください
+- PR では、テスト・clippy (警告もエラー)・画面のビルド・ライセンスの一覧の確認が自動で動きます (`.github/workflows/ci.yml`)。初めての方の PR は、メンテナーが承認してから動きます
 - 送っていただいたコードは、このリポジトリと同じ GPL-3.0-or-later で公開されます
 
 ## リリース (メンテナー向け)

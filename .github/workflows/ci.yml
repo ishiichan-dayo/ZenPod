@@ -1,0 +1,55 @@
+name: ci
+
+# PR と main への push で、テスト・clippy・画面のビルド・ライセンスの一覧を確かめる (Linux だけ)。
+#
+# PR のコード (フォークのものも) がそのまま動くので、秘密情報は使わない・書き込みの権限を持たない。
+# pull_request_target は使わない (フォークの PR に書き込みの権限と secrets が渡るため)。
+# 初めての人の PR は、メンテナーが承認するまで動かない (リポジトリの Actions の設定)。
+#
+# Action はタグを書き換えられても中身が変わらないよう、コミットの SHA で固定する (build.yml と同じ版)
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+# 同じ PR に続けて push したら、古い実行は止める
+concurrency:
+  group: ci-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  check:
+    runs-on: ubuntu-22.04
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 24
+      - uses: dtolnay/rust-toolchain@89b12181fb390509a0842a86cc55eeb8eb928c1d # stable
+        with:
+          components: clippy
+      # キャッシュは main の push でだけ保存する (PR からは読むだけ)
+      - uses: swatinem/rust-cache@6323deb102c322ba6fcbdcafc7e3dddab59af2b6 # v2.9.2
+        with:
+          save-if: ${{ github.ref == 'refs/heads/main' }}
+      # src-tauri のコンパイルに webkit、変換とタグのテストに ffmpeg が要る
+      - name: ビルドに要るもの
+        timeout-minutes: 16
+        run: scripts/ci-apt.sh libwebkit2gtk-4.1-dev libayatana-appindicator3-dev librsvg2-dev ffmpeg
+      - run: npm ci
+      # 翻訳の抜け (i18n-check)・型・画面のビルド
+      - run: npm run build
+      - run: cargo clippy --workspace --all-targets --locked -- -D warnings
+      - run: cargo test --locked -p ipod-core -p zenpod-app
+      - name: THIRD_PARTY_LICENSES.md が最新か
+        run: |
+          python3 scripts/third-party-licenses.py
+          git diff --exit-code THIRD_PARTY_LICENSES.md || { echo "::error::python3 scripts/third-party-licenses.py で作り直してコミットする"; exit 1; }

@@ -1,0 +1,8 @@
+[workspace]
+resolver = "2"
+members = ["crates/ipod-core", "crates/zenpod-app", "src-tauri"]
+
+# 開発版でも画像の縮小・タグの読み込みなどが極端に遅くならないよう、依存ライブラリだけは最適化してビルドする
+# (配布版の release ビルドには影響しない)
+[profile.dev.package."*"]
+opt-level = 2

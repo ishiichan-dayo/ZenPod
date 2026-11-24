@@ -87,6 +87,13 @@ The app isn't code-signed yet, so you'll see a warning the first time.
 
 Please use [Issues](https://github.com/ishiichan-dayo/ZenPod/issues). Including your iPod model (shown at the top left of the window), the mode (iPod OS / Rockbox) and your OS helps a lot.
 
+## Source code and license
+
+ZenPod is open source under [GPL-3.0-or-later](LICENSE). See [DEVELOPMENT.md](DEVELOPMENT.md) for how to build it and how the code is organized (in Japanese).
+
+- Licenses of the libraries it uses are listed in [THIRD_PARTY_LICENSES.md](THIRD_PARTY_LICENSES.md)
+- The database signing for iPod classic and others (`crates/ipod-core/src/ipod/hash58.rs`) is a port of libgpod's `itdb_hash58.c` (BSD license, Copyright (C) 2007 Christophe Fergeau). The license notice is included in the source
+
 ## Support
 
 ZenPod is a free app made by one person. If you find it useful, you can [buy me a coffee on Ko-fi](https://ko-fi.com/ishiichan_dayo). It helps keep development going.

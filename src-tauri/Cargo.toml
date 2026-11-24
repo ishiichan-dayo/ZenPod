@@ -1,0 +1,35 @@
+[package]
+name = "zenpod"
+version = "2.11.1"
+description = "iPod classic にドラッグ&ドロップで曲を転送するアプリ"
+license = "GPL-3.0-or-later"
+edition = "2021"
+
+[lib]
+name = "zenpod_lib"
+crate-type = ["staticlib", "cdylib", "rlib"]
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+
+[dependencies]
+tauri = { version = "2", features = [] }
+tauri-plugin-dialog = "2"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+base64 = "0.23"
+ipod-core = { path = "../crates/ipod-core" }
+zenpod-app = { path = "../crates/zenpod-app" }
+tauri-plugin-updater = "2"
+tauri-plugin-process = "2"
+# 先行版の確認でリリースの一覧 (GitHub API) を読む (ipod-core と同じ版)
+ureq = { version = "3.4.2", features = ["json"] }
+# OS の言語 (画面が起動する前のダイアログの言語)
+sys-locale = "0.3"
+# ログ (logging.rs。ipod-core と同じ版)
+log = "0.4.34"
+chrono = { version = "0.4.45", default-features = false, features = ["clock"] }
+
+[target.'cfg(windows)'.dependencies]
+# WebView2 が起動後に落ちたことを知るため (wry と同じ版に合わせる)
+webview2-com = "0.38"

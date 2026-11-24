@@ -1,0 +1,15 @@
+{
+  "app": {
+    "windows": [
+      {
+        "title": "ZenPod",
+        "width": 1120,
+        "height": 740,
+        "minWidth": 820,
+        "minHeight": 520,
+        "dragDropEnabled": true,
+        "decorations": false
+      }
+    ]
+  }
+}

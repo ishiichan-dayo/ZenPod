@@ -88,6 +88,13 @@ https://github.com/user-attachments/assets/ec41166c-ef58-4174-b428-4b8eb114418e
 
 [Issues](https://github.com/ishiichan-dayo/ZenPod/issues) にお寄せください。iPod の機種（画面の左上に表示されます）・モード（iPod OS / Rockbox）・OS を書いていただけると助かります。
 
+## ソースコードとライセンス
+
+ZenPod は [GPL-3.0-or-later](LICENSE) のオープンソースです。ビルドの仕方とコードの構成は [DEVELOPMENT.md](DEVELOPMENT.md) にあります。
+
+- 使っているライブラリのライセンスは [THIRD_PARTY_LICENSES.md](THIRD_PARTY_LICENSES.md) にまとめています
+- iPod classic などのデータベースの署名 (`crates/ipod-core/src/ipod/hash58.rs`) は、libgpod の `itdb_hash58.c` (BSD ライセンス、Copyright (C) 2007 Christophe Fergeau) を移植したものです。ライセンスの表記はソースの中にあります
+
 ## 応援
 
 ZenPod は個人で開発している無料のアプリです。気に入っていただけたら、[Ko-fi](https://ko-fi.com/ishiichan_dayo) で応援していただけるとうれしいです。開発を続ける励みになります。

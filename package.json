@@ -1,0 +1,29 @@
+{
+  "name": "zenpod",
+  "private": true,
+  "license": "GPL-3.0-or-later",
+  "version": "2.11.1",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "node scripts/i18n-check.mjs && tsc && vite build",
+    "i18n:check": "node scripts/i18n-check.mjs",
+    "tauri": "tauri",
+    "win:setup": "bash scripts/setup-win-toolchain.sh",
+    "win:dev": "bash scripts/win.sh dev",
+    "win:run": "bash scripts/win.sh run",
+    "win:installer": "bash scripts/win.sh installer",
+    "win:stop": "bash scripts/win.sh stop"
+  },
+  "devDependencies": {
+    "@tauri-apps/cli": "^2.12.1",
+    "typescript": "^7.0.2",
+    "vite": "^8.3.0"
+  },
+  "dependencies": {
+    "@tauri-apps/api": "^2.11.1",
+    "@tauri-apps/plugin-dialog": "^2.7.3",
+    "@tauri-apps/plugin-process": "^2.3.1",
+    "@tauri-apps/plugin-updater": "^2.12.0"
+  }
+}

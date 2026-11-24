@@ -1,0 +1,7441 @@
+:root {
+  --bg: #f5f6f8;
+  --panel: #ffffff;
+  --sidebar: #eef0f3;
+  --border: #dfe2e7;
+  --text: #1d1f23;
+  --muted: #6b717b;
+  --accent: #2f6fe4;
+  --accent-soft: #e3ecfd;
+  --accent-text: #ffffff;
+  --row-alt: #fafbfc;
+  --row-hover: #f0f3f8;
+  /* ジャケットを読み込んでいる間のスケルトンの光 */
+  --skel-shine: rgba(255, 255, 255, 0.55);
+  --sel: #d6e3fb;
+  --sel-focus: #2f6fe4;
+  --danger: #d93a3a;
+  --ok: #1f9d55;
+  --warn-bg: #fff4e0;
+  --warn-text: #8a5a00;
+  --diff-del-bg: #fde2e2;
+  --diff-del-text: #a4262c;
+  --diff-ins-bg: #d8f3dc;
+  --diff-ins-text: #1b6b34;
+  --shadow: 0 10px 30px rgba(20, 30, 50, 0.18);
+  --ipod-body: #e6e8eb;
+  --ipod-edge: #aeb3ba;
+  --ipod-screen: #3b7bea;
+  /* 容量の内訳 (音楽はアクセントの色。写真・アートワークは色覚特性でも見分けられる組で検証済み) */
+  --cap-photos: #eb6834;
+  --cap-videos: #8b5cf6;
+  --cap-artwork: #1baf7a;
+  --cap-other: #a3a8b0;
+  /* 自前のスクロールバーのつまみ (ふだん / サイドバーにポインタがあるとき / つまみの上・ドラッグ中) */
+  --scroll-thumb: rgba(0, 0, 0, 0.12);
+  --scroll-thumb-show: rgba(0, 0, 0, 0.24);
+  --scroll-thumb-hover: rgba(0, 0, 0, 0.4);
+  --radius: 8px;
+  /* 動きの共通の速さと緩急 */
+  --dur: 160ms;
+  --ease: cubic-bezier(0.2, 0.8, 0.2, 1);
+  --row-h: 30px;
+  color-scheme: light;
+}
+
+/* ダーク: 設定の「外観」が「システムに合わせる」なら OS に従い、ライト / ダークを選んだらそれに固定する */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --skel-shine: rgba(255, 255, 255, 0.08);
+    --bg: #1b1c1f;
+    --panel: #232428;
+    --sidebar: #1f2023;
+    --border: #34363c;
+    --text: #e8e9ec;
+    --muted: #9298a2;
+    --accent: #4d8af0;
+    --accent-soft: #24324d;
+    --row-alt: #26272b;
+    --row-hover: #2c2e33;
+    --sel: #2d4470;
+    --sel-focus: #4d8af0;
+    --ok: #4cc27f;
+    --warn-bg: #3a2f1a;
+    --warn-text: #f0c46a;
+    --diff-del-bg: #4a2327;
+    --diff-del-text: #ff9a9f;
+    --diff-ins-bg: #1f3d28;
+    --diff-ins-text: #8fe0a4;
+    --shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+    --ipod-body: #3a3c41;
+    --ipod-edge: #5b5f66;
+    --cap-photos: #d95926;
+    --cap-videos: #7c4ddb;
+    --cap-artwork: #199e70;
+    --cap-other: #6b717b;
+    --scroll-thumb: rgba(255, 255, 255, 0.1);
+    --scroll-thumb-show: rgba(255, 255, 255, 0.2);
+    --scroll-thumb-hover: rgba(255, 255, 255, 0.36);
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --skel-shine: rgba(255, 255, 255, 0.08);
+  --bg: #1b1c1f;
+  --panel: #232428;
+  --sidebar: #1f2023;
+  --border: #34363c;
+  --text: #e8e9ec;
+  --muted: #9298a2;
+  --accent: #4d8af0;
+  --accent-soft: #24324d;
+  --row-alt: #26272b;
+  --row-hover: #2c2e33;
+  --sel: #2d4470;
+  --sel-focus: #4d8af0;
+  --ok: #4cc27f;
+  --warn-bg: #3a2f1a;
+  --warn-text: #f0c46a;
+  --diff-del-bg: #4a2327;
+  --diff-del-text: #ff9a9f;
+  --diff-ins-bg: #1f3d28;
+  --diff-ins-text: #8fe0a4;
+  --shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+  --ipod-body: #3a3c41;
+  --ipod-edge: #5b5f66;
+  --cap-photos: #d95926;
+  --cap-videos: #7c4ddb;
+  --cap-artwork: #199e70;
+  --cap-other: #6b717b;
+  --scroll-thumb: rgba(255, 255, 255, 0.1);
+  --scroll-thumb-show: rgba(255, 255, 255, 0.2);
+  --scroll-thumb-hover: rgba(255, 255, 255, 0.36);
+  color-scheme: dark;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  height: 100%;
+  background: var(--bg);
+  color: var(--text);
+  font: 13px/1.45 -apple-system, BlinkMacSystemFont, "Segoe UI", "Hiragino Sans", "Hiragino Kaku Gothic ProN",
+    "Yu Gothic UI", Meiryo, "Noto Sans JP", sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -webkit-user-select: none;
+  user-select: none;
+  overflow: hidden;
+}
+
+.hidden {
+  display: none !important;
+}
+.muted {
+  color: var(--muted);
+}
+.spacer {
+  flex: 1;
+}
+
+/* ---------- buttons ---------- */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  height: 30px;
+  padding: 0 16px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--panel);
+  color: var(--text);
+  font: inherit;
+  cursor: pointer;
+  white-space: nowrap;
+  transition:
+    transform 80ms var(--ease),
+    border-color var(--dur) var(--ease),
+    background var(--dur) var(--ease);
+}
+/* 押している間だけ少し縮む */
+.btn:active:not(:disabled) {
+  transform: scale(0.97);
+}
+.btn:hover:not(:disabled) {
+  border-color: var(--muted);
+}
+.btn:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+.btn.primary {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--accent-text);
+}
+.btn.primary:hover:not(:disabled) {
+  filter: brightness(1.08);
+  border-color: var(--accent);
+}
+.btn.danger {
+  color: var(--danger);
+}
+.btn.danger.solid {
+  background: var(--danger);
+  border-color: var(--danger);
+  color: #fff;
+}
+.btn.ghost {
+  background: transparent;
+}
+/* アイコンだけのボタンは高さに合わせた正方形 (mini などで高さが変わっても) */
+.btn.icon {
+  width: auto;
+  aspect-ratio: 1;
+  padding: 0;
+  justify-content: center;
+  flex: none;
+}
+.btn.icon svg,
+.btn-ico {
+  width: 16px;
+  height: 16px;
+  fill: currentColor;
+}
+.btn.mini {
+  height: 22px;
+  padding: 0 8px;
+  font-size: 12px;
+}
+.btn.icon.mini {
+  padding: 0;
+}
+
+/* ---------- ipod svg ---------- */
+.ipod-body {
+  fill: var(--ipod-body);
+  stroke: var(--ipod-edge);
+  stroke-width: 2;
+}
+.ipod-screen {
+  fill: var(--ipod-screen);
+}
+/* 上部のバーの絵だけ、メニューの行を描いた暗い画面にする */
+.device-icon .ipod-screen {
+  fill: #1c2027;
+  transition: fill 0.2s ease;
+}
+/* 絵の画面のメニュー (暗い画面に明るい行、上の 1 行は選択中)。Rockbox のときは色だけ変える */
+.ipod-menu {
+  fill: #c9d1dc;
+  transition: fill 0.2s ease;
+}
+.ipod-menu-sel {
+  fill: var(--ipod-screen);
+  transition: fill 0.2s ease;
+}
+/* Rockbox のとき: ロゴの配色 (黄色の地に黒) */
+.topbar.rockbox .device-icon .ipod-screen {
+  fill: #ffc000;
+}
+.topbar.rockbox .ipod-menu {
+  fill: #000;
+}
+/* 選択中の行はロゴの「box」の銀色。黄色の地で埋もれないよう、ロゴと同じく黒で縁取る */
+.topbar.rockbox .ipod-menu-sel {
+  fill: #a5b9ca;
+  stroke: #000;
+  stroke-width: 1;
+}
+@media (prefers-reduced-motion: reduce) {
+  .device-icon .ipod-screen,
+  .ipod-menu,
+  .ipod-menu-sel {
+    transition: none;
+  }
+}
+.ipod-wheel {
+  fill: var(--panel);
+  stroke: var(--ipod-edge);
+  stroke-width: 2;
+}
+
+/* ---------- 未接続 (iPod の一覧の代わりに表示) ---------- */
+.connect-view {
+  flex: 1;
+  min-height: 0;
+  display: grid;
+  place-items: center;
+  border-top: 1px solid var(--border);
+  overflow: auto;
+}
+.empty-card {
+  text-align: center;
+  max-width: 480px;
+  padding: 24px;
+}
+.empty-ipod {
+  width: 72px;
+  height: 112px;
+  animation: float 3s ease-in-out infinite;
+}
+@keyframes float {
+  50% {
+    transform: translateY(-6px);
+  }
+}
+.connect-view h1 {
+  font-size: 20px;
+  margin: 16px 0 8px;
+}
+.device-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 16px 0 16px;
+}
+.device-list .btn {
+  justify-content: center;
+  height: 36px;
+}
+
+/* ---------- main layout ---------- */
+/* 画面 (一覧か設定) の下に、共通の下のバー */
+body {
+  display: flex;
+  flex-direction: column;
+  /* 自前のタイトルバーの高さ (無いとき 0。titlebar.ts が OS ごとの印を付ける) */
+  --tb-h: 0px;
+}
+.main {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+.topbar {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 8px 16px;
+  background: var(--panel);
+  border-bottom: 1px solid var(--border);
+}
+.device {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+.device-icon {
+  width: 26px;
+  height: 40px;
+  flex: none;
+}
+.device-meta {
+  min-width: 0;
+}
+.device-name {
+  font-size: 15px;
+  line-height: 20px;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  cursor: text;
+}
+/* 名前と補足の間は 4px (名前 20px + 4px + 補足 16px で、左の iPod の絵の高さ 40px にそろう) */
+.device-sub {
+  margin-top: 4px;
+  font-size: 12px;
+  line-height: 16px;
+  color: var(--muted);
+  white-space: nowrap;
+}
+/* iPod OS / Rockbox の切り替え (上部のバー) */
+/* サイドバーの一番上。サイドバーの幅いっぱいに、2 つを同じ幅で並べる */
+.seg.mode-seg {
+  display: grid;
+  /* サイドバーを一番狭く (160px) しても 2 つが 1 行に収まるように */
+  grid-auto-columns: minmax(0, 1fr);
+  /* スクロールする箱 (.side-scroll) の上に固定して置く */
+  flex: none;
+  margin: 8px;
+  font-size: 12px;
+}
+.seg.mode-seg .seg-item span {
+  line-height: 16px;
+  padding: 4px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.seg.mode-seg.hidden {
+  display: none;
+}
+/* 読み込んでいる間は押せない */
+.seg.mode-seg.busy {
+  opacity: 0.6;
+  pointer-events: none;
+}
+.capacity {
+  flex: 1;
+  max-width: 360px;
+  margin-left: auto;
+}
+.cap-bar {
+  height: 8px;
+  border-radius: 4px;
+  background: var(--border);
+  overflow: hidden;
+}
+/* 使用中の部分。中を内訳ごとに区切り、間に 2px の隙間を空ける */
+.capacity {
+  position: relative;
+}
+.cap-used {
+  display: flex;
+  gap: 2px;
+  height: 100%;
+  border-radius: 4px;
+  overflow: hidden;
+  transition: width 0.6s var(--ease);
+}
+.cap-seg {
+  flex-basis: 0;
+  min-width: 0;
+}
+.cap-seg[data-k="music"],
+.cap-sw[data-k="music"] {
+  background: var(--accent);
+}
+.cap-seg[data-k="photos"],
+.cap-sw[data-k="photos"] {
+  background: var(--cap-photos);
+}
+.cap-seg[data-k="videos"],
+.cap-sw[data-k="videos"] {
+  background: var(--cap-videos);
+}
+.cap-seg[data-k="artwork"],
+.cap-sw[data-k="artwork"] {
+  background: var(--cap-artwork);
+}
+.cap-seg[data-k="other"],
+.cap-sw[data-k="other"] {
+  background: var(--cap-other);
+}
+.cap-sw[data-k="free"] {
+  background: var(--border);
+}
+/* マウスを乗せる (Tab で選ぶ) と内訳の表を出す */
+.cap-pop {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  z-index: 50;
+  min-width: 240px;
+  padding: 8px 16px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--panel);
+  box-shadow: var(--shadow);
+  font-size: 12px;
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(-4px);
+  transition:
+    opacity var(--dur) var(--ease),
+    transform var(--dur) var(--ease),
+    visibility var(--dur);
+}
+.capacity:hover .cap-pop,
+.capacity:focus-visible .cap-pop {
+  opacity: 1;
+  visibility: visible;
+  transform: none;
+}
+.cap-row {
+  display: grid;
+  grid-template-columns: 8px 1fr auto 40px;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 0;
+}
+.cap-sw {
+  width: 8px;
+  height: 8px;
+  border-radius: 2px;
+}
+.cap-size {
+  font-variant-numeric: tabular-nums;
+}
+.cap-pct {
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+.cap-text {
+  margin-top: 4px;
+  font-size: 11px;
+  color: var(--muted);
+  text-align: right;
+}
+.top-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.warn {
+  padding: 8px 16px;
+  background: var(--warn-bg);
+  color: var(--warn-text);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border-bottom: 1px solid var(--border);
+}
+
+.body {
+  flex: 1;
+  display: flex;
+  min-height: 0;
+}
+
+/* ---------- sidebar ---------- */
+.sidebar {
+  /* 一覧の画面のサイドバーはドラッグで幅を変えられる (main.ts が --side-w を入れる) */
+  width: var(--side-w, 220px);
+  flex: none;
+  background: var(--sidebar);
+  border-right: 1px solid var(--border);
+  overflow-y: auto;
+  padding: 8px 0 16px;
+}
+/* 一覧の画面のサイドバー: 一覧はスクロールし、下の設定は常に見える */
+.sidebar.main-side {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  padding: 0;
+}
+.side-scroll {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 8px 0 16px;
+}
+/* 上に残る切り替え (iPod OS / Rockbox) と、スクロールする一覧の境目の線 (下の「アプリの設定」の上の線と同じ)。
+   内側の影で描くので、一覧をスクロールしても線は動かない */
+.mode-seg:not(.hidden) + .side-scroll {
+  box-shadow: inset 0 1px 0 var(--border);
+}
+.side-foot {
+  flex: none;
+  padding: 8px;
+  border-top: 1px solid var(--border);
+}
+.side-settings {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  height: 32px;
+  padding: 0 8px;
+  border: none;
+  border-radius: 6px;
+  background: none;
+  color: var(--muted);
+  font: inherit;
+  cursor: pointer;
+}
+.side-settings:hover {
+  background: var(--row-hover);
+  color: var(--text);
+}
+.side-settings svg {
+  width: 16px;
+  height: 16px;
+}
+.side-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 16px 4px;
+  font-size: 11px;
+  line-height: 16px;
+  font-weight: 600;
+  color: var(--muted);
+  letter-spacing: 0.04em;
+}
+.side-list {
+  list-style: none;
+  margin: 0;
+  padding: 0 8px;
+}
+.side-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 30px;
+  padding: 0 8px;
+  border-radius: 6px;
+  cursor: pointer;
+  border: 2px solid transparent;
+}
+.side-item:hover,
+.side-item.hovering {
+  background: var(--row-hover);
+}
+.side-item.active {
+  background: var(--accent-soft);
+  color: var(--accent);
+  font-weight: 600;
+}
+/* サイドバーのビデオの下の行 (種類・番組・アーティスト)。1 段 24px 字下げして、アイコンを親の名前の頭にそろえる */
+.main-side .side-item[data-vnode] {
+  padding-left: calc(8px + var(--depth, 0) * 24px);
+}
+/* 子のある行は、マウスを乗せるとアイコンが開け閉めの印 (サイドバーの塊の見出しと同じ ⌄。閉じると右向き) に替わる */
+.side-ico {
+  display: grid;
+  place-items: center;
+  width: 16px;
+  height: 16px;
+  flex: none;
+}
+.side-ico > * {
+  grid-area: 1 / 1;
+  transition: opacity var(--dur) var(--ease);
+}
+/* アイコンは透明度を下げてあり、重なりの順で印より上に描かれるので、押せないようにして印を上に置く */
+.side-ico > svg {
+  pointer-events: none;
+}
+.side-ico .tree-chev {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  place-items: center;
+  width: 16px;
+  height: 16px;
+  padding: 0;
+  border: none;
+  border-radius: 4px;
+  background: none;
+  color: var(--muted);
+  cursor: pointer;
+  opacity: 0;
+}
+.side-item.active .side-ico .tree-chev,
+.side-ico .tree-chev:hover {
+  color: inherit;
+}
+.side-item .side-ico .tree-chev svg {
+  width: 12px;
+  height: 12px;
+  fill: none;
+  opacity: 1;
+  transition: transform var(--dur) var(--ease);
+}
+.side-item.collapsed .side-ico .tree-chev svg {
+  transform: rotate(-90deg);
+}
+.side-item.has-kids:is(:hover, .hovering) .side-ico > svg {
+  opacity: 0;
+}
+.side-item.has-kids:is(:hover, .hovering) .side-ico .tree-chev {
+  opacity: 1;
+}
+@media (prefers-reduced-motion: reduce) {
+  .side-ico > *,
+  .side-item .side-ico .tree-chev svg {
+    transition: none;
+  }
+}
+/* サイドバーの並べ替え: つかんだ項目は薄く、入る場所に線を出す */
+.side-item.side-dragging {
+  opacity: 0.4;
+}
+/* 並べ替えの線: 入る場所に、境目のまっすぐな 2px の線を出す (プレイリストの曲・サイドバーの項目・サイドバーの塊で同じ) */
+.row.insert-before::before,
+.row.insert-after::before,
+.side-item.insert-before::before,
+.side-item.insert-after::before,
+.side-sec.insert-before::before,
+.side-sec.insert-after::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 2px;
+  border-radius: 1px;
+  background: var(--accent);
+  pointer-events: none;
+  /* 一覧の左に固定したチェックの欄より手前に */
+  z-index: 2;
+}
+.row.insert-before::before,
+.side-sec.insert-before::before {
+  top: -1px;
+}
+.row.insert-after::before,
+.side-sec.insert-after::before {
+  bottom: -1px;
+}
+/* サイドバーの項目は枠 (2px、透明) の外側まで引き、項目の間の境目に置く */
+.side-item.insert-before,
+.side-item.insert-after,
+.side-sec.insert-before,
+.side-sec.insert-after {
+  position: relative;
+}
+.side-item.insert-before::before,
+.side-item.insert-after::before {
+  left: -2px;
+  right: -2px;
+}
+.side-item.insert-before::before {
+  top: -3px;
+}
+.side-item.insert-after::before {
+  bottom: -3px;
+}
+/* 塊の線は、項目と同じ幅 (一覧の左右の 8px の内側) */
+.side-sec.insert-before::before,
+.side-sec.insert-after::before {
+  left: 8px;
+  right: 8px;
+}
+body.side-reordering,
+body.side-reordering .side-item {
+  cursor: grabbing;
+}
+.side-item.drop-target {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+  transform: scale(1.03);
+}
+.side-item svg {
+  width: 16px;
+  height: 16px;
+  flex: none;
+  fill: currentColor;
+  opacity: 0.8;
+}
+.side-item .label {
+  flex: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.side-item .count {
+  font-size: 11px;
+  color: var(--muted);
+}
+.side-item.new-pl {
+  color: var(--muted);
+  font-style: italic;
+}
+
+/* ---------- content / table ---------- */
+.content {
+  position: relative;
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  background: var(--panel);
+}
+/* モードの切り替えで読み込んでいる間の、一覧の上の覆い */
+.switch-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  display: grid;
+  place-items: center;
+  background: color-mix(in srgb, var(--panel) 75%, transparent);
+  animation: fade-in 0.2s ease-out;
+}
+.switch-overlay.hidden {
+  display: none;
+}
+.switch-card {
+  display: grid;
+  justify-items: center;
+  gap: 8px;
+  padding: 24px 32px;
+  border-radius: 8px;
+  background: var(--panel);
+  box-shadow: var(--shadow);
+}
+.switch-title {
+  font-weight: 600;
+}
+.switch-sub {
+  margin-top: 4px;
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+}
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+}
+.toolbar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+}
+/* 高さはボタン (30px) に固定する (開いたアルバムのジャケットなどで上の段の高さが変わらないように) */
+.view-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  height: 30px;
+}
+.view-head h2 {
+  margin: 0;
+  font-size: 18px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+/* 普段は短く、入力中・文字が入っているときだけ広げる */
+.search {
+  width: 150px;
+  height: 30px;
+  padding: 0 8px 0 32px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--bg)
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23868c96'%3E%3Cpath d='M10 3a7 7 0 0 1 5.6 11.2l5.1 5.1-1.4 1.4-5.1-5.1A7 7 0 1 1 10 3Zm0 2a5 5 0 1 0 0 10 5 5 0 0 0 0-10Z'/%3E%3C/svg%3E")
+    no-repeat 9px center / 15px;
+  color: var(--text);
+  font: inherit;
+  outline: none;
+  transition: width 0.18s ease;
+}
+.search:focus,
+.search:not(:placeholder-shown) {
+  width: 240px;
+}
+.search:focus {
+  border-color: var(--accent);
+}
+@media (prefers-reduced-motion: reduce) {
+  .search {
+    transition: none;
+  }
+}
+
+.table {
+  position: relative;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  border-top: 1px solid var(--border);
+}
+.thead,
+.row {
+  display: grid;
+  /* 列は「表示する項目」で変わるので main.ts が --cols に入れる */
+  grid-template-columns: var(--cols, 32px 40px minmax(160px, 2.4fr) 1fr 32px);
+  align-items: center;
+}
+/* 見出しにも一覧のスクロールバーと同じ幅を空けて、列の位置をそろえる
+   (Windows はスクロールバーが一覧の幅を取るので、空けないと割合で決まる列がずれる) */
+.thead,
+.tbody {
+  scrollbar-gutter: stable;
+}
+/* 見出しの行: 中身 32px + 下線 1px。チェックと歯車は上下左右 8px の位置 */
+/* 横のスクロールバーは一覧 (.tbody) だけ。見出しは一覧のスクロールに合わせて main.ts が動かす */
+.thead {
+  overflow: hidden;
+  height: 33px;
+  border-bottom: 1px solid var(--border);
+  font-size: 11px;
+  color: var(--muted);
+  font-weight: 600;
+}
+/* 境目の当たりを見出しの高さいっぱいにするため、箱は行いっぱいに広げて文字を上下の中央に置く */
+.th {
+  position: relative;
+  align-self: stretch;
+  display: flex;
+  align-items: center;
+  padding: 0 8px;
+  cursor: pointer;
+  white-space: nowrap;
+  overflow: hidden;
+}
+/* 列の右端の境目: ドラッグで幅を変える。乗せたら縦線を出す */
+.col-grip {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  right: 0;
+  width: 8px;
+  cursor: col-resize;
+}
+.col-grip::after {
+  content: "";
+  position: absolute;
+  top: 8px;
+  bottom: 8px;
+  right: 0;
+  width: 2px;
+  background: transparent;
+  transition: background 0.15s;
+}
+.thead:hover .col-grip::after,
+.vis-head:hover .col-grip::after {
+  background: var(--border);
+}
+.col-grip:hover::after,
+.col-grip.dragging::after {
+  background: var(--accent);
+}
+.th:hover {
+  color: var(--text);
+}
+.th.sorted {
+  color: var(--accent);
+}
+.th.num,
+.cell.num {
+  text-align: right;
+}
+.th.num {
+  justify-content: flex-end;
+}
+.tbody {
+  flex: 1;
+  overflow: auto;
+  position: relative;
+  outline: none;
+}
+.rows {
+  position: relative;
+  min-width: var(--cols-min, 0);
+}
+.row {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: var(--row-h);
+  /* 行の背景はこの変数で決める (左に固定したチェックの欄も同じ色で塗る) */
+  --row-bg: transparent;
+  background: var(--row-bg);
+  cursor: default;
+  /* 1 行の中の変化をほかの行の計算に広げない (スクロールで行を足し外しするときのレイアウト・描画を軽くする) */
+  contain: layout style;
+}
+.row.alt {
+  --row-bg: var(--row-alt);
+}
+.row:hover {
+  --row-bg: var(--row-hover);
+}
+.row.selected {
+  --row-bg: var(--sel);
+}
+/* カーソルの行 (クリックした行)。チェックした行より控えめにして区別する */
+.row.focused:not(.selected) {
+  --row-bg: color-mix(in srgb, var(--sel) 55%, transparent);
+}
+.tbody:focus .row.focused {
+  box-shadow: inset 3px 0 0 var(--sel-focus);
+}
+/* 入る場所の線は、並べ替えのどこでも同じ (境目のまっすぐな 2px の線。下の「並べ替えの線」) */
+/* チェックの欄は横にスクロールしても左に固定する。下を流れる列が透けないよう、一覧の地の色に行の色を重ねて塗る。
+   行の左端の印 (カーソルの線・差し込み位置の線) は欄に隠れるので、欄にも同じ印を付ける */
+.cell.chk {
+  position: sticky;
+  left: 0;
+  z-index: 1;
+  background: linear-gradient(var(--row-bg), var(--row-bg)), var(--panel);
+}
+.th.chk {
+  position: sticky;
+  left: 0;
+  z-index: 1;
+  align-self: stretch;
+  background: var(--panel);
+}
+.tbody:focus .row.focused .cell.chk {
+  box-shadow: inset 3px 0 0 var(--sel-focus);
+}
+.cell {
+  padding: 0 8px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.cell.idx {
+  color: var(--muted);
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+}
+.cell.title {
+  font-weight: 500;
+}
+.cell.num {
+  font-variant-numeric: tabular-nums;
+  color: var(--muted);
+}
+
+/* 狭い一覧 (アーティスト表示など) でも、点線の枠が一覧の端にくっつかないように外側に余白 */
+.empty-view {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  pointer-events: none;
+}
+/* 空の一覧の案内 (曲・動画・写真で同じ形)。幅は文の長さで変えない。見出しの 1 行の下に小さい補足 */
+.drop-hint {
+  box-sizing: border-box;
+  width: 400px;
+  max-width: 100%;
+  text-align: center;
+  color: var(--muted);
+  padding: 40px 32px;
+  border: 2px dashed var(--border);
+  border-radius: 16px;
+}
+.drop-hint-sub {
+  margin-top: 8px;
+  font-size: 12px;
+  /* 折り返すときは行の長さをそろえる (最後の 1〜2 文字だけが次の行に落ちないように) */
+  text-wrap: balance;
+}
+.drop-hint-sub + .drop-hint-sub {
+  margin-top: 4px;
+}
+.drop-hint svg {
+  width: 40px;
+  height: 40px;
+  fill: currentColor;
+  opacity: 0.5;
+  margin-bottom: 8px;
+}
+
+.selbar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  border-top: 1px solid var(--border);
+  background: var(--accent-soft);
+  overflow: hidden;
+}
+/* 折り返さずに 1 行のまま。入り切らない分は fitSelbar が畳む */
+.selbar > * {
+  flex: none;
+  white-space: nowrap;
+}
+.selbar > .spacer {
+  flex: 1;
+}
+.sel-count {
+  flex: 0 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+/* メニューは上に開くので、上向きの矢印 */
+.sel-more-icon {
+  width: 16px;
+  height: 16px;
+}
+.selbar.fit-1 .sel-detail {
+  display: none;
+}
+.selbar.fit-2 #btn-sel-export,
+.selbar.fit-3 #btn-sel-remove {
+  display: none;
+}
+
+
+/* ---------- status ---------- */
+.status {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  height: 34px;
+  padding: 0 16px;
+  background: var(--sidebar);
+  border-top: 1px solid var(--border);
+  font-size: 12px;
+  color: var(--muted);
+}
+.status-left {
+  flex: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+/* 転送中は下のバーの幅いっぱいに: 「転送中 3 / 12」・曲名・進み具合・%・中止 */
+.status:has(.transfer:not(.hidden)) .spacer {
+  display: none;
+}
+/* 転送中は上下を 8px 空ける (高さは一番高いジャケット 24px で決まる) */
+.status:has(.transfer:not(.hidden)) {
+  height: auto;
+  padding: 8px 16px;
+}
+.transfer {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-width: 0;
+}
+/* 転送中の曲のジャケット。無ければ音符 */
+.transfer-art {
+  flex: none;
+  width: 24px;
+  height: 24px;
+  border-radius: 4px;
+  background: var(--border) center / cover no-repeat;
+  display: grid;
+  place-items: center;
+}
+.transfer-art svg {
+  width: 14px;
+  height: 14px;
+  fill: var(--muted);
+}
+.transfer-meter {
+  display: flex;
+  flex: 0 1 400px;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 160px;
+}
+.transfer-row {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  font-size: 11px;
+  line-height: 1;
+  color: var(--text);
+}
+#transfer-label {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  font-weight: 600;
+}
+.transfer-bar {
+  height: 4px;
+  border-radius: 2px;
+  background: var(--border);
+  overflow: hidden;
+}
+.transfer-pct {
+  flex: none;
+  font-variant-numeric: tabular-nums;
+}
+.transfer .btn.mini {
+  margin-left: 8px;
+}
+#transfer-fill,
+#set-ff-fill,
+#onb-ff-fill {
+  height: 100%;
+  width: 0;
+  background: var(--accent);
+  transition: width 0.2s;
+}
+
+/* ---------- drag & drop ---------- */
+.drop-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(47, 111, 228, 0.12);
+  border: 3px dashed var(--accent);
+  display: grid;
+  place-items: center;
+  pointer-events: none;
+  z-index: 50;
+}
+.drop-overlay.over-target {
+  background: rgba(47, 111, 228, 0.05);
+}
+.drop-card {
+  background: var(--panel);
+  padding: 24px 32px;
+  border-radius: 14px;
+  box-shadow: var(--shadow);
+  font-size: 15px;
+  font-weight: 600;
+  text-align: center;
+}
+.drop-card svg {
+  width: 36px;
+  height: 36px;
+  fill: var(--accent);
+  display: block;
+  margin: 0 auto 8px;
+}
+.drag-ghost {
+  position: fixed;
+  z-index: 60;
+  pointer-events: none;
+  background: var(--accent);
+  color: var(--accent-text);
+  padding: 4px 8px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 600;
+  box-shadow: var(--shadow);
+  transform: translate(12px, 8px);
+}
+
+/* ---------- menu ---------- */
+/* 幅は中身によらず決める (曲名の長さでメニューの大きさが変わらないように)。長い文字は末尾を省略する */
+/* ダイアログ (z-index 90) の中から開くメニュー (動画の情報の編集のアートワーク) もダイアログの上に出す */
+.menu {
+  position: fixed;
+  z-index: 95;
+  width: 264px;
+  max-height: 60vh;
+  overflow-y: auto;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  box-shadow: var(--shadow);
+  padding: 4px;
+}
+.menu-item {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 8px 16px;
+  border-radius: 4px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.menu-item:hover,
+.menu-item.open {
+  background: var(--accent);
+  color: var(--accent-text);
+}
+.menu-text {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.menu-key,
+.menu-arrow {
+  flex: none;
+  color: var(--muted);
+  font-size: 12px;
+}
+.menu-arrow {
+  font-size: 14px;
+  line-height: 1;
+}
+.menu-item:hover .menu-key,
+.menu-item:hover .menu-arrow,
+.menu-item.open .menu-arrow {
+  color: inherit;
+  opacity: 0.8;
+}
+.menu-item.danger {
+  color: var(--danger);
+}
+.menu-item.danger:hover {
+  background: var(--danger);
+  color: #fff;
+}
+.menu-item.disabled {
+  opacity: 0.4;
+  pointer-events: none;
+}
+.menu-sep {
+  height: 1px;
+  background: var(--border);
+  margin: 4px 0;
+}
+.menu-label {
+  padding: 4px 16px;
+  font-size: 11px;
+  color: var(--muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ---------- modal ---------- */
+.modal-back {
+  position: fixed;
+  inset: 0;
+  z-index: 90;
+  background: rgba(0, 0, 0, 0.35);
+  display: grid;
+  place-items: center;
+}
+.modal {
+  width: min(460px, calc(100vw - 32px));
+  max-height: calc(100vh - var(--tb-h) - 32px);
+  overflow-y: auto;
+  background: var(--panel);
+  border-radius: 12px;
+  box-shadow: var(--shadow);
+  padding: 24px;
+  -webkit-user-select: text;
+  user-select: text;
+}
+.modal h3 {
+  margin: 0 0 8px;
+  font-size: 15px;
+}
+.modal p {
+  margin: 0 0 16px;
+  color: var(--muted);
+  white-space: pre-wrap;
+}
+.modal input[type="text"],
+.modal input[type="date"] {
+  width: 100%;
+  height: 32px;
+  padding: 0 8px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--bg);
+  color: var(--text);
+  font: inherit;
+  outline: none;
+}
+.modal input[type="text"]:focus,
+.modal input[type="date"]:focus {
+  border-color: var(--accent);
+}
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 16px;
+}
+.field {
+  margin-bottom: 16px;
+}
+.field label {
+  display: block;
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+.field .hint,
+.set-card .hint {
+  font-size: 12px;
+  color: var(--muted);
+  margin-top: 4px;
+}
+.field-row {
+  display: flex;
+  gap: 8px;
+}
+/* ---------- スマートプレイリストの条件の画面 ---------- */
+/* 見出しと下の段 (合う曲の数・ボタン) は固定して、間だけをスクロールする */
+.modal.smart-modal {
+  display: flex;
+  flex-direction: column;
+  width: min(760px, calc(100vw - 32px));
+  overflow: hidden;
+}
+.spl-body {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  margin: 0 -24px;
+  padding: 0 24px;
+}
+.smart-modal select,
+.smart-modal input[type="number"],
+.smart-modal input[type="date"],
+.smart-modal .spl-val input[type="text"] {
+  height: 32px;
+  padding: 0 8px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--bg);
+  color: var(--text);
+  font: inherit;
+  outline: none;
+  min-width: 0;
+}
+.smart-modal select:focus,
+.smart-modal input:focus {
+  border-color: var(--accent);
+}
+/* 見出し (1 行) と、その下の名前 */
+.spl-head {
+  margin-bottom: 16px;
+}
+.spl-head h3 {
+  margin: 0 0 16px;
+}
+.spl-head .spl-label {
+  display: block;
+}
+.modal input[type="text"].spl-name {
+  font-size: 14px;
+  font-weight: 600;
+}
+.spl-section {
+  margin-bottom: 16px;
+}
+.spl-label {
+  margin-bottom: 8px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--muted);
+}
+/* ひな形・対象のチップ */
+.spl-templates,
+.spl-chips {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.spl-templates {
+  margin-bottom: 16px;
+}
+/* ひな形・対象は、見出しを左に置いてチップと 1 行に並べる */
+.spl-templates .spl-label,
+.spl-chips .spl-label {
+  margin: 0 8px 0 0;
+}
+.spl-chip {
+  height: 28px;
+  padding: 0 16px;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: var(--bg);
+  color: var(--text);
+  font: inherit;
+  font-size: 12px;
+  cursor: pointer;
+  transition:
+    border-color var(--dur) var(--ease),
+    background var(--dur) var(--ease);
+}
+.spl-chip:hover {
+  border-color: var(--accent);
+}
+.spl-chip.on {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+  color: var(--accent);
+  font-weight: 600;
+}
+.spl-chip:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+/* 条件。長いときはこの中だけスクロール */
+.spl-rules {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 8px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+}
+.spl-rules.off {
+  opacity: 0.5;
+}
+.spl-match {
+  align-self: flex-start;
+}
+.spl-match .seg-item span {
+  padding: 4px 16px;
+  font-size: 12px;
+}
+.spl-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+/* 1 行 = 項目・比べ方・値・削除 */
+.spl-row {
+  display: grid;
+  grid-template-columns: minmax(136px, 184px) minmax(120px, 160px) minmax(0, 1fr) 32px;
+  align-items: center;
+  gap: 8px;
+}
+.spl-row.away .spl-field {
+  color: var(--muted);
+}
+.spl-raw {
+  grid-column: 1 / 4;
+}
+.spl-val {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+.spl-val > input,
+.spl-val > select {
+  flex: 1 1 0;
+}
+.spl-unit,
+.spl-to {
+  flex: none;
+  font-size: 12px;
+}
+/* 削除は普段は薄く、行に乗せると濃くする */
+.spl-del {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border: none;
+  border-radius: 6px;
+  background: none;
+  color: var(--muted);
+  opacity: 0.5;
+  cursor: pointer;
+  transition:
+    opacity var(--dur) var(--ease),
+    background var(--dur) var(--ease);
+}
+.spl-del svg {
+  width: 16px;
+  height: 16px;
+  fill: currentColor;
+}
+.spl-row:hover > .spl-del,
+.spl-group-head:hover > .spl-del,
+.spl-del:focus-visible {
+  opacity: 1;
+}
+.spl-del:hover {
+  background: var(--bg);
+  color: var(--danger);
+}
+.spl-stars {
+  display: flex;
+  align-items: center;
+}
+.spl-star {
+  padding: 0 4px;
+  border: none;
+  background: none;
+  font-size: 18px;
+  line-height: 32px;
+  color: var(--muted);
+  opacity: 0.4;
+  cursor: pointer;
+}
+.spl-star.on {
+  color: var(--accent);
+  opacity: 1;
+}
+.spl-star:focus-visible {
+  outline: 2px solid var(--accent);
+  border-radius: 4px;
+}
+/* 入れ子のグループ */
+.spl-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 8px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--bg);
+}
+.spl-group select,
+.spl-group input[type="number"],
+.spl-group input[type="date"],
+.spl-group .spl-val input[type="text"] {
+  background-color: var(--panel);
+}
+.spl-group-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 32px;
+}
+.spl-group-title {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--muted);
+}
+.spl-adds {
+  display: flex;
+  gap: 8px;
+}
+.spl-away {
+  margin-top: 8px;
+  font-size: 12px;
+  color: var(--muted);
+}
+/* スイッチの行 (曲の数を絞る・ライブアップデートなど) */
+.spl-switch {
+  justify-content: space-between;
+  gap: 16px;
+  padding: 8px 0;
+}
+.spl-switch .switch-text {
+  flex: 1;
+  min-width: 0;
+}
+.spl-switch .check-hint {
+  margin-top: 4px;
+}
+.spl-limit {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding-bottom: 8px;
+}
+.spl-limit input[type="number"] {
+  width: 80px;
+}
+/* 下の段: 合う曲の数と曲名 (左)・ボタン (右) */
+.spl-foot {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 16px;
+  padding-top: 16px;
+  border-top: 1px solid var(--border);
+}
+.spl-foot .modal-actions {
+  flex: none;
+  margin-top: 0;
+}
+.spl-preview {
+  flex: 1;
+  min-width: 0;
+}
+.spl-count {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+.spl-count b {
+  font-size: 15px;
+}
+.spl-count span,
+.spl-sample {
+  font-size: 12px;
+}
+.spl-sample {
+  margin-top: 4px;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+@media (max-width: 720px) {
+  .spl-row {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) 32px;
+  }
+  .spl-val {
+    grid-column: 1 / 3;
+  }
+}
+
+/* ---------- iTunes / ミュージックからの取り込み ---------- */
+.modal.imp-modal {
+  width: min(640px, calc(100vw - 32px));
+}
+.imp-all {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+  font-weight: 600;
+}
+.imp-all .muted {
+  font-weight: 400;
+  font-size: 12px;
+}
+.imp-list {
+  max-height: 48vh;
+  overflow-y: auto;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+}
+.imp-row {
+  padding: 8px;
+  border-bottom: 1px solid var(--border);
+}
+.imp-row:last-child {
+  border-bottom: none;
+}
+.imp-main {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  cursor: pointer;
+}
+.imp-icon {
+  display: grid;
+  flex: none;
+  color: var(--muted);
+}
+.imp-icon svg {
+  width: 16px;
+  height: 16px;
+  fill: currentColor;
+}
+.imp-name {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.imp-badge {
+  flex: none;
+  padding: 0 8px;
+  border-radius: 8px;
+  background: var(--warn-bg);
+  color: var(--warn-text);
+  font-size: 11px;
+  line-height: 18px;
+}
+.imp-count {
+  flex: none;
+  font-size: 12px;
+}
+.imp-missing-btn {
+  margin: 4px 0 0 48px;
+  padding: 0;
+  border: none;
+  background: none;
+  color: var(--accent);
+  font: inherit;
+  font-size: 12px;
+  cursor: pointer;
+}
+.imp-missing {
+  margin: 4px 0 0 48px;
+  padding: 0;
+  list-style: none;
+  font-size: 12px;
+  color: var(--muted);
+}
+.imp-transfer {
+  margin-top: 16px;
+}
+.imp-note {
+  margin: 4px 0 0 48px;
+  font-size: 12px;
+  color: var(--warn-text);
+}
+.imp-missing li {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+/* FireWire GUID (読み取り専用で出すとき) */
+/* 値の欄は残りの幅いっぱい、ボタンと同じ高さ (30px)。編集するときの入力欄も同じ形 */
+.guid-row {
+  align-items: center;
+  width: 100%;
+}
+.guid-row .btn {
+  flex: none;
+}
+/* 設定画面の入力欄の共通スタイル (高さ 32px) より優先する */
+.guid-row .guid-value,
+.set-card .guid-row input.guid-value {
+  flex: 1;
+  min-width: 0;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0 8px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--bg);
+  color: var(--text);
+  font-family: ui-monospace, "Cascadia Mono", Consolas, monospace;
+  font-size: 13px;
+  letter-spacing: 0.04em;
+  outline: none;
+}
+code.guid-value {
+  -webkit-user-select: all;
+  user-select: all;
+}
+.set-card .guid-row input.guid-value:focus {
+  border-color: var(--accent);
+}
+.check {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+}
+.errors {
+  max-height: 200px;
+  overflow: auto;
+  font-size: 12px;
+  background: var(--bg);
+  border-radius: 6px;
+  padding: 8px 8px;
+  margin: 0;
+  white-space: pre-wrap;
+}
+
+/* ---------- toast ---------- */
+.toast-root {
+  position: fixed;
+  right: 16px;
+  bottom: 46px;
+  z-index: 100;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  align-items: flex-end;
+}
+.toast {
+  max-width: 420px;
+  padding: 8px 16px;
+  border-radius: 8px;
+  background: var(--text);
+  color: var(--panel);
+  box-shadow: var(--shadow);
+  animation: toast-in 0.2s ease-out;
+}
+/* 同じ種類の知らせの中身を差し替えたとき */
+.toast.refresh {
+  animation: toast-refresh 0.3s ease-out;
+}
+@keyframes toast-refresh {
+  40% {
+    transform: scale(1.05);
+  }
+}
+.toast.error {
+  background: var(--danger);
+  color: #fff;
+}
+@keyframes toast-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+}
+/* ---------- 再生 ---------- */
+/* Spotify と同じ 3 列: 左 (曲) と右 (音量) は同じ幅、中央 (操作と再生位置) を広く取る */
+.player {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(280px, 2fr) minmax(0, 1fr);
+  align-items: center;
+  gap: 16px;
+  padding: 8px 16px;
+  background: var(--panel);
+  border-top: 1px solid var(--border);
+}
+.player-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+.player-center {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  min-width: 0;
+}
+.player-controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.player-controls .btn.icon {
+  color: var(--muted);
+}
+.player-controls .btn.icon:hover:not(:disabled) {
+  color: var(--text);
+}
+/* 再生 / 一時停止: 丸く塗った大きめのボタン */
+/* 乗せたときに大きくするのは後ろの丸だけ。ボタンごと拡大すると、アイコンも半端な大きさ・位置で描き直され、
+   拡大率によってずれて見える */
+.player-controls .btn.icon.player-play {
+  position: relative;
+  width: 32px;
+  height: 32px;
+  border: none;
+  border-radius: 50%;
+  background: none;
+  color: var(--bg);
+}
+.player-controls .btn.icon.player-play::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: var(--text);
+  /* パッと変わらないよう、少し時間をかけて大きくする (離したときも同じ速さで戻す) */
+  transition: transform 180ms var(--ease);
+}
+/* 操作ボタン共通のホバー (文字色を濃くする) より優先させる。そうしないと塗りと同じ色のアイコンになる */
+.player-controls .btn.icon.player-play:hover:not(:disabled) {
+  color: var(--bg);
+  background: none;
+}
+/* 32px → 36px (片側 2px ずつ。整数の px になる倍率にして、縁がにじまないように) */
+.player-controls .btn.icon.player-play:hover:not(:disabled)::before {
+  transform: scale(1.125);
+}
+/* アイコンの箱は後ろの丸と同じ 32px にして、padding で 18px に描く。18px の箱だと、拡大率 125% などで
+   丸とアイコンの箱が別々に画素へ丸められ、止まっているときだけ中央からずれる (入れ替えのアニメーション中は合う) */
+.player-controls .btn.icon.player-play svg {
+  position: relative;
+  box-sizing: border-box;
+  width: 32px;
+  height: 32px;
+  padding: 7px;
+}
+.player-progress {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+}
+.player-right {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 4px;
+  min-width: 0;
+}
+/* シャッフル・リピート: 前・再生・次から少し離す (間は 16px)。オンのときはアクセントの色にして、下に小さな点を付ける */
+.player-mode {
+  position: relative;
+}
+#pl-shuffle {
+  margin-right: 8px;
+}
+#pl-repeat {
+  margin-left: 8px;
+}
+.player-controls .player-mode.on,
+.player-controls .player-mode.on:hover:not(:disabled) {
+  color: var(--accent);
+}
+.player-mode.on::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  bottom: 4px;
+  width: 4px;
+  height: 4px;
+  transform: translateX(-50%);
+  border-radius: 50%;
+  background: currentColor;
+}
+/* 再生中の曲のジャケット (無ければ音符) */
+.player-art {
+  width: 48px;
+  height: 48px;
+  flex: none;
+  border-radius: 4px;
+  overflow: hidden;
+  background: var(--border);
+  display: grid;
+  place-items: center;
+  color: var(--muted);
+}
+.player-art img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.player-art.none svg {
+  width: 22px;
+  height: 22px;
+  fill: currentColor;
+  opacity: 0.6;
+}
+.player-info {
+  min-width: 0;
+}
+.player-title,
+.player-sub {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+/* 行の高さは整数の px に (端数があるとプレーヤーの高さが半端になり、ボタンのアイコンが拡大率によってずれる) */
+.player-title {
+  font-weight: 600;
+  font-size: 13px;
+  line-height: 18px;
+}
+.player-sub {
+  margin-top: 4px;
+  font-size: 11px;
+  line-height: 16px;
+  color: var(--muted);
+}
+/* 曲名・アーティスト・アルバム: 押すと一覧へ移る (マウスを乗せると下線) */
+.pl-link {
+  cursor: pointer;
+}
+.pl-link:hover {
+  text-decoration: underline;
+}
+.player-sub .pl-link:hover {
+  color: var(--text);
+}
+.player-time {
+  font-size: 11px;
+  line-height: 16px;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+  min-width: 32px;
+}
+/* 時間の文字はスライダーの側に寄せる */
+#pl-cur {
+  text-align: right;
+}
+#pl-dur {
+  text-align: left;
+}
+.player-seek {
+  flex: 1;
+  min-width: 0;
+}
+#pl-mute {
+  color: var(--muted);
+}
+#pl-mute:hover:not(:disabled) {
+  color: var(--text);
+}
+.player-vol {
+  width: 96px;
+  min-width: 0;
+  margin-right: 8px;
+}
+#pl-close {
+  color: var(--muted);
+}
+/* とても狭いときは音量のスライダーを隠す (アイコンでミュートはできる) */
+.player.narrow .player-vol {
+  display: none;
+}
+/* 一覧のジャケット: マウスを乗せると暗くして再生ボタンを重ねる */
+.art-wrap {
+  position: relative;
+  display: inline-flex;
+  flex: none;
+}
+.row-play {
+  display: none;
+  position: absolute;
+  inset: 0;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: none;
+  border-radius: 3px;
+  background: rgba(0, 0, 0, 0.55);
+  color: #fff;
+  cursor: pointer;
+}
+.row-play svg {
+  width: 14px;
+  height: 14px;
+  fill: currentColor;
+}
+.row:hover .row-play {
+  display: flex;
+}
+/* 再生中の曲: ジャケットに動くバーを重ねる。マウスを乗せると一時停止 / 再開のボタンに替わる */
+.row-eq {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 3px;
+  background: rgba(0, 0, 0, 0.55);
+}
+.row-eq .eq i {
+  background: #fff;
+}
+.row:hover .row-eq {
+  display: none;
+}
+.row-play .i-play,
+.player-paused .row-play .i-pause {
+  display: none;
+}
+.player-paused .row-play .i-play {
+  display: contents;
+}
+.row-play .i-pause {
+  display: contents;
+}
+.row.playing .cell.title,
+.row.playing .idx-n {
+  color: var(--accent);
+}
+
+/* ---------- PC の音楽フォルダ ---------- */
+/* iPod に同じ曲がある印。ジャケットと同じ幅で、無い行も空けて位置をそろえる */
+.cell.on-ipod {
+  display: flex;
+  justify-content: flex-end;
+}
+.ipod-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  height: 20px;
+  padding: 0 8px 0 4px;
+  border-radius: 10px;
+  font-size: 11px;
+  font-weight: 600;
+  white-space: nowrap;
+  color: var(--ok);
+  background: color-mix(in srgb, var(--ok) 16%, transparent);
+}
+.ipod-badge svg {
+  width: 12px;
+  height: 12px;
+  fill: currentColor;
+}
+
+/* ---------- 設定 (一覧の上に重ねるモーダル) ---------- */
+/* 右クリックのメニュー (80)・確認のダイアログ (90) は設定の上に出す */
+.settings-page {
+  position: fixed;
+  inset: 0;
+  z-index: 70;
+  display: grid;
+  place-items: center;
+  background: rgba(0, 0, 0, 0.35);
+  animation: set-fade 0.24s var(--ease);
+}
+.settings-dialog {
+  width: min(1040px, calc(100vw - 64px));
+  height: min(760px, calc(100vh - var(--tb-h) - 64px));
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--bg);
+  box-shadow: var(--shadow);
+  animation: set-pop 0.28s var(--ease);
+  /* 中のスクロールバーのつまみの位置の基準にし、角丸の外へはみ出す部分を切る */
+  position: relative;
+}
+/* 閉じるときは薄くしてから隠す (main.ts の showSettingsPane)。消えていく間は押せない */
+.settings-page.closing {
+  pointer-events: none;
+  animation: set-fade-out 0.2s ease-in forwards;
+}
+.settings-page.closing .settings-dialog {
+  animation: set-pop-out 0.2s ease-in forwards;
+}
+@keyframes set-fade {
+  from {
+    opacity: 0;
+  }
+}
+@keyframes set-fade-out {
+  to {
+    opacity: 0;
+  }
+}
+/* 開くときは少し小さく下から浮き上がり、閉じるときは同じ向きへ沈む */
+@keyframes set-pop-out {
+  to {
+    opacity: 0;
+    transform: translateY(16px) scale(0.94);
+  }
+}
+@keyframes set-pop {
+  from {
+    opacity: 0;
+    transform: translateY(16px) scale(0.94);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .settings-page,
+  .settings-dialog {
+    animation: none;
+  }
+}
+.settings-top {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 8px 16px;
+  background: var(--panel);
+  border-bottom: 1px solid var(--border);
+}
+.settings-top h2 {
+  flex: 1;
+  margin: 0;
+  font-size: 18px;
+}
+/* 表示の大きさ: − 数字 ＋ … 100% に戻す */
+.set-zoom {
+  gap: 8px;
+}
+.set-zoom-value {
+  min-width: 48px;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+}
+/* 設定のサイドメニュー: 項目の一覧はスクロールし、下端の「デバッグ」(開発版だけ) は常に見える */
+.sidebar.set-side {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  padding-bottom: 0;
+}
+.set-side #set-nav {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+}
+/* 左の項目の一覧 (小見出しは置かない。モーダルの見出しが「設定」なので) */
+#set-nav {
+  padding-top: 16px;
+}
+/* 右上の閉じるボタン (見出しの右) */
+#set-back {
+  color: var(--muted);
+}
+#set-back:hover:not(:disabled) {
+  color: var(--text);
+}
+.settings-content {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  background: var(--bg);
+}
+.settings-body {
+  flex: 1;
+  overflow-y: auto;
+  /* スクロールバーの有無で中央に置いた中身が左右にずれないよう、場所をいつも空けておく */
+  scrollbar-gutter: stable;
+  padding: 16px 24px 40px;
+}
+.set-head {
+  margin: 0 0 16px;
+  font-size: 18px;
+}
+.set-card {
+  max-width: 640px;
+  margin: 0 0 16px;
+  padding: 16px 16px;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+}
+.set-card .field:last-child {
+  margin-bottom: 0;
+}
+.set-card label.check {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 4px 0;
+  font-weight: normal;
+}
+.set-card label.check input {
+  margin-top: 4px;
+}
+/* 設定のオン・オフはトグルスイッチ。文字を左、スイッチを右に置き、行のどこを押しても切り替わる */
+.set-card label.switch-row {
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+.switch-text {
+  flex: 1;
+  min-width: 0;
+}
+input.switch {
+  -webkit-appearance: none;
+  appearance: none;
+  position: relative;
+  flex: none;
+  width: 36px;
+  height: 20px;
+  margin: 0;
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--muted) 45%, var(--border));
+  cursor: pointer;
+  transition: background var(--dur) var(--ease);
+}
+.set-card label.check input.switch {
+  margin-top: 0;
+}
+input.switch::before {
+  content: "";
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.25);
+  transition: transform 160ms var(--ease);
+}
+input.switch:checked {
+  background: var(--accent);
+}
+input.switch:checked::before {
+  transform: translateX(16px);
+}
+input.switch:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+input.switch:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+@media (prefers-reduced-motion: reduce) {
+  input.switch,
+  input.switch::before {
+    transition: none;
+  }
+}
+.set-card input[type="text"] {
+  width: 100%;
+  height: 32px;
+  padding: 0 8px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--bg);
+  color: var(--text);
+  font: inherit;
+  outline: none;
+}
+.set-card input[type="text"]:focus {
+  border-color: var(--accent);
+}
+/* ffmpeg の場所: 「参照」で選ぶだけで、手では入力しない */
+.set-card input[type="text"][readonly] {
+  cursor: default;
+}
+.set-ok {
+  margin-bottom: 8px;
+  font-size: 12px;
+  color: var(--muted);
+  word-break: break-all;
+}
+.set-card .set-warn {
+  margin: 0 0 8px;
+}
+.set-dup {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 0 8px;
+  font-size: 13px;
+}
+.set-dup select {
+  height: 30px;
+  padding: 0 8px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--bg);
+  color: var(--text);
+  font: inherit;
+}
+
+.set-ff-actions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 8px;
+}
+/* ffmpeg の欄: 上に今の状態 (枠の中)、下に場所の設定。間は 16px あける */
+.set-ff-status {
+  margin-bottom: 16px;
+}
+.set-ff-status:empty {
+  display: none;
+}
+.set-ff-box {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 16px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--bg);
+}
+.set-ff-box .set-ok {
+  margin: 0;
+}
+.set-card .set-ff-status .set-warn {
+  margin: 0;
+  padding: 16px;
+  border-radius: 8px;
+}
+.set-ff-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 16px;
+  font-size: 12px;
+}
+.set-ff-pct {
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+.set-ff-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+.set-ff-path-label {
+  display: block;
+  margin-bottom: 8px;
+  font-size: 12px;
+  font-weight: 600;
+}
+.set-ff-note {
+  font-size: 12px;
+  color: var(--muted);
+}
+.set-warn .set-ff-note {
+  color: inherit;
+  opacity: 0.85;
+}
+
+.set-convert {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  align-items: center;
+  gap: 8px 16px;
+  margin-bottom: 8px;
+  font-size: 13px;
+}
+.set-convert select {
+  height: 30px;
+  padding: 0 8px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--bg);
+  color: var(--text);
+  font: inherit;
+}
+.set-convert-hint {
+  margin-bottom: 8px;
+}
+.set-convert-hint p {
+  margin: 0;
+}
+.set-convert-hint p + p {
+  margin-top: 4px;
+}
+/* 転送の前の変換の確認 */
+.cv-ask {
+  grid-template-columns: 1fr;
+  gap: 4px;
+  margin: 16px 0 8px;
+}
+.cv-ask select {
+  margin-bottom: 8px;
+}
+.cv-ask + .hint + .check {
+  margin-top: 16px;
+}
+
+.set-info {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 4px 16px;
+  margin-bottom: 16px;
+  font-size: 13px;
+}
+.set-info span:nth-child(odd) {
+  color: var(--muted);
+}
+
+/* ---------- 設定 ---------- */
+.set-title {
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+.check-hint {
+  display: block;
+  font-size: 12px;
+  color: var(--muted);
+}
+/* 設定の項目名と補足の間は 4px 空ける (補足だけの行は空けない) */
+.set-card .switch-text > .check-hint,
+.set-card .set-dup > label > .check-hint,
+.set-card .set-tidy-row > div > div + .check-hint {
+  margin-top: 4px;
+}
+.set-warn {
+  margin-top: 8px;
+  padding: 8px 8px;
+  border-radius: 6px;
+  background: var(--warn-bg);
+  color: var(--warn-text);
+  font-size: 12px;
+}
+
+.field label.check {
+  display: flex;
+  align-items: flex-start;
+  font-weight: 400;
+}
+.field label.check input {
+  margin-top: 4px;
+  flex: none;
+}
+
+.cell.title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.cell.title span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.art {
+  width: 22px;
+  height: 22px;
+  flex: none;
+  border-radius: 3px;
+  background: var(--border);
+  object-fit: cover;
+}
+/* ジャケットが無い曲はグレーの四角。読み込み中はスケルトン (.skel) */
+.art.none {
+  background: var(--border);
+}
+.art.skel {
+  position: relative;
+  overflow: hidden;
+}
+.check + .check {
+  margin-top: 8px;
+}
+
+/* ---------- アートワーク検索 ---------- */
+.modal.wide {
+  width: min(820px, calc(100vw - 32px));
+}
+/* 候補から選ぶ画面 (ネットで探す・アルバムごとに探す): ウィンドウの高さに収め、候補の一覧だけをスクロールする
+   (画面ごとスクロールすると、下の設定とボタンが隠れて気づきにくい) */
+.modal.art-pick {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+.modal.art-pick > * {
+  flex: none;
+}
+.modal.art-pick > .as-grid {
+  flex: 1 1 auto;
+  max-height: none;
+  min-height: 160px;
+}
+/* 説明と設定の段は 16px、設定の段とボタンの段は 8px */
+.modal.art-pick > .as-shrink {
+  margin-top: 16px;
+}
+.modal.art-pick > .modal-actions {
+  margin-top: 8px;
+}
+.as-bar {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+.as-bar input {
+  flex: 1;
+}
+.as-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+  gap: 8px;
+  max-height: 56vh;
+  min-height: 200px;
+  overflow-y: auto;
+  padding: 2px;
+  margin-bottom: 8px;
+}
+.as-empty {
+  grid-column: 1 / -1;
+  display: grid;
+  place-items: center;
+  min-height: 180px;
+  color: var(--muted);
+}
+/* 検索中の候補の場所 (本物のカードと同じ大きさ。画像と文字の場所だけ光らせる) */
+.as-skel {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 8px;
+  border: 2px solid var(--border);
+  border-radius: 10px;
+  background: var(--panel);
+  pointer-events: none;
+}
+.as-skel-img {
+  position: relative;
+  overflow: hidden;
+  width: 100%;
+  aspect-ratio: 1;
+  border-radius: 6px;
+  background: var(--border);
+}
+.as-skel .sk {
+  margin: 3px 0;
+}
+.as-skel .as-skel-res {
+  height: 16px;
+  margin-top: 4px;
+}
+.as-card {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 8px;
+  border: 2px solid var(--border);
+  border-radius: 10px;
+  background: var(--panel);
+  color: var(--text);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  min-width: 0;
+}
+.as-card:hover {
+  border-color: var(--muted);
+}
+.as-card.selected {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-soft);
+}
+.as-card img {
+  width: 100%;
+  aspect-ratio: 1;
+  object-fit: cover;
+  border-radius: 6px;
+  background: var(--bg);
+}
+.as-src {
+  font-size: 10px;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+.as-title,
+.as-artist {
+  font-size: 12px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.as-title {
+  font-weight: 600;
+}
+.as-artist {
+  color: var(--muted);
+}
+.res {
+  display: inline-block;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 1px 8px;
+  border-radius: 4px;
+  margin-top: 4px;
+  font-variant-numeric: tabular-nums;
+}
+.res-high {
+  background: #dff3e4;
+  color: #1c7a3a;
+}
+.res-mid {
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+.res-low {
+  background: var(--warn-bg);
+  color: var(--warn-text);
+}
+.res-unknown {
+  background: var(--bg);
+  color: var(--muted);
+  font-weight: 400;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .res-high {
+    background: #1f3a28;
+    color: #7fd69a;
+  }
+}
+:root[data-theme="dark"] .res-high {
+  background: #1f3a28;
+  color: #7fd69a;
+}
+.as-scope {
+  font-size: 12px;
+}
+.modal > .hint {
+  font-size: 12px;
+  color: var(--muted);
+}
+.as-shrink {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-top: 8px;
+  font-size: 12px;
+}
+/* 縮小する大きさの選択欄 (ui/art-size.ts) */
+.art-size {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+.art-size select,
+.art-size input {
+  height: 30px;
+  padding: 0 8px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--bg);
+  color: var(--text);
+  font: inherit;
+}
+.art-size select:focus-visible,
+.art-size input:focus {
+  border-color: var(--accent);
+  outline: none;
+}
+.art-size input {
+  width: 80px;
+}
+.art-size select {
+  padding-right: 32px;
+}
+.te-art-shrink {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  font-size: 12px;
+}
+.shrink-size {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-top: 16px;
+}
+
+/* ---------- 選択用チェックボックス ---------- */
+.cell.chk,
+.th.chk {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  padding: 0;
+  cursor: pointer;
+}
+.box {
+  width: 16px;
+  height: 16px;
+  border: 1.5px solid var(--muted);
+  border-radius: 4px;
+  background: var(--panel);
+  position: relative;
+  opacity: 0.55;
+}
+.row:hover .box,
+.th.chk:hover .box {
+  opacity: 1;
+}
+.row.selected .box,
+.th.chk.all .box,
+.th.chk.some .box {
+  opacity: 1;
+  background: var(--accent);
+  border-color: var(--accent);
+}
+.th.chk.all .box::after {
+  content: "";
+  position: absolute;
+  left: 4.5px;
+  top: 1.5px;
+  width: 4px;
+  height: 8px;
+  border: solid #fff;
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg);
+}
+.th.chk.some .box::after {
+  content: "";
+  position: absolute;
+  left: 2px;
+  right: 2px;
+  top: 5.5px;
+  height: 2px;
+  background: #fff;
+}
+/* アルバムごとにアートワークを探す (dialogs/artwork-bulk.ts): 何番目のどのアルバムか・裏の書き込みの残り */
+.ab-top {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: -8px -8px 8px 0;
+}
+.ab-top h3 {
+  flex: 1;
+  margin: 0;
+}
+.ab-head {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  min-width: 0;
+  margin-bottom: 8px;
+}
+.ab-pos {
+  flex: none;
+  color: var(--accent);
+  font-weight: 600;
+}
+.ab-name {
+  min-width: 0;
+  overflow: hidden;
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.ab-status {
+  font-size: 12px;
+}
+.as-grid:focus {
+  outline: none;
+}
+.as-info.busy {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.as-info {
+  font-size: 11px;
+  color: var(--muted);
+  min-height: 16px;
+  margin: -4px 0 8px;
+}
+
+/* ---------- 読みの変更確認 ---------- */
+.rd-wrap {
+  max-height: 52vh;
+  overflow: auto;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+}
+.rd-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+  table-layout: fixed;
+}
+.rd-table th {
+  position: sticky;
+  top: 0;
+  background: var(--sidebar);
+  text-align: left;
+  font-weight: 600;
+  color: var(--muted);
+  padding: 8px 8px;
+  z-index: 1;
+}
+.rd-table td {
+  padding: 4px 8px;
+  border-top: 1px solid var(--border);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.rd-table th:nth-child(1) { width: 34px; }
+.rd-table th:nth-child(2) { width: 24%; }
+.rd-table th:nth-child(3) { width: 96px; }
+.rd-table th:nth-child(4) { width: 20%; }
+.rd-table th:nth-child(5) { width: 18%; }
+.rd-chk {
+  text-align: center !important;
+  text-overflow: clip !important;
+}
+.rd-field {
+  color: var(--muted);
+}
+.rd-after input {
+  width: 100%;
+  height: 24px;
+  padding: 0 8px;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  background: var(--bg);
+  color: var(--text);
+  font: inherit;
+}
+.rd-after input:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+.rd-skip {
+  font-size: 12px;
+}
+
+/* ---------- 曲情報の編集 ---------- */
+.te-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  column-gap: 8px;
+}
+/* 文字の項目は 1 行ずつ、数字の項目 (年・番号) は 3 つ横に並べる */
+.te-grid .field {
+  grid-column: span 3;
+  margin-bottom: 8px;
+}
+.te-grid .field.te-num {
+  grid-column: span 1;
+}
+/* 読みのある項目は、表記 (2) と読み (1) を横に並べる */
+.te-grid .field.te-has-sort {
+  grid-column: span 2;
+}
+.te-grid .field.te-sort {
+  grid-column: span 1;
+}
+.te-grid .field.te-sort label {
+  font-weight: 400;
+  color: var(--muted);
+}
+/* 見出しの横の「?」(押すと説明を開く) */
+.help-btn {
+  width: 16px;
+  height: 16px;
+  margin-left: 4px;
+  padding: 0;
+  border: 1px solid var(--border);
+  border-radius: 50%;
+  background: var(--panel);
+  color: var(--muted);
+  font: 600 10px/14px inherit;
+  text-align: center;
+  cursor: pointer;
+  vertical-align: 1px;
+}
+.help-btn:hover,
+.help-btn.active {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+.te-sort label {
+  display: inline-block;
+}
+.te-sort {
+  position: relative;
+}
+/* 「?」の下に重ねて出す (レイアウトを動かさない) */
+.te-help {
+  position: absolute;
+  top: 24px;
+  right: 0;
+  z-index: 10;
+  width: min(380px, calc(100vw - 64px));
+  padding: 8px 16px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--panel);
+  box-shadow: var(--shadow);
+  font-size: 12px;
+  line-height: 1.55;
+  font-weight: 400;
+}
+.te-help-title {
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+.te-help ul {
+  margin: 0;
+  padding-left: 16px;
+}
+.te-help li + li {
+  margin-top: 4px;
+}
+/* 編集画面の上: ネットで取得・読みの自動入力 */
+/* 読みの自動入力の結果: ボタンの下に浮かせて出す (ほかの要素を動かさない) */
+.te-yomi {
+  position: relative;
+}
+.te-note {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 0;
+  z-index: 10;
+  width: max-content;
+  max-width: min(360px, calc(100vw - 64px));
+  padding: 8px 8px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--panel);
+  box-shadow: var(--shadow);
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--text);
+  white-space: normal;
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(-3px);
+  transition:
+    opacity 0.18s var(--ease),
+    transform 0.18s var(--ease),
+    visibility 0s linear 0.18s;
+  pointer-events: none;
+}
+.te-note.show {
+  opacity: 1;
+  visibility: visible;
+  transform: none;
+  transition:
+    opacity 0.18s var(--ease),
+    transform 0.18s var(--ease);
+}
+.modal.te-modal {
+  display: flex;
+  flex-direction: column;
+  width: min(600px, calc(100vw - 32px));
+  overflow: hidden;
+}
+/* 窓が低いときは中身だけをスクロールする (見出し・タブ・保存のボタンはいつも見える) */
+.te-pages {
+  flex: 1 1 auto;
+  min-height: 0;
+  grid-template-rows: minmax(0, 1fr);
+}
+.te-modal .modal-actions {
+  margin-top: 0;
+  padding-top: 16px;
+  border-top: 1px solid var(--border);
+}
+/* 見出し: どの曲を編集しているか (ジャケット・曲名・アーティストとアルバム) */
+.te-head {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+.te-art {
+  flex: none;
+  width: 48px;
+  height: 48px;
+  border-radius: 6px;
+  object-fit: cover;
+}
+.te-art.none {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--border);
+  background: var(--bg);
+  color: var(--muted);
+}
+.te-art.none svg {
+  width: 24px;
+  height: 24px;
+  fill: currentColor;
+  opacity: 0.6;
+}
+.te-head-text {
+  flex: 1;
+  min-width: 0;
+}
+.te-fetch {
+  flex: none;
+  align-self: flex-start;
+}
+.modal .te-head h3 {
+  margin: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.te-head-sub {
+  margin-top: 4px;
+  font-size: 12px;
+  line-height: 16px;
+  color: var(--muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+/* 複数の曲のときの説明は折り返す */
+.te-head-sub.wrap {
+  white-space: normal;
+}
+/* 「情報」と「歌詞」の切り替え (一覧の表示の切り替えと同じ .seg を中央に)。
+   2 つのページを同じ場所に重ね、切り替えてもダイアログの大きさを変えない */
+.te-tabs {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 16px;
+}
+/* 項目の幅をそろえて広めにとる (文字の長さで幅が変わらないように。英語の Info / Lyrics でも同じ) */
+.te-tabs .seg {
+  grid-auto-columns: 112px;
+}
+/* 詳細: 文字の項目 (ジャンル・作曲者) は 2 つ、数字の項目は 3 つ横に並べる */
+.te-grid.te-detail {
+  grid-template-columns: repeat(6, 1fr);
+}
+.te-grid.te-detail .field {
+  grid-column: span 3;
+}
+.te-grid.te-detail .field.te-num {
+  grid-column: span 2;
+}
+/* 区切りの見出し (詳細・iPod) */
+.te-sec-title {
+  margin: 8px 0;
+  padding-top: 16px;
+  border-top: 1px solid var(--border);
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 16px;
+  color: var(--muted);
+}
+/* 項目の見出しは高さをそろえる (読みの列の見出しには小さいボタンが並ぶ) */
+.te-grid .field label,
+.te-sort-head {
+  height: 22px;
+  margin-bottom: 4px;
+  line-height: 22px;
+}
+.te-sort-head {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.te-grid .te-sort-head label {
+  margin: 0;
+}
+.te-sort-head .help-btn {
+  margin-left: 0;
+}
+.te-sort-head .te-yomi {
+  margin-left: auto;
+}
+/* 読みの列は右端なので、結果の吹き出しは右にそろえて出す */
+.te-sort-head .te-note {
+  right: 0;
+  left: auto;
+}
+.te-sort-spacer {
+  visibility: hidden;
+}
+/* 保存先の説明は保存のボタンの左に */
+.modal .te-where {
+  flex: 1;
+  margin: 0 8px 0 0;
+  align-self: center;
+  font-size: 12px;
+  line-height: 16px;
+}
+.te-pages {
+  display: grid;
+}
+/* スクロールバーがダイアログの端に来るよう、左右の余白はページの中に持つ */
+.te-page {
+  grid-area: 1 / 1;
+  min-width: 0;
+  min-height: 0;
+  margin: 0 -24px;
+  padding: 0 24px 16px;
+  overflow-y: auto;
+}
+/* 隠したページも大きさは保つ (.hidden は display: none になるので使わない)。
+   ページの直後に置かれるスクロールのつまみ (scrollbar.ts) も一緒に隠し、行を増やさないよう同じ場所に置く */
+.te-page.te-off,
+.te-page.te-off + .oscroll-track {
+  visibility: hidden;
+}
+.te-pages > .oscroll-track {
+  grid-area: 1 / 1;
+}
+/* 歌詞の欄は、見えている高さいっぱいに広げる (ページはスクロールさせない) */
+.te-lyrics-page {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+.te-lyrics {
+  flex: 1;
+  width: 100%;
+  min-height: 160px;
+  padding: 8px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--bg);
+  color: var(--text);
+  font: inherit;
+  line-height: 1.6;
+  resize: none;
+  outline: none;
+}
+.te-lyrics:focus {
+  border-color: var(--accent);
+}
+.te-lyrics:disabled {
+  color: var(--muted);
+}
+/* 動画の情報の編集 (iTunes の「情報を見る」と同じタブ。6 つ並ぶので、項目の幅は文字に合わせる) */
+.te-tabs .seg.ve-tabs {
+  grid-auto-columns: max-content;
+}
+.ve-modal .te-pages {
+  min-height: 440px;
+}
+.te-modal select {
+  width: 100%;
+  height: 32px;
+  padding: 0 8px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--bg);
+  color: var(--text);
+  font: inherit;
+}
+/* 再生時間・再生回数 (読むだけ) */
+.ve-stats {
+  margin: 8px 0 16px;
+}
+.ve-plays {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+/* アートワーク: 大きく出して、下に操作 */
+.te-art-page {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  padding-top: 8px;
+}
+.te-art-big {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 240px;
+  height: 240px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--bg);
+  overflow: hidden;
+}
+.te-art-big img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.te-art-none svg {
+  width: 64px;
+  height: 64px;
+  fill: var(--muted);
+  opacity: 0.5;
+}
+.te-art-actions {
+  display: flex;
+  gap: 8px;
+}
+/* 埋め込み画像の大きさ: 画像のすぐ下に (ページの間隔 16px を 8px に詰める) */
+.te-art-size {
+  margin: -8px 0 0;
+  font-size: 12px;
+}
+/* 音量の調整: 両端に -100% / +100%、右に今の値 */
+.po-volume {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+}
+.po-volume input[type="range"] {
+  flex: 1;
+}
+.po-volume-val {
+  min-width: 64px;
+  text-align: right;
+  font-size: 13px;
+}
+/* 開始 / 停止: チェックと時間の欄を 2 段に */
+.po-times {
+  display: grid;
+  grid-template-columns: 96px 160px;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+.po-times input[type="text"]:disabled {
+  opacity: 0.5;
+}
+.ve-file {
+  padding-top: 8px;
+}
+/* 設定の画面で言語を切り替えたとき、中身をいったん薄くしてから出し直す */
+#settings-body {
+  transition: opacity 0.15s var(--ease);
+}
+#settings-body.set-fade {
+  opacity: 0;
+}
+
+/* はじめの案内 */
+.modal.onb-modal {
+  position: relative;
+  box-sizing: border-box;
+  width: min(640px, calc(100vw - 32px));
+  display: flex;
+  flex-direction: column;
+  padding: 32px;
+}
+.onb-page {
+  flex: 1;
+  position: relative;
+}
+/* 高さを測る間は、ページを中身の高さのままにする (PC の音楽フォルダは一覧の量が効かないよう 0 のまま) */
+.onb-measure .onb-page {
+  flex: none;
+}
+/* タイトルとスキップの行 */
+.onb-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 8px;
+}
+/* .onb-page h2 の下の余白が残ると、スキップが上にずれる */
+.onb-page .onb-head h2 {
+  margin: 0;
+}
+.onb-head .btn {
+  flex: none;
+}
+/* 言語を切り替えたとき、中身をいったん薄くしてから出し直す */
+.onb-modal > * {
+  transition: opacity 0.15s var(--ease);
+}
+.onb-modal.onb-fade > * {
+  opacity: 0;
+}
+.onb-page h2 {
+  font-size: 22px;
+  margin: 0 0 8px;
+}
+.onb-page > p {
+  color: var(--muted);
+  margin: 0 0 24px;
+  line-height: 1.6;
+}
+.onb-tips {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+/* ようこそと ffmpeg: 見出しと説明の文は上のまま、その下の枠をページの残りの天地中央に置く */
+.onb-page.onb-welcome,
+.onb-page.onb-ffmpeg {
+  display: flex;
+  flex-direction: column;
+}
+.onb-body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+.onb-feat-icon {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 8px;
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+.onb-feat-icon svg {
+  width: 24px;
+  height: 24px;
+  fill: currentColor;
+}
+.onb-tips li {
+  padding-left: 16px;
+  position: relative;
+  line-height: 1.6;
+}
+.onb-tips li::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 8px;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--accent);
+}
+.onb-folders {
+  margin: 0;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  overflow: hidden;
+}
+/* 一覧はフォルダの数によらず、ページの残りの高さいっぱいにしてスクロールさせる (足してもモーダルが伸びない)。
+   基準を 0px にして、中身の高さがモーダルの高さに効かないようにする */
+.onb-page.onb-pc {
+  flex: 1 1 0px;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+.onb-pc .onb-folders {
+  flex: 1 1 0px;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+.onb-folder-box {
+  position: relative;
+  flex: 1 1 0px;
+  min-height: 0;
+}
+.onb-folder-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  height: 100%;
+  overflow-y: auto;
+}
+.onb-folder-list li {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 8px 8px 8px 16px;
+  border-bottom: 1px solid var(--border);
+}
+.onb-folder-list li:last-child {
+  border-bottom: none;
+}
+.onb-folder-empty {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  margin: 0;
+  font-size: 12px;
+}
+.onb-folder-fade {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 32px;
+  /* 背景色へ溶かすだけだと気づきにくいので、文字の色を薄く重ねて影のようにする (ライト・ダークどちらでも見える) */
+  background: linear-gradient(to bottom, transparent, color-mix(in srgb, var(--text) 7%, transparent));
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.15s var(--ease);
+}
+.onb-folder-fade.on {
+  opacity: 1;
+}
+.onb-folder-icon svg {
+  width: 20px;
+  height: 20px;
+  fill: var(--muted);
+  display: block;
+}
+.onb-folder-text {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.onb-folder-text span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.onb-folder-text .muted {
+  font-size: 11px;
+}
+.onb-folder-add {
+  display: block;
+  width: 100%;
+  padding: 16px;
+  border: none;
+  border-top: 1px solid var(--border);
+  background: none;
+  color: var(--accent);
+  font: inherit;
+  font-weight: 600;
+  text-align: left;
+  cursor: pointer;
+}
+.onb-folder-add:hover {
+  background: var(--accent-soft);
+}
+/* 案内のコツ: 電球のアイコンと、薄いアクセントの色の枠。
+   .onb-page > p の下の余白が付くとページの下に隙間が空くので、上だけに余白を付ける */
+.onb-page > p.onb-tip,
+.onb-tip {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin: 16px 0 0;
+  padding: 8px 16px;
+  border-radius: 8px;
+  background: var(--accent-soft);
+  font-size: 12px;
+  line-height: 1.6;
+}
+.onb-tip-icon svg {
+  display: block;
+  width: 16px;
+  height: 16px;
+  margin-top: 2px;
+  fill: var(--accent);
+}
+/* 案内の 3 つの枠 (ようこそ・ffmpeg) を横に並べる。ffmpeg はその下に入れるボタン */
+.onb-boxes {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+}
+/* アイコン・タイトル・説明の行を 3 つの枠で共有する (タイトルの行数が違っても、説明の位置がそろう) */
+.onb-boxes li {
+  display: grid;
+  grid-template-rows: subgrid;
+  grid-row: span 3;
+  justify-items: start;
+  align-content: start;
+  gap: 8px;
+  padding: 16px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+}
+.onb-boxes li > span:last-child {
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.6;
+}
+.onb-ff-action {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  margin-top: 24px;
+}
+.onb-ff-error {
+  color: var(--danger);
+  font-size: 12px;
+  text-align: center;
+}
+/* 入れている途中と完了: ページの残りの縦横の中央に */
+.onb-ff-center {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  text-align: center;
+}
+.onb-ff-center .onb-done-mark {
+  margin-bottom: 8px;
+}
+.onb-ff-label {
+  font-weight: 600;
+}
+.onb-ff-bar {
+  width: 320px;
+  max-width: 100%;
+}
+.onb-ff-size {
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+}
+/* 転送先の形のお知らせの、例のパス */
+.layout-notice-example {
+  font-size: 12px;
+  word-break: break-all;
+}
+.onb-layouts {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+.onb-layout {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 8px 16px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  cursor: pointer;
+}
+.onb-layout:has(input:checked) {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+}
+.onb-layout > span {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 12px;
+  word-break: break-all;
+}
+.onb-layout > span > span:first-child {
+  font-weight: 600;
+  font-size: 13px;
+}
+.onb-badge {
+  display: inline-block;
+  margin-left: 8px;
+  padding: 0 8px;
+  border-radius: 999px;
+  background: var(--accent);
+  color: var(--accent-text);
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 18px;
+  vertical-align: 1px;
+}
+/* 準備ができました: 円とチェックを描き、文字とコツを順に出す */
+/* 要素をページの縦横の中央に。コツの一覧は、ひとかたまりで中央に置き、中の文字は左に揃える (点と行頭を揃えるため) */
+.onb-page.onb-done {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+.onb-done .onb-head {
+  justify-content: center;
+}
+.onb-done .onb-tips {
+  text-align: left;
+}
+.onb-done-mark {
+  width: 64px;
+  height: 64px;
+  margin-bottom: 16px;
+}
+.onb-done-mark svg {
+  display: block;
+  width: 64px;
+  height: 64px;
+  fill: none;
+  stroke: var(--accent);
+  stroke-width: 4;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.onb-done-mark .c {
+  stroke-dasharray: 176;
+  stroke-dashoffset: 176;
+  animation: onb-draw 0.6s var(--ease) 0.1s forwards;
+}
+.onb-done-mark .k {
+  stroke-dasharray: 40;
+  stroke-dashoffset: 40;
+  animation: onb-draw 0.35s var(--ease) 0.6s forwards;
+}
+.onb-done-mark svg {
+  animation: onb-pop 0.4s var(--ease) 0.85s;
+}
+@keyframes onb-draw {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+@keyframes onb-pop {
+  50% {
+    transform: scale(1.08);
+  }
+}
+.onb-done .onb-done-title,
+.onb-done .onb-done-lead,
+.onb-done .onb-tips li {
+  opacity: 0;
+  animation: onb-rise 0.4s var(--ease) forwards;
+}
+.onb-done .onb-done-title {
+  animation-delay: 0.5s;
+}
+.onb-done .onb-done-lead {
+  animation-delay: 0.6s;
+}
+.onb-done .onb-tips li:nth-child(1) {
+  animation-delay: 0.8s;
+}
+.onb-done .onb-tips li:nth-child(2) {
+  animation-delay: 0.9s;
+}
+.onb-done .onb-tips li:nth-child(3) {
+  animation-delay: 1s;
+}
+.onb-done .onb-tips li:nth-child(4) {
+  animation-delay: 1.1s;
+}
+@keyframes onb-rise {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .onb-done-mark .c,
+  .onb-done-mark .k,
+  .onb-done-mark svg,
+  .onb-done .onb-done-title,
+  .onb-done .onb-done-lead,
+  .onb-done .onb-tips li {
+    animation: none;
+    opacity: 1;
+    stroke-dashoffset: 0;
+  }
+}
+.onb-foot {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  margin-top: 24px;
+}
+.onb-foot > :first-child {
+  justify-self: start;
+}
+.onb-nav {
+  justify-self: end;
+  display: flex;
+  gap: 8px;
+}
+.onb-dots {
+  display: flex;
+  gap: 8px;
+}
+.onb-dots span {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--border);
+}
+.onb-dots span.on {
+  background: var(--accent);
+}
+
+/* 設定: Rockbox の転送先の形 */
+/* まとまりは 3 つ: 見出しと対象の iPod (4px) / 説明 / 部品・欄・操作の補足・例 (8px・4px)。まとまりの間は 16px */
+#set-layout > .set-title:first-child {
+  margin-bottom: 4px;
+}
+.layout-target {
+  font-size: 12px;
+  margin-bottom: 16px;
+}
+#set-layout > .hint {
+  margin-top: 0;
+}
+#set-layout .rn-parts {
+  margin: 16px 0 8px;
+}
+.layout-preview {
+  margin-top: 4px;
+  font-size: 12px;
+  word-break: break-all;
+}
+.layout-preview.layout-error {
+  color: var(--danger);
+}
+.layout-presets-title {
+  margin-top: 24px;
+}
+/* よく使う形: 1 行に 1 つ。形は部品の見た目で、その下に例のパス。今の形と同じ行は色を付ける */
+/* 高さは 3 つ半ほど。スクロールさせ、下にまだあるときは下端をぼかす (.onb-folder-fade) */
+.lp-box {
+  position: relative;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  overflow: hidden;
+}
+.layout-presets {
+  display: flex;
+  flex-direction: column;
+  max-height: 216px;
+  overflow-y: auto;
+}
+.lp-item {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+  padding: 8px 16px;
+  border: none;
+  border-top: 1px solid var(--border);
+  background: none;
+  color: var(--text);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.lp-item:first-child {
+  border-top: none;
+}
+.lp-item:hover {
+  background: var(--row-hover);
+}
+.lp-item.on {
+  background: var(--accent-soft);
+}
+.lp-main {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.lp-pattern {
+  font-size: 12px;
+  line-height: 24px;
+}
+.lp-example {
+  font-size: 12px;
+  color: var(--muted);
+  word-break: break-all;
+}
+/* 部品の見た目だけ (押せない)。よく使う形の中で使う */
+.tok.tok-static {
+  padding: 0 4px;
+  font-size: 11px;
+  line-height: 20px;
+  cursor: inherit;
+}
+/* ファイル名の変更のよく使う形: 部品の見た目のボタン */
+.rn-preset {
+  padding: 2px 8px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: none;
+  color: var(--text);
+  font: inherit;
+  font-size: 12px;
+  cursor: pointer;
+}
+.rn-preset:hover {
+  background: var(--row-hover);
+}
+/* 分類と評価 (iPod の曲だけ): 表の下に横に並べる */
+/* 分類は左端、評価は右端に置く。分類の選択欄は横幅の半分 */
+.te-extra {
+  display: flex;
+  justify-content: space-between;
+  gap: 24px;
+  margin-top: 8px;
+}
+.te-extra .field {
+  margin-bottom: 8px;
+}
+.te-extra .field:first-child {
+  flex: 0 1 calc(50% - 4px);
+}
+.te-extra select {
+  width: 100%;
+  height: 32px;
+  padding: 0 8px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--bg);
+  color: var(--text);
+  font: inherit;
+}
+.te-kind-note {
+  font-size: 11px;
+  margin: 0 0 8px;
+}
+.te-stars {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  min-height: 30px;
+}
+.te-star {
+  border: none;
+  background: none;
+  padding: 0 4px;
+  font-size: 20px;
+  line-height: 1;
+  color: var(--muted);
+  opacity: 0.4;
+  cursor: pointer;
+}
+.te-star.on {
+  color: var(--accent);
+  opacity: 1;
+}
+.te-star:focus-visible {
+  outline: 2px solid var(--accent);
+  border-radius: 4px;
+}
+.te-star-note {
+  margin-left: 8px;
+  font-size: 12px;
+}
+/* 自動で入れた欄を一瞬光らせる */
+.modal input.flash {
+  animation: te-flash 0.6s var(--ease);
+}
+@keyframes te-flash {
+  from {
+    background: var(--accent-soft);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .modal input.flash {
+    animation: none;
+  }
+}
+/* ---------- 曲情報をネットで取得 ---------- */
+.tf-list {
+  display: flex;
+  flex-direction: column;
+  max-height: 52vh;
+  min-height: 200px;
+  overflow-y: auto;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  margin-bottom: 8px;
+}
+.tf-cand {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  border: none;
+  border-top: 1px solid var(--border);
+  background: transparent;
+  color: var(--text);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.tf-cand:first-child {
+  border-top: none;
+}
+.tf-cand:hover {
+  background: var(--accent-soft);
+}
+.tf-cand img {
+  width: 48px;
+  height: 48px;
+  flex: none;
+  border-radius: 4px;
+  object-fit: cover;
+  background: var(--border);
+}
+.tf-cand img.tf-noimg {
+  visibility: hidden;
+}
+.tf-cand-text {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+.tf-cand-title {
+  font-weight: 600;
+}
+.tf-cand-title,
+.tf-cand-artist,
+.tf-cand-meta {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.tf-cand-meta {
+  font-size: 12px;
+}
+/* 候補の曲名とその下の行の間は 4px */
+.tf-cand-title + .tf-cand-artist,
+.tf-cand-artist + .tf-cand-meta,
+.tf-cand-title + .tf-cand-meta {
+  margin-top: 4px;
+}
+.tf-loading {
+  min-height: 240px;
+}
+.tf-unmatched {
+  font-size: 12px;
+}
+.tf-minor {
+  margin-left: 4px;
+  font-size: 10px;
+  padding: 0 4px;
+  border-radius: 3px;
+  background: var(--border);
+  color: var(--muted);
+}
+.tf-diff {
+  max-height: 52vh;
+  overflow: auto;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+}
+/* 差分表の下の説明 (書き換える先の案内) */
+.tf-diff + .hint,
+.tf-diff + .oscroll-track + .hint {
+  margin-top: 8px;
+}
+.tf-section {
+  padding: 8px 0;
+  border-top: 1px solid var(--border);
+}
+.tf-section:first-child {
+  border-top: none;
+}
+.tf-section-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 16px;
+  font-weight: 600;
+  font-size: 12px;
+  color: var(--muted);
+}
+.tf-track .tf-section-head {
+  color: var(--text);
+  font-size: 13px;
+}
+.tf-nr {
+  min-width: 20px;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+.tf-track-title {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+/* 曲の見出し: [チェック 番号 曲名 長さ] 注記 … [対応する曲目] */
+.tf-track-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+.tf-track-len,
+.tf-track-note {
+  flex: none;
+  font-size: 12px;
+  font-weight: 400;
+}
+.tf-chk-space {
+  visibility: hidden;
+}
+.tf-assign {
+  flex: 0 1 240px;
+  min-width: 120px;
+  height: 24px;
+  padding: 0 4px;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  background: var(--bg);
+  color: var(--text);
+  font: inherit;
+  font-size: 12px;
+  font-weight: 400;
+}
+/* チェック | 項目 | 変更前 | → | 変更後 | 曲数 */
+.tf-row {
+  display: grid;
+  grid-template-columns: 20px 130px minmax(0, 1fr) 16px minmax(0, 1fr) 48px;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 16px 4px 32px;
+  font-size: 13px;
+}
+.tf-row.off .tf-before,
+.tf-row.off .tf-after,
+.tf-row.off .tf-arrow {
+  opacity: 0.4;
+}
+.tf-row.off del,
+.tf-row.off ins {
+  background: none;
+}
+.tf-field {
+  color: var(--muted);
+  font-size: 12px;
+  white-space: nowrap;
+}
+.tf-before,
+.tf-after {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.tf-before {
+  color: var(--muted);
+}
+.tf-arrow {
+  color: var(--muted);
+  text-align: center;
+}
+.tf-after {
+  padding: 4px 8px;
+  margin: -4px -8px;
+  border-radius: 4px;
+  cursor: text;
+}
+.tf-after:hover {
+  background: var(--row-hover);
+}
+.tf-after input {
+  width: 100%;
+  height: 26px;
+}
+.tf-note {
+  font-size: 12px;
+  white-space: nowrap;
+  text-align: right;
+}
+.tf-diff del {
+  text-decoration: line-through;
+  background: var(--diff-del-bg);
+  color: var(--diff-del-text);
+  border-radius: 2px;
+}
+.tf-diff ins {
+  text-decoration: none;
+  background: var(--diff-ins-bg);
+  color: var(--diff-ins-text);
+  border-radius: 2px;
+}
+
+/* ---------- ファイル名の一括変更 ---------- */
+.rn-parts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-bottom: 8px;
+}
+/* 部品の欄 (tokenEditor)。見た目は文字の入力欄と同じ。部品は角丸の印 */
+.tok-editor {
+  min-height: 32px;
+  padding: 4px 8px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--bg);
+  color: var(--text);
+  line-height: 22px;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  outline: none;
+  cursor: text;
+  -webkit-user-select: text;
+  user-select: text;
+}
+.tok-editor:focus {
+  border-color: var(--accent);
+}
+.rn-pattern.tok-editor {
+  font-size: 14px;
+}
+.tok {
+  display: inline-block;
+  margin: 0 1px;
+  padding: 0 8px;
+  border: none;
+  border-radius: 4px;
+  background: var(--accent-soft);
+  color: var(--accent);
+  font: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 22px;
+  white-space: nowrap;
+  cursor: grab;
+  -webkit-user-select: none;
+  user-select: none;
+  touch-action: none;
+}
+.rn-parts .tok:hover {
+  background: color-mix(in srgb, var(--accent) 22%, transparent);
+}
+.tok-moving {
+  display: none;
+}
+.tok-ghost {
+  position: fixed;
+  z-index: 200;
+  pointer-events: none;
+  transform: translate(-50%, -50%);
+  box-shadow: var(--shadow);
+  cursor: grabbing;
+}
+/* 欄の外へ出した部品 (離すと外れる) */
+.tok-ghost.tok-remove {
+  opacity: 0.5;
+  text-decoration: line-through;
+}
+.tok-caret {
+  display: inline-block;
+  width: 2px;
+  height: 18px;
+  margin: 0 -1px;
+  border-radius: 1px;
+  background: var(--accent);
+  vertical-align: middle;
+}
+.tok-hint {
+  margin-top: 4px;
+  font-size: 12px;
+}
+/* よく使う形: 部品の欄のすぐ下 (欄と一つのまとまり)。結果の一覧とは 24px 離す */
+.rn-options {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px;
+  margin: 8px 0 24px;
+  font-size: 12px;
+}
+/* 結果の一覧と、その上の帯 (曲順の桁のチェック) を 1 つの枠に */
+.rn-list {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  overflow: hidden;
+}
+.rn-list-bar {
+  padding: 8px;
+  border-bottom: 1px solid var(--border);
+  font-size: 12px;
+}
+.rn-list .rd-wrap {
+  border: none;
+  border-radius: 0;
+}
+.rn-options label.check {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.rn-table th:nth-child(2),
+.rn-table th:nth-child(3) {
+  width: auto;
+}
+.rn-table th:nth-child(4) {
+  width: 190px;
+}
+.rn-table td.rn-state {
+  white-space: normal;
+}
+.rn-table tr.rn-off td:not(.rn-state) {
+  opacity: 0.5;
+}
+.rn-problem {
+  color: var(--danger);
+  font-size: 11px;
+}
+
+/* ---------- 表記ゆれ ---------- */
+.uv-net {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+  font-size: 12px;
+}
+.uv-list {
+  max-height: 52vh;
+  overflow: auto;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+}
+.uv-group {
+  padding: 8px 16px;
+  border-top: 1px solid var(--border);
+}
+.uv-group:first-child {
+  border-top: none;
+}
+.uv-head,
+.uv-name {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+.uv-head {
+  margin-bottom: 4px;
+}
+.uv-name {
+  padding: 4px 0 4px 24px;
+  font-size: 13px;
+}
+.uv-label {
+  flex: 1;
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.uv-reasons {
+  display: flex;
+  gap: 4px;
+}
+.uv-reason {
+  font-size: 11px;
+  padding: 1px 8px;
+  border-radius: 4px;
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+.uv-empty {
+  padding: 24px;
+  text-align: center;
+  font-size: 13px;
+}
+
+/* ---------- アップデート (画面中央のモーダル) ---------- */
+.modal.update-modal {
+  width: min(560px, calc(100vw - 32px));
+}
+.uc-sub {
+  font-size: 12px;
+  margin: -4px 0 16px;
+}
+/* リリースノート: 見出し (新しい機能・修正など) と箇条書き */
+.uc-notes {
+  max-height: 50vh;
+  overflow-y: auto;
+  padding: 8px 16px;
+  border-radius: 8px;
+  background: var(--bg);
+  font-size: 13px;
+  line-height: 1.6;
+}
+.uc-notes h4 {
+  margin: 8px 0 4px;
+  font-size: 13px;
+}
+.uc-notes ul {
+  margin: 0 0 8px;
+  padding-left: 16px;
+}
+.uc-notes p {
+  margin: 0 0 8px;
+}
+.uc-progress {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 16px;
+  font-size: 12px;
+  color: var(--muted);
+}
+.uc-bar {
+  flex: 1;
+  height: 8px;
+  background: var(--border);
+  border-radius: 4px;
+  overflow: hidden;
+}
+.uc-fill {
+  height: 100%;
+  width: 0;
+  background: var(--accent);
+  transition: width 0.2s;
+}
+
+/* ---------- iPod の読み込み中 ---------- */
+.spinner {
+  display: inline-block;
+  width: 28px;
+  height: 28px;
+  border: 3px solid var(--border);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+.connect-view .spinner {
+  margin: 16px auto 0;
+  display: block;
+}
+/* 上部の iPod の欄: 未接続・読み込み中は容量と取り出しを出さない */
+.topbar.no-device .capacity {
+  visibility: hidden;
+}
+/* 取り出しは場所ごと消して、設定ボタンを右端に寄せる */
+.topbar.no-device #btn-eject {
+  display: none;
+}
+.topbar.no-device .device-icon {
+  opacity: 0.45;
+}
+.topbar.no-device .device-name {
+  cursor: default;
+}
+.topbar.loading .device-icon {
+  animation: float 1.2s ease-in-out infinite;
+  opacity: 1;
+}
+.side-note {
+  /* 見出しの文字と左をそろえる (見出し 16px = 一覧の余白 8px + 8px) */
+  padding: 4px 8px 8px;
+  font-size: 12px;
+  color: var(--muted);
+}
+
+/* 設定: 外観 (3 つから 1 つを選ぶボタン) */
+/* 項目は等幅 (いちばん長い項目の幅にそろえる) */
+.seg {
+  position: relative;
+  display: inline-grid;
+  grid-auto-flow: column;
+  grid-auto-columns: 1fr;
+  padding: 2px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--bg);
+}
+.seg-item {
+  position: relative;
+  z-index: 1;
+  cursor: pointer;
+}
+/* 選んだ項目の後ろの背景。選び直すと滑って動く (main.ts の placeSegThumb) */
+.seg-thumb {
+  position: absolute;
+  top: 2px;
+  bottom: 2px;
+  left: 2px;
+  border-radius: 6px;
+  background: var(--panel);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
+  opacity: 0;
+  /* 少し行き過ぎて戻る (軽くバウンド)。幅は控えめに */
+  transition:
+    transform 0.34s cubic-bezier(0.34, 1.45, 0.6, 1),
+    width 0.34s cubic-bezier(0.34, 1.25, 0.6, 1);
+  pointer-events: none;
+}
+.seg-thumb.no-anim {
+  transition: none;
+}
+.seg-item input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+.seg-item span {
+  display: block;
+  text-align: center;
+  /* 行の高さは整数の px に (倍数だと 18.84px などの端数が出て、下にある一覧の行やアイコンが半端な位置に置かれ、
+     拡大率によってずれて見える) */
+  line-height: 18px;
+  padding: 4px 16px;
+  border-radius: 6px;
+  color: var(--muted);
+  transition: color 0.2s var(--ease);
+}
+.seg-item input:checked + span {
+  color: var(--text);
+  font-weight: 600;
+}
+/* アルバム表示との切り替えは画面全体をクロスフェードするので、切り替えのボタンだけは
+   その場の表示を出して、背景が動くのが見えるようにする */
+.layout-toggle {
+  view-transition-name: layout-toggle;
+}
+::view-transition-old(layout-toggle) {
+  display: none;
+}
+::view-transition-new(layout-toggle) {
+  animation: none;
+}
+.seg-item input:focus-visible + span {
+  outline: 2px solid var(--accent);
+}
+
+/* 終わるまで出しておく通知 (アートワークの反映など) */
+.toast.busy {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.spinner.small {
+  width: 14px;
+  height: 14px;
+  border-width: 2px;
+  flex: none;
+}
+.toast.busy .spinner.small {
+  border-color: color-mix(in srgb, var(--panel) 35%, transparent);
+  border-top-color: var(--panel);
+}
+/* 保存中のボタン (main.ts の busySave): 1. 幅が弾みながら広がる → 2. 文字が替わる → 3. 回る印が左から出てくる。
+   保存中は押せないが、薄くはしない */
+.btn.saving {
+  justify-content: center;
+  gap: 0;
+  overflow: hidden;
+  transition: width 0.28s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.btn.saving:disabled {
+  opacity: 1;
+  cursor: progress;
+}
+.btn .save-spin {
+  display: inline-flex;
+  flex: none;
+  /* 広がる途中で文字に重ならないように */
+  overflow: hidden;
+  width: 0;
+  margin-right: 0;
+  opacity: 0;
+  transform: scale(0.4);
+  transition:
+    width 0.2s var(--ease),
+    margin-right 0.2s var(--ease),
+    opacity 0.16s var(--ease),
+    transform 0.24s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.btn.saving.spin .save-spin {
+  width: 14px;
+  margin-right: 8px;
+  opacity: 1;
+  transform: none;
+}
+.btn .save-spin .spinner.small {
+  margin: 0;
+}
+.btn .save-text {
+  transition: opacity 0.1s var(--ease);
+}
+.btn .save-text.swap {
+  opacity: 0;
+}
+.btn .spinner.small {
+  margin-right: 8px;
+  vertical-align: -2px;
+  border-color: color-mix(in srgb, currentColor 35%, transparent);
+  border-top-color: currentColor;
+}
+/* アートワークの反映中は候補を選び直せないようにする */
+.art-applying .as-grid,
+.art-applying .as-bar {
+  pointer-events: none;
+  opacity: 0.6;
+}
+.ipod-badge.working {
+  color: var(--muted);
+  background: color-mix(in srgb, var(--muted) 14%, transparent);
+}
+.ipod-badge.working .spinner.small {
+  width: 11px;
+  height: 11px;
+  margin-right: 4px;
+  border-color: color-mix(in srgb, currentColor 30%, transparent);
+  border-top-color: currentColor;
+}
+
+/* ---------- アルバム表示 ---------- */
+/* 見方の切り替え: ツールバーの下の段の中央に置く */
+/* 上のヘッダーとは線で区切る */
+/* 3 列: 左は空き、中央に見方の切り替え、右端に並べ替え。左右の列は同じ幅に分けるので切り替えは真ん中に来る。
+   狭いときは左の空きから詰め (切り替えが左へ寄る)、並べ替えと重ならない */
+.view-switch {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: stretch;
+  padding: 8px 16px;
+  border-top: 1px solid var(--border);
+  container-type: inline-size;
+}
+.view-switch > .layout-toggle {
+  grid-column: 2;
+}
+/* 高さはタブ (曲 / アルバム / アーティスト) に合わせる (行の中でいっぱいに伸ばす)。左とは 8px 以上空ける。
+   縦の位置に transform を使わない (押したときの .btn:active の scale と打ち消し合って、ボタンが下にずれる) */
+.sort-btn {
+  grid-column: 3;
+  justify-self: end;
+  margin-left: 8px;
+  height: auto;
+  padding: 0 16px;
+  border-radius: 8px;
+  background: var(--bg);
+  color: var(--muted);
+}
+/* さらに狭いときは並べ替えの文字を隠してアイコンだけにする (今の並べ方はボタンの title で分かる) */
+@container (max-width: 480px) {
+  #sort-label {
+    display: none;
+  }
+  .sort-btn {
+    padding: 0 8px;
+  }
+}
+.sort-btn:hover:not(:disabled) {
+  color: var(--text);
+}
+.sort-btn svg.icon-line {
+  width: 16px;
+  height: 16px;
+  flex: none;
+}
+.layout-toggle .seg-item span {
+  padding: 4px 16px;
+  white-space: nowrap;
+}
+/* タイトルの横に 2 段: 上に件数、下に合計時間・容量 */
+.view-meta {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  min-width: 0;
+  flex: none;
+  font-size: 12px;
+  line-height: 1.3;
+  white-space: nowrap;
+}
+#view-stats {
+  font-size: 11px;
+  opacity: 0.75;
+}
+#view-stats:empty {
+  display: none;
+}
+.view-head #btn-album-back {
+  align-self: center;
+  flex: none;
+}
+.album-grid {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  /* カードは描いたときの幅で置くので、チェックで選択バーが出て一覧が低くなり縦のスクロールバーが出ると、
+     幅が縮んで横のスクロールバーまで出ていた。スクロールバーの場所をいつも空けて、幅を変えない */
+  scrollbar-gutter: stable;
+  border-top: 1px solid var(--border);
+  padding: 16px;
+}
+/* カードを置く面。カードは main.ts (renderAlbumGrid) が位置と幅を決めて置く。列の数は幅 150px 以上で入るだけ、間は 16px */
+.album-canvas {
+  position: relative;
+}
+.album-card {
+  position: absolute;
+  min-width: 0;
+  cursor: pointer;
+  border-radius: 8px;
+  padding: 6px;
+  margin: -6px;
+}
+
+.album-card:hover {
+  background: var(--row-hover);
+}
+.album-card.selected {
+  background: var(--sel);
+}
+/* ジャケットの左上のチェック: マウスを乗せたとき・選んでいるとき・ほかのアルバムを選んでいる間に出す */
+.album-chk {
+  position: absolute;
+  left: 4px;
+  top: 4px;
+  width: 32px;
+  height: 32px;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  border: none;
+  background: none;
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.12s;
+}
+.album-chk .box {
+  width: 20px;
+  height: 20px;
+  border-color: #fff;
+  background: rgba(0, 0, 0, 0.25);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+  opacity: 1;
+}
+.album-card:hover .album-chk,
+.album-chk:focus-visible,
+.album-grid.selecting .album-chk,
+.album-card.selected .album-chk,
+.album-card.some .album-chk {
+  opacity: 1;
+}
+.album-card.selected .album-chk .box,
+.album-card.some .album-chk .box {
+  background: var(--accent);
+  border-color: var(--accent);
+}
+.album-card.selected .check-mark {
+  visibility: visible;
+}
+/* 一部の曲だけ選んでいるアルバムは横線 */
+.album-card.some .album-chk .box::after {
+  content: "";
+  position: absolute;
+  left: 4px;
+  right: 4px;
+  top: 7.5px;
+  height: 2px;
+  background: #fff;
+}
+.album-card.chk-anim .album-chk .box {
+  animation: check-box 260ms var(--ease) both;
+}
+.album-card.chk-anim .check-mark path {
+  animation: check-draw 240ms var(--ease) 60ms both;
+}
+/* キーボードで選んでいるもの (main.ts の「キーボードでの移動」)。枠は、キーで操作していて、その一覧にフォーカスがあるときだけ */
+.main-side:focus,
+.artist-list:focus,
+.album-grid:focus {
+  outline: none;
+}
+.kb .main-side:focus .side-item.active,
+.kb .artist-list:focus .side-item.active,
+.album-grid:focus .album-card.kb-focus {
+  outline: 2px solid var(--sel-focus);
+  outline-offset: -2px;
+}
+.album-art {
+  position: relative;
+  aspect-ratio: 1;
+  border-radius: 6px;
+  overflow: hidden;
+  background: var(--border);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.18);
+}
+.album-art img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+.album-noart {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  color: var(--muted);
+}
+/* ジャケットを読み込んでいる間 (アルバムのカード・アーティスト表示の見出し) */
+.skel::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, transparent, var(--skel-shine), transparent);
+  transform: translateX(-100%);
+  animation: skel 1.4s ease-in-out infinite;
+  /* 作り直したカードも途中から始めて、どのカードもそろって流れるように (skelStyle) */
+  animation-delay: var(--skel-at, 0ms);
+}
+/* まだ読み込みを頼んでいない枠は光らせない (画面の外の行。ui/podcasts.ts の epArtHtml) */
+.skel.wait::after {
+  animation: none;
+}
+@keyframes skel {
+  to {
+    transform: translateX(100%);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .skel::after {
+    animation: none;
+  }
+}
+.album-noart svg {
+  width: 36%;
+  height: 36%;
+  fill: currentColor;
+  opacity: 0.5;
+}
+.album-play {
+  position: absolute;
+  right: 8px;
+  bottom: 8px;
+  width: 34px;
+  height: 34px;
+  border: none;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: var(--accent);
+  color: var(--accent-text);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+  cursor: pointer;
+  opacity: 0;
+  transform: translateY(4px);
+  transition: opacity 0.12s, transform 0.12s;
+}
+.album-play svg {
+  width: 18px;
+  height: 18px;
+  fill: currentColor;
+}
+.album-card:hover .album-play,
+.album-play:focus-visible {
+  opacity: 1;
+  transform: none;
+}
+/* 再生中のアルバム: ボタンを常に出して動くバー。マウスを乗せると一時停止 / 再開のボタン */
+.album-play.playing {
+  opacity: 1;
+  transform: none;
+}
+.album-play .eq {
+  width: 16px;
+  height: 14px;
+}
+.album-play .eq i {
+  background: currentColor;
+}
+.album-play .i-pause,
+.album-play .i-play,
+.album-card:hover .album-play.playing .eq {
+  display: none;
+}
+.album-card:hover .album-play.playing .i-pause {
+  display: contents;
+}
+.player-paused .album-card:hover .album-play.playing .i-pause {
+  display: none;
+}
+.player-paused .album-card:hover .album-play.playing .i-play {
+  display: contents;
+}
+.album-name {
+  margin-top: 8px;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.album-sub {
+  margin-top: 4px;
+  font-size: 12px;
+  color: var(--muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ボタンの中のアイコンはクリックを受けない (押したときの対象が常にボタンになるように) */
+.btn svg {
+  pointer-events: none;
+}
+
+/* 再生中の行の印: 上下に動く 3 本のバー */
+/* バーの幅が整数の px になる大きさにする (14px だと 1 本 3.33px になり、拡大率によって太さと位置がばらつく)。
+   置く場所 (ジャケットの上・再生ボタンの中) では中央に寄せるので、文字に合わせる調整 (vertical-align) はしない */
+.eq {
+  display: flex;
+  align-items: flex-end;
+  gap: 2px;
+  width: 16px;
+  height: 12px;
+}
+.eq i {
+  flex: 1;
+  height: 100%;
+  border-radius: 1px;
+  background: var(--accent);
+  transform-origin: bottom;
+  animation: eq-bounce 0.9s ease-in-out infinite;
+}
+.eq i:nth-child(2) {
+  animation-duration: 0.7s;
+  animation-delay: -0.3s;
+}
+.eq i:nth-child(3) {
+  animation-duration: 1.1s;
+  animation-delay: -0.6s;
+}
+@keyframes eq-bounce {
+  0%,
+  100% {
+    transform: scaleY(0.3);
+  }
+  50% {
+    transform: scaleY(1);
+  }
+}
+/* 一時停止中は動きを止めて、低めのバーにする */
+.player-paused .eq i {
+  animation: none;
+  transform: scaleY(0.35);
+}
+@media (prefers-reduced-motion: reduce) {
+  .eq i {
+    animation: none;
+    transform: scaleY(0.7);
+  }
+}
+
+/* ============================================================
+   マイクロインタラクション
+   ============================================================ */
+
+.side-item {
+  transition:
+    transform var(--dur) var(--ease),
+    background var(--dur) var(--ease);
+}
+/* 曲を追加したプレイリスト: 弾む + 「＋n」が浮かんで消える */
+.side-item.bump {
+  position: relative;
+  animation: bump 420ms var(--ease);
+}
+.side-item.bump .count {
+  animation: count-flash 700ms var(--ease);
+}
+@keyframes bump {
+  30% {
+    transform: scale(1.06);
+  }
+}
+@keyframes count-flash {
+  0%,
+  40% {
+    color: var(--accent);
+    font-weight: 700;
+  }
+}
+.plus-float {
+  position: absolute;
+  right: 10px;
+  top: 2px;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--accent);
+  pointer-events: none;
+  animation: float-up 900ms var(--ease) forwards;
+}
+@keyframes float-up {
+  from {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(-14px);
+  }
+}
+
+/* 転送が終わった曲の「転送済み」: ポンと出る */
+.ipod-badge.pop {
+  animation: badge-pop 420ms var(--ease);
+}
+@keyframes badge-pop {
+  0% {
+    transform: scale(0.6);
+    opacity: 0;
+  }
+  55% {
+    transform: scale(1.12);
+    opacity: 1;
+  }
+}
+
+/* チェック: 箱が弾んで、チェックマークを描く。範囲のときは --d ずつ遅らせて波のように */
+.row.chk-anim .box {
+  animation: check-box 260ms var(--ease) var(--d, 0ms) both;
+}
+.row.chk-anim .check-mark path {
+  animation: check-draw 240ms var(--ease) calc(var(--d, 0ms) + 60ms) both;
+}
+@keyframes check-box {
+  0% {
+    transform: scale(0.8);
+  }
+  60% {
+    transform: scale(1.12);
+  }
+}
+@keyframes check-draw {
+  from {
+    stroke-dashoffset: 12;
+  }
+}
+
+/* 消した曲の行: 右へ滑りながら消える */
+.row.removing {
+  animation: row-out 200ms var(--ease) forwards;
+  pointer-events: none;
+}
+@keyframes row-out {
+  to {
+    opacity: 0;
+    transform: translateX(24px);
+  }
+}
+
+/* ジャケット: 読み込めたらふわっと出す */
+img.fade {
+  animation: fade-in 180ms var(--ease);
+}
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+}
+
+/* 通知: 消えるときも下へ沈みながら */
+.toast.leaving {
+  animation: toast-out 180ms var(--ease) forwards;
+}
+@keyframes toast-out {
+  to {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+}
+
+/* 設定: 項目を切り替えたら内容を少し下から出す */
+/* 見出しとカードを 640px の幅にまとめて、設定の画面の左右の中央に置く */
+.set-section {
+  max-width: 640px;
+  margin: 0 auto;
+  animation: rise 200ms var(--ease);
+}
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+}
+
+/* 再生 / 一時停止のアイコンの入れ替え */
+.btn.swap svg {
+  animation: icon-swap 200ms var(--ease);
+}
+@keyframes icon-swap {
+  from {
+    opacity: 0;
+    transform: scale(0.5) rotate(-60deg);
+  }
+}
+
+/* 再生位置・音量のスライダー: 普段は細く、触るとつまみが大きくなる */
+.player-seek,
+.player-vol {
+  -webkit-appearance: none;
+  appearance: none;
+  height: 4px;
+  border-radius: 2px;
+  /* 普段は文字の色で塗り、触るとアクセントの色にする (Spotify と同じ) */
+  --fill: var(--text);
+  background:
+    linear-gradient(var(--fill), var(--fill)) 0 / var(--p, 0%) 100% no-repeat,
+    var(--border);
+  cursor: pointer;
+  outline: none;
+}
+.player-seek:hover,
+.player-vol:hover,
+.player-seek:active,
+.player-vol:active {
+  --fill: var(--accent);
+}
+.player-seek::-webkit-slider-thumb,
+.player-vol::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 13px;
+  height: 13px;
+  border-radius: 50%;
+  background: var(--text);
+  border: none;
+  transform: scale(0);
+  transition: transform var(--dur) var(--ease);
+}
+.player-seek:hover::-webkit-slider-thumb,
+.player-seek:active::-webkit-slider-thumb,
+.player-vol:hover::-webkit-slider-thumb,
+.player-vol:active::-webkit-slider-thumb,
+.player-seek:focus-visible::-webkit-slider-thumb,
+.player-vol:focus-visible::-webkit-slider-thumb {
+  transform: scale(1);
+}
+
+/* ドラッグ中の「n 曲」: 1 曲目のジャケットを添える */
+.drag-ghost {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+.drag-ghost img {
+  width: 18px;
+  height: 18px;
+  border-radius: 3px;
+  object-fit: cover;
+  margin-left: -4px;
+}
+
+/* 読み込み中の仮の行 (スケルトン) */
+.row.skel {
+  pointer-events: none;
+  --row-bg: transparent;
+}
+/* 行そのものには光の帯を流さない (光るのは棒とジャケットの枠の中だけ) */
+.row.skel::after {
+  content: none;
+}
+/* 棒は文字と同じく左寄せ (数の列は右寄せ)。チェックの箱も本物と同じに薄く出す */
+.row.skel .cell.num .sk {
+  margin-left: auto;
+}
+.row.skel .cell.title .sk {
+  flex: none;
+}
+.row.skel .box {
+  opacity: 0.35;
+}
+/* スケルトンの棒 (一覧の行・アルバムのカード)。光り方はジャケットの読み込み中と同じ (.skel::after) */
+.sk {
+  position: relative;
+  display: block;
+  height: 9px;
+  overflow: hidden;
+  border-radius: 4px;
+  background: var(--border);
+}
+.album-card.skel-card {
+  pointer-events: none;
+}
+.album-card.skel-card .album-name,
+.album-card.skel-card .album-sub {
+  display: flex;
+  align-items: center;
+  height: 18px;
+}
+.album-card.skel-card .album-sub {
+  height: 16px;
+}
+
+/* 開いたアルバムの見出しのジャケット (タイルのジャケットからここへ動く) */
+.view-head.album-open {
+  align-items: center;
+}
+.view-head.album-open h2 {
+  line-height: 1.2;
+}
+/* 見出しの段の高さ (30px) に合わせる */
+.album-head-art {
+  width: 30px;
+  height: 30px;
+  flex: none;
+  border-radius: 5px;
+  object-fit: cover;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+  view-transition-name: album-art;
+}
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation-duration: 160ms;
+}
+::view-transition-group(album-art) {
+  animation-duration: 260ms;
+  animation-timing-function: var(--ease);
+}
+
+/* 「アニメーションを減らす」設定のときは動きを止める */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* 行のチェックマーク (SVG の線)。チェックした行だけ見える */
+.check-mark {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  fill: none;
+  stroke: #fff;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  visibility: hidden;
+}
+.check-mark path {
+  /* 線の長さ (約 10) より少し長くして、stroke-dashoffset で描き始めを隠せるようにする */
+  stroke-dasharray: 12;
+  stroke-dashoffset: 0;
+}
+.row.selected .check-mark {
+  visibility: visible;
+}
+
+/* 設定: ライブラリの整理 (説明と実行ボタンを 1 行ずつ) */
+.set-tidy-row {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 8px 0;
+}
+.set-tidy-row > div {
+  flex: 1;
+  min-width: 0;
+}
+/* 設定のカードの中の項目 (スイッチ・ボタン付きの行・選ぶ欄) は線で区切る。見出しや補足の文は直前の項目の一部として線を挟まない */
+.set-card > :is(.set-item, .set-tidy-row, label.switch-row, .set-dup, .set-convert) {
+  margin: 0;
+  padding: 16px 0;
+}
+/* 文字とボタンを並べる行は、行の高さを整数の px にしてボタンの高さ (30px) の中央にそろえる (端数だと拡大率によって文字が上下にずれる) */
+.set-card > .field-row.set-item {
+  align-items: center;
+  min-height: 30px;
+  line-height: 20px;
+}
+.set-card > :is(.set-item, .set-tidy-row, label.switch-row, .set-dup, .set-convert):first-child,
+.set-card > .set-title + :is(.set-item, .set-tidy-row, label.switch-row, .set-dup, .set-convert) {
+  padding-top: 0;
+}
+.set-card > :is(.set-item, .set-tidy-row, label.switch-row, .set-dup, .set-convert):last-child {
+  padding-bottom: 0;
+}
+.set-card > :is(.set-item, .set-tidy-row, label.switch-row, .set-dup, .set-convert) ~ :is(.set-item, .set-tidy-row, label.switch-row, .set-dup, .set-convert) {
+  border-top: 1px solid var(--border);
+}
+/* アップデートの確認と「起動時にアップデートを確認する」は 1 つのまとまりとして線を挟まない (先行版との間だけ線) */
+.set-card > .field-row.set-update-row + label.switch-row {
+  border-top: 0;
+  padding-top: 0;
+}
+
+/* 線で描くアイコン (歯車など)。塗りのアイコンと同じ大きさ・色で表示する */
+svg.icon-line,
+.btn.icon svg.icon-line,
+.side-item svg.icon-line {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+/* 大きさは偶数にする (30px のボタンに奇数の大きさを入れると中心が 0.5px にずれ、拡大率によって片寄って見える) */
+.btn.icon svg.icon-line {
+  width: 16px;
+  height: 16px;
+}
+
+/* iPod の名前の横の鉛筆 (名前を変更)。普段は控えめ、名前かボタンに乗せるとはっきり */
+/* 行の高さは名前と同じ 20px に固定する (22px の鉛筆は iPod OS のときだけ出るので、モードを切り替えるとヘッダーの高さが変わっていた) */
+.device-name-row {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  min-width: 0;
+  height: 20px;
+}
+/* 読み込み中・準備中の回る印 (名前との間は 8px) */
+#device-spin {
+  margin-left: 4px;
+}
+.rename-btn {
+  flex: none;
+  width: 22px;
+  height: 22px;
+  margin: -1px 0;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  border: none;
+  border-radius: 5px;
+  background: transparent;
+  color: var(--muted);
+  cursor: pointer;
+  opacity: 0.6;
+  transition:
+    opacity var(--dur) var(--ease),
+    background var(--dur) var(--ease),
+    color var(--dur) var(--ease);
+}
+.rename-btn svg {
+  width: 14px;
+  height: 14px;
+  pointer-events: none;
+}
+.device-name-row:hover .rename-btn,
+.rename-btn:focus-visible {
+  opacity: 1;
+}
+.rename-btn:hover {
+  background: var(--row-hover);
+  color: var(--text);
+}
+
+/* ---------- 詳細情報 ---------- */
+.dt-summary {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 8px;
+  margin-bottom: 16px;
+  font-weight: 600;
+}
+.dt-badge {
+  padding: 1px 8px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 500;
+}
+.dt-badge.lossless {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+.dt-sec {
+  margin-bottom: 16px;
+}
+.dt-title {
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+.dt-tags > summary {
+  cursor: pointer;
+}
+.dt-count {
+  color: var(--muted);
+  font-weight: 400;
+  font-size: 12px;
+  margin-left: 4px;
+}
+.dt-grid {
+  grid-template-columns: minmax(120px, max-content) 1fr;
+  margin-bottom: 0;
+}
+.dt-grid span {
+  overflow-wrap: anywhere;
+}
+.dt-key {
+  font-family: ui-monospace, "Cascadia Mono", Consolas, monospace;
+  font-size: 12px;
+}
+.dt-error {
+  color: var(--danger) !important;
+}
+
+/* フッターの右端: カーソルのある曲の形式 (転送中は進み具合に場所を譲る) */
+.status-format {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--muted);
+  font: inherit;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  cursor: pointer;
+}
+.status-format:hover {
+  color: var(--text);
+}
+.status-format .dt-badge {
+  flex: none;
+  padding: 0 8px;
+}
+.status:has(.transfer:not(.hidden)) .status-format {
+  display: none;
+}
+
+/* 見出しの右端: 表示する項目の歯車 */
+/* 見出しの右上に重ねる (スクロールバーの分の空きより右)。ボタン 24px の中のアイコン 16px が
+   上と右から 8px の位置になる。見出しの最後の列 (32px) は行と位置をそろえるために空けておく */
+.th.col-set {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  z-index: 2;
+  display: flex;
+  padding: 0;
+  overflow: visible;
+}
+/* 見出しの文字の上に重なるので、並べ替えのボタンと同じく地の色を敷いて見分けやすくする */
+.th.col-set .btn {
+  height: 24px;
+  background: var(--bg);
+}
+.th.col-set .btn.icon svg.icon-line {
+  width: 16px;
+  height: 16px;
+}
+
+/* チェックの付くメニュー項目 */
+.menu-check {
+  width: 14px;
+  margin-right: -8px;
+  display: inline-flex;
+  flex: none;
+}
+.menu-check svg {
+  width: 14px;
+  height: 14px;
+  fill: currentColor;
+}
+
+/* サイドバーと一覧の境目: ドラッグで幅を変える */
+.side-resizer {
+  flex: none;
+  width: 6px;
+  margin: 0 -3px;
+  position: relative;
+  z-index: 5;
+  cursor: col-resize;
+}
+.side-resizer::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 2px;
+  width: 2px;
+  background: transparent;
+  transition: background 0.15s;
+}
+.side-resizer:hover::after,
+.side-resizer.dragging::after {
+  background: var(--accent);
+}
+body.col-resizing {
+  cursor: col-resize;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+/* ---------- アーティスト表示 ---------- */
+.list-area {
+  flex: 1;
+  display: flex;
+  min-height: 0;
+}
+.list-area .table {
+  min-width: 0;
+}
+.artist-list {
+  /* 境目をドラッグして変えられる (main.ts が --artist-w を入れる) */
+  width: var(--artist-w, 208px);
+  flex: none;
+  overflow-y: auto;
+  padding: 8px 0;
+  border-top: 1px solid var(--border);
+  border-right: 1px solid var(--border);
+}
+.artist-list .side-item {
+  cursor: pointer;
+}
+/* 名前の左のチェック (そのアーティストの全曲を選ぶ / 外す。配布リポジトリの Issue #25)。曲の一覧の行のチェックと同じ見た目 */
+.artist-chk {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 16px;
+  height: 16px;
+  padding: 0;
+  border: none;
+  background: none;
+  cursor: pointer;
+}
+.artist-list .side-item:hover .box {
+  opacity: 1;
+}
+.artist-list .side-item:is(.selected, .some) .box {
+  opacity: 1;
+  background: var(--accent);
+  border-color: var(--accent);
+}
+.artist-list .side-item.selected .check-mark {
+  visibility: visible;
+}
+/* 一部の曲だけ選んでいるアーティストは横線 */
+.artist-list .side-item.some .box::after {
+  content: "";
+  position: absolute;
+  left: 2px;
+  right: 2px;
+  top: 5.5px;
+  height: 2px;
+  background: #fff;
+}
+.artist-list .side-item.chk-anim .box {
+  animation: check-box 260ms var(--ease) both;
+}
+.artist-list .side-item.chk-anim .check-mark path {
+  animation: check-draw 240ms var(--ease) 60ms both;
+}
+.artist-empty {
+  padding: 8px 16px;
+  font-size: 12px;
+}
+/* 右側の見出し: アーティスト名 / アルバム (行ではないので選択やドラッグの対象にならない) */
+.ab-artist,
+.ab-album {
+  position: absolute;
+  left: 0;
+  right: 0;
+  display: flex;
+  padding: 0 16px;
+}
+.ab-artist {
+  flex-direction: column;
+  justify-content: center;
+}
+.ab-artist-name {
+  font-size: 20px;
+  font-weight: 700;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.ab-album {
+  align-items: flex-end;
+  gap: 16px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--border);
+}
+.ab-cover {
+  position: relative;
+  width: 48px;
+  height: 48px;
+  flex: none;
+  border-radius: 5px;
+  overflow: hidden;
+  background: var(--border);
+  display: grid;
+  place-items: center;
+  color: var(--muted);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.18);
+}
+.ab-cover img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.ab-cover > svg {
+  width: 22px;
+  height: 22px;
+  fill: currentColor;
+  opacity: 0.6;
+}
+/* ジャケットにマウスを乗せると再生ボタン (一覧の行と同じ見た目) */
+.ab-play {
+  display: none;
+  position: absolute;
+  inset: 0;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: none;
+  background: rgba(0, 0, 0, 0.55);
+  color: #fff;
+  cursor: pointer;
+}
+.ab-play svg {
+  width: 20px;
+  height: 20px;
+  fill: currentColor;
+}
+.ab-album:hover .ab-play {
+  display: flex;
+}
+.ab-text {
+  min-width: 0;
+  padding-bottom: 4px;
+}
+.ab-name {
+  font-size: 14px;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.ab-sub {
+  margin-top: 4px;
+  font-size: 12px;
+  color: var(--muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* 曲情報をネットで取得: 表記の選び方 */
+.tf-naming {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+.tf-naming-label {
+  font-weight: 600;
+}
+.tf-naming-hint {
+  margin-bottom: 8px;
+  min-height: 1.5em;
+}
+.tf-latin-note {
+  color: var(--muted);
+  font-size: 12px;
+}
+
+/* ドライブが出るのを待っている間の文章: まとまりは中央に、中の行は左揃え (幅は文章に合わせる。短い 1 行も中央に見える) */
+#connect-wait {
+  width: fit-content;
+  max-width: 440px;
+  margin-left: auto;
+  margin-right: auto;
+  text-align: left;
+  line-height: 1.8;
+}
+/* つないだ iPod がドライブとして出ないときの、Mac 形式 (HFS+) の案内 (Windows) */
+.connect-hfs {
+  display: block;
+  margin-top: 8px;
+}
+
+/* 設定の「デバッグ」(開発版だけ) のショートカットの表示 */
+.dev-kbd {
+  margin-left: 8px;
+  padding: 0 4px;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  font: 11px/16px ui-monospace, SFMono-Regular, Consolas, monospace;
+  color: var(--muted);
+}
+
+/* ---------- スクロールバー ---------- */
+/* OS のバーは出ると場所を取って中身の幅が変わる (Windows は矢印付きで太い) ので全部隠し、
+   main.ts の attachScrollbar がスクロールする要素の右端・下端の 8px に細いつまみを重ねて描く。
+   ふだんは薄く、スクロールする要素にポインタがあると濃くする */
+* {
+  scrollbar-width: none;
+}
+::-webkit-scrollbar {
+  display: none;
+}
+/* 溝はホイールやクリックを下の中身へ通す。つかめるのはつまみだけ */
+.oscroll-track {
+  left: 0;
+  top: 0;
+  width: 0;
+  height: 0;
+  pointer-events: none;
+  transition: opacity var(--dur) var(--ease);
+}
+/* 親が動くアニメーションの間は位置が合わないので隠す */
+.oscroll-track.oscroll-anim {
+  opacity: 0;
+  transition: none;
+}
+.oscroll-bar {
+  position: absolute;
+}
+.oscroll-y {
+  width: 8px;
+}
+.oscroll-x {
+  height: 8px;
+}
+.oscroll-thumb {
+  /* 透明な枠で 8px の中に 6px 幅で描く */
+  border: 1px solid transparent;
+  border-radius: 4px;
+  background: var(--scroll-thumb) padding-box;
+  pointer-events: auto;
+  transition: background-color var(--dur) var(--ease);
+}
+.oscroll-y .oscroll-thumb {
+  width: 8px;
+}
+.oscroll-x .oscroll-thumb {
+  height: 8px;
+}
+:hover + .oscroll-track .oscroll-thumb {
+  background-color: var(--scroll-thumb-show);
+}
+.oscroll-thumb:hover,
+.oscroll-track.dragging .oscroll-thumb {
+  background-color: var(--scroll-thumb-hover);
+}
+
+/* ---------- ポッドキャストの購読 ---------- */
+.side-item .spinner.small {
+  flex: none;
+}
+.pod-view {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  border-top: 1px solid var(--border);
+}
+.pod-view.hidden {
+  display: none;
+}
+.pod-head {
+  display: flex;
+  gap: 16px;
+  padding: 16px;
+  border-bottom: 1px solid var(--border);
+}
+.pod-cover {
+  width: 96px;
+  height: 96px;
+  flex: none;
+  border-radius: 8px;
+  object-fit: cover;
+  background: var(--row-hover);
+}
+.pod-cover.skel {
+  position: relative;
+  display: block;
+  overflow: hidden;
+  background: var(--border);
+}
+.pod-cover-none {
+  display: grid;
+  place-items: center;
+  color: var(--muted);
+}
+.pod-cover-none svg {
+  width: 40px;
+  height: 40px;
+  fill: currentColor;
+}
+.pod-meta {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.pod-title {
+  font-size: 16px;
+  font-weight: 600;
+}
+.pod-desc {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  font-size: 12px;
+  line-height: 16px;
+}
+.pod-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-top: auto;
+  padding-top: 8px;
+}
+/* 1 段目: 作者 (太字) と、同期・更新・メニュー。高さの真ん中をそろえる */
+.pod-meta-top {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+.pod-meta-top .pod-title {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.pod-btns {
+  display: flex;
+  flex: none;
+  gap: 8px;
+}
+/* 紹介文の上は 8px (段の間の 4px に足す) */
+.pod-meta-top + .pod-desc {
+  margin-top: 4px;
+}
+/* 「iPod に [新しい] 方から [3 回] を置く」: 文の中にセレクトを置く */
+.pod-keep {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-right: 8px;
+  white-space: nowrap;
+}
+/* 隣のボタン (.btn) と同じ見た目 (矢印はファイルの最後のセレクトボックスの共通の規則) */
+.pod-keep select {
+  height: 30px;
+  padding: 0 8px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background-color: var(--panel);
+  color: var(--text);
+  font: inherit;
+  cursor: pointer;
+  outline: none;
+  transition: border-color var(--dur) var(--ease);
+}
+.pod-keep select:hover {
+  border-color: var(--muted);
+}
+.pod-keep select:focus-visible {
+  border-color: var(--accent);
+}
+.pod-actions .btn .spinner.small {
+  margin-right: 8px;
+}
+/* 回の一覧の上の段: 並べ替えを右端に (曲の一覧の、表示の切り替えの段と同じ置き方) */
+.pod-listbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  /* 左の全選択のチェックを、行のチェックと同じ位置に (行は左 8px) */
+  padding: 8px 16px 8px 8px;
+  border-bottom: 1px solid var(--border);
+}
+/* 全選択: 曲の一覧の見出しのチェックと同じ見た目 (全部はチェック、一部は横線) */
+.pod-selall:hover .box,
+.pod-selall:focus-visible .box {
+  opacity: 1;
+}
+.pod-selall.all .box,
+.pod-selall.some .box {
+  opacity: 1;
+  background: var(--accent);
+  border-color: var(--accent);
+}
+.pod-selall.all .box::after {
+  content: "";
+  position: absolute;
+  left: 4.5px;
+  top: 1.5px;
+  width: 4px;
+  height: 8px;
+  border: solid #fff;
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg);
+}
+.pod-selall.some .box::after {
+  content: "";
+  position: absolute;
+  left: 2px;
+  right: 2px;
+  top: 5.5px;
+  height: 2px;
+  background: #fff;
+}
+.pod-listbar .sort-btn {
+  height: 30px;
+}
+.pod-eps {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+}
+.pod-ep {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px 8px 8px;
+  border-bottom: 1px solid var(--border);
+}
+.pod-ep:hover {
+  background: var(--row-hover);
+}
+.pod-ep.sel {
+  background: var(--sel);
+}
+.pod-chk {
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 32px;
+  flex: none;
+  padding: 0;
+  border: none;
+  background: none;
+  cursor: pointer;
+}
+.pod-ep:hover .box,
+.pod-chk:focus-visible .box {
+  opacity: 1;
+}
+.pod-ep.sel .box {
+  opacity: 1;
+  background: var(--accent);
+  border-color: var(--accent);
+}
+.pod-ep.sel .check-mark {
+  visibility: visible;
+}
+.pod-ep.chk-anim .box {
+  animation: check-box 260ms var(--ease) var(--d, 0ms) both;
+}
+.pod-ep.chk-anim .check-mark path {
+  animation: check-draw 240ms var(--ease) calc(var(--d, 0ms) + 60ms) both;
+}
+/* 再生済みかの印。未再生は青い点 (iPod の「ポッドキャスト」と同じ)、再生済みは丸にチェック。押すと切り替わる */
+.pod-played {
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  flex: none;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  background: none;
+  color: var(--muted);
+  cursor: pointer;
+}
+.pod-played:hover {
+  background: var(--row-hover);
+  color: var(--text);
+}
+.pod-ep:hover .pod-played:hover {
+  background: var(--border);
+}
+.pod-played .icon-line {
+  width: 16px;
+  height: 16px;
+}
+.pod-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--accent);
+}
+/* 再生済みの回は全体を薄くする (どれを聞いたか一目で分かるように) */
+.pod-ep.played .pod-ep-title,
+.pod-ep.played .pod-ep-sub {
+  color: var(--muted);
+  opacity: 0.75;
+}
+.pod-ep:not(.played) .pod-ep-title {
+  font-weight: 600;
+}
+.pod-ep-main {
+  flex: 1;
+  min-width: 0;
+}
+.pod-ep-title {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.pod-ep-sub {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  font-size: 12px;
+  line-height: 16px;
+}
+.pod-ep-status {
+  flex: none;
+}
+/* 右端の状態のアイコン (幅をそろえて、行ごとに位置がずれないように) */
+.pod-ep-status {
+  display: grid;
+  place-items: center;
+  width: 32px;
+}
+.pod-state {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+}
+.pod-state svg {
+  width: 18px;
+  height: 18px;
+  fill: currentColor;
+}
+.pod-state.ok {
+  color: var(--ok);
+}
+.pod-state.muted {
+  color: var(--muted);
+  opacity: 0.6;
+}
+.pod-state.busy {
+  color: var(--accent);
+}
+.pod-state-btn {
+  width: 32px;
+  height: 32px;
+  border-color: transparent;
+  background: transparent;
+  color: var(--muted);
+}
+.btn.icon.pod-state-btn svg {
+  width: 18px;
+  height: 18px;
+}
+.pod-state-btn:hover:not(:disabled) {
+  color: var(--accent);
+}
+/* 送っている間: アイコンの周りの輪 (取得中は伸びる、転送中は回る) */
+.pod-state {
+  position: relative;
+}
+.pod-state .pod-ring {
+  position: absolute;
+  inset: 0;
+  width: 32px;
+  height: 32px;
+}
+.pod-state-icon {
+  display: grid;
+  place-items: center;
+  opacity: 0.75;
+}
+.pod-state .pod-state-icon svg {
+  width: 14px;
+  height: 14px;
+}
+.pod-ring circle {
+  fill: none;
+  stroke-width: 2.5;
+}
+.pod-ring .track {
+  stroke: var(--border);
+}
+.pod-ring .fill {
+  stroke: currentColor;
+  stroke-linecap: round;
+  transform: rotate(-90deg);
+  transform-origin: 50% 50%;
+  transition: stroke-dashoffset 0.2s linear;
+}
+.pod-ring.spin {
+  animation: pod-spin 0.9s linear infinite;
+}
+@keyframes pod-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+/* 送り終えたら緑の iPod がポンと出る (PC の一覧の「転送済み」と同じ動き) */
+.pod-state.ok.pop svg {
+  animation: badge-pop 420ms var(--ease);
+}
+@media (prefers-reduced-motion: reduce) {
+  .pod-ring.spin,
+  .pod-state.ok.pop svg {
+    animation: none;
+  }
+}
+.pod-empty {
+  padding: 32px 16px;
+  text-align: center;
+}
+/* 同期の確認: 番組名は回の名前の後ろに薄く */
+.pod-sync-head {
+  margin: 16px 0 8px;
+  font-weight: 600;
+}
+.pod-sync-list {
+  max-height: 28vh;
+}
+.pod-sync-show {
+  margin-left: 8px;
+  font-size: 12px;
+}
+/* サイドバーの「ポッドキャスト」の見出しの、同期と登録のボタン */
+.side-head-btns {
+  display: flex;
+  gap: 4px;
+}
+/* 隣の「＋」の字と同じくらいに見える大きさ (ボタンは 22px のまま) */
+.side-head-btns .btn.icon svg.icon-line {
+  width: 12px;
+  height: 12px;
+}
+.pod-sync-skip {
+  margin-top: 8px;
+}
+
+/* ---------- サイドバーの塊 (開け閉め・並べ替え) ---------- */
+.side-head-toggle {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  min-width: 0;
+  margin-left: -4px;
+  padding: 0 4px 0 0;
+  border: none;
+  border-radius: 4px;
+  background: none;
+  color: inherit;
+  font: inherit;
+  letter-spacing: inherit;
+  text-transform: inherit;
+  cursor: pointer;
+}
+.side-head-toggle:hover {
+  color: var(--text);
+}
+.side-head-toggle > span {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.side-head-toggle .side-chevron {
+  width: 12px;
+  height: 12px;
+  flex: none;
+  transition: transform var(--dur) var(--ease);
+}
+.side-sec.collapsed .side-chevron {
+  transform: rotate(-90deg);
+}
+.side-sec.collapsed > .side-list {
+  display: none;
+}
+/* 塊のドラッグ: つかんだ塊は薄く、入る場所に線を出す (項目の並べ替えと同じ) */
+.side-sec.sec-dragging {
+  opacity: 0.4;
+}
+body.sec-reordering,
+body.sec-reordering * {
+  cursor: grabbing !important;
+}
+@media (prefers-reduced-motion: reduce) {
+  .side-head-toggle .side-chevron {
+    transition: none;
+  }
+}
+
+/* 回の一覧の行のサムネイル (回ごとの画像、無ければ番組の画像) */
+.pod-ep-art {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  flex: none;
+  overflow: hidden;
+  border-radius: 4px;
+  background: var(--border);
+  color: var(--muted);
+}
+.pod-ep-art img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+.pod-ep-art.none svg {
+  width: 20px;
+  height: 20px;
+  fill: currentColor;
+  opacity: 0.6;
+}
+.pod-ep.played .pod-ep-art img {
+  opacity: 0.6;
+}
+/* 番組の詳細 */
+.pod-cover:not(.skel),
+.pod-title {
+  cursor: pointer;
+}
+.pod-info-head {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+.pod-info-cover {
+  width: 96px;
+  height: 96px;
+  flex: none;
+  border-radius: 8px;
+  object-fit: cover;
+  background: var(--row-hover);
+}
+.pod-info-name {
+  min-width: 0;
+}
+.pod-info-name h3 {
+  margin: 0 0 4px;
+}
+.pod-info-desc {
+  margin-bottom: 16px;
+  white-space: pre-line;
+  overflow-wrap: anywhere;
+  line-height: 1.6;
+}
+.pod-info-modal .dt-grid span:nth-child(even) {
+  overflow-wrap: anywhere;
+}
+
+/* ---------------- ライブラリの「ビデオ」「写真」(ui/visual.ts) ---------------- */
+.vis-view {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  border-top: 1px solid var(--border);
+}
+.vis-view.hidden {
+  display: none;
+}
+/* 左の一覧 (写真のリストのアルバム) と右の一覧 */
+.vis-body {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+}
+.vis-main {
+  /* リストの項目名の歯車 (.vis-colset) の位置の基準。項目名は横にスクロールするので、その外に置く */
+  position: relative;
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+.vis-side {
+  /* 境目をドラッグして変えられる (幅はアーティスト表示の左の一覧とは別に覚える) */
+  width: var(--photo-side-w, 232px);
+  flex: none;
+  overflow-y: auto;
+  padding: 8px;
+  border-right: 1px solid var(--border);
+  outline: none;
+}
+.vis-side.hidden {
+  display: none;
+}
+.vis-side .side-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+/* 階層は字下げで (1 段 16px)。開け閉めの印があるときは、印 (16px) と間 (8px) の分の 24px */
+.vis-side .side-item {
+  padding-left: calc(8px + var(--depth, 0) * 16px);
+}
+.vis-side .side-item.slot {
+  padding-left: calc(8px + var(--depth, 0) * 24px);
+}
+/* 開け閉めの印 (サイドバーの塊の見出しと同じ ⌄。閉じると右向き) */
+.vis-side .tree-chev {
+  display: grid;
+  place-items: center;
+  width: 16px;
+  height: 16px;
+  flex: none;
+  padding: 0;
+  border: none;
+  border-radius: 4px;
+  background: none;
+  color: var(--muted);
+  cursor: pointer;
+}
+.vis-side .tree-chev:hover {
+  color: var(--text);
+}
+.vis-side .side-item .tree-chev svg {
+  width: 12px;
+  height: 12px;
+  fill: none;
+  opacity: 1;
+  transition: transform var(--dur) var(--ease);
+}
+.vis-side .side-item.collapsed .tree-chev svg {
+  transform: rotate(-90deg);
+}
+@media (prefers-reduced-motion: reduce) {
+  .vis-side .side-item .tree-chev svg {
+    transition: none;
+  }
+}
+.vis-side .side-item svg {
+  width: 16px;
+  height: 16px;
+  fill: currentColor;
+  flex: none;
+  opacity: 0.8;
+}
+.vis-side .side-item .label {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.vis-grid {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  scrollbar-gutter: stable;
+  padding: 16px;
+  outline: none;
+  position: relative;
+}
+.vis-sec {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  margin: 8px 0 16px;
+  font-size: 15px;
+}
+.vis-sec .muted {
+  font-weight: normal;
+  font-size: 13px;
+}
+.vis-cards {
+  display: grid;
+  gap: 16px;
+  margin-bottom: 24px;
+}
+.vis-cards.video {
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+}
+.vis-cards.photo {
+  grid-template-columns: repeat(auto-fill, minmax(128px, 1fr));
+  gap: 8px;
+}
+.vis-card {
+  position: relative;
+  min-width: 0;
+  cursor: pointer;
+  border-radius: 8px;
+  padding: 4px;
+  margin: -4px;
+}
+.vis-card:hover {
+  background: var(--row-hover);
+}
+.vis-card.selected {
+  background: var(--sel);
+}
+/* カーソル (クリックしたもの)。チェックしたものより控えめにして区別する (曲の一覧と同じ) */
+.vis-card.focused:not(.selected) {
+  background: color-mix(in srgb, var(--sel) 55%, transparent);
+}
+/* サムネイルは画像が枠いっぱいで背景が見えないので、チェックの縁より薄い縁を付ける */
+.vis-card.focused:not(.selected):not(.vis-row) .vis-thumb {
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent) 40%, transparent);
+}
+.vis-thumb {
+  position: relative;
+  aspect-ratio: 16 / 9;
+  border-radius: 6px;
+  overflow: hidden;
+  background: var(--border);
+  display: grid;
+  place-items: center;
+  color: var(--muted);
+}
+.vis-cards.photo .vis-thumb {
+  aspect-ratio: 1;
+  border-radius: 4px;
+}
+/* 画像は枠いっぱいに置く (枠は grid なので、高さ 100% だけでは枠の高さにならず、縦長の画像がはみ出していた) */
+.vis-thumb img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+.vis-thumb > svg {
+  width: 32px;
+  height: 32px;
+  fill: currentColor;
+  opacity: 0.6;
+}
+.vis-card.selected .vis-thumb {
+  box-shadow: 0 0 0 2px var(--accent);
+}
+.vis-title {
+  margin-top: 8px;
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.vis-title.skel-line {
+  position: relative;
+  overflow: hidden;
+  height: 12px;
+  width: 70%;
+  border-radius: 4px;
+  background: var(--border);
+}
+.vis-sub {
+  margin-top: 4px;
+  font-size: 12px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+/* 左上のチェック: マウスを乗せたとき・選んでいるとき・ほかを選んでいる間に出す (アルバムのカードと同じ) */
+.vis-chk {
+  position: absolute;
+  left: 8px;
+  top: 8px;
+  width: 32px;
+  height: 32px;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  border: none;
+  background: none;
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.12s;
+}
+.vis-chk .box {
+  width: 20px;
+  height: 20px;
+  border-color: #fff;
+  background: rgba(0, 0, 0, 0.25);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+  opacity: 1;
+}
+.vis-card:hover .vis-chk,
+.vis-grid.selecting .vis-chk,
+.vis-card.selected .vis-chk {
+  opacity: 1;
+}
+.vis-card.selected .vis-chk .box {
+  background: var(--accent);
+  border-color: var(--accent);
+}
+.vis-card.selected .check-mark {
+  visibility: visible;
+}
+.vis-card.chk-anim .vis-chk .box {
+  animation: check-box 260ms var(--ease) both;
+}
+.vis-card.chk-anim .check-mark path {
+  animation: check-draw 240ms var(--ease) 60ms both;
+}
+.vis-empty {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+}
+/* 写真を大きく見る (画面いっぱいの暗い背景) */
+.vis-viewer {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  background: rgba(0, 0, 0, 0.88);
+  display: grid;
+  grid-template-columns: 64px 1fr 64px;
+  grid-template-rows: 1fr auto;
+  align-items: center;
+  color: #fff;
+}
+.vis-viewer-stage {
+  position: relative;
+  height: calc(100vh - var(--tb-h) - 96px);
+  display: grid;
+  place-items: center;
+}
+.vis-viewer-stage img {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+  image-rendering: auto;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+  transition: opacity 0.15s;
+}
+.vis-viewer-stage img.loading {
+  opacity: 0.3;
+}
+.vis-viewer-stage .spinner {
+  position: absolute;
+}
+.vis-viewer-stage img:not(.loading) ~ .spinner,
+.vis-viewer-stage:has(img:not(.loading)) .spinner {
+  display: none;
+}
+/* 動画の再生: 暗くした背景の真ん中に、ほどよい大きさの枠 (縦横比は動画に合わせる)。操作はすべて枠の上に重ねる
+   (上に題名、下に再生位置と操作の列)。文字とスライダーの色は暗い背景向けに差し替える (下のプレーヤーのスライダーをそのまま使う) */
+.video-player {
+  grid-template-columns: 80px 1fr 80px;
+  grid-template-rows: 1fr;
+  --text: #fff;
+  --muted: rgba(255, 255, 255, 0.72);
+  --border: rgba(255, 255, 255, 0.28);
+  --accent: #fff;
+}
+.vp-panel {
+  justify-self: center;
+  /* 横は 960px まで。ウィンドウの高さからも、上下の余白の分を空けて縦に合わせる */
+  width: min(960px, 100%, calc((100vh - var(--tb-h) - 128px) * var(--ar, 1.7778)));
+}
+.vp-frame {
+  position: relative;
+  aspect-ratio: var(--ar, 1.7778);
+  background: #000;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow:
+    0 0 0 1px rgba(255, 255, 255, 0.06),
+    0 24px 64px rgba(0, 0, 0, 0.6);
+}
+.vp-frame video {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  outline: none;
+  cursor: pointer;
+}
+/* 再生中にマウスを止めたら、操作と一緒にポインタも消す */
+.vp-frame:not(.awake):not(.paused) video {
+  cursor: none;
+}
+.vp-frame .spinner {
+  position: absolute;
+  inset: 0;
+  margin: auto;
+}
+.vp-frame:not(.loading) .spinner {
+  display: none;
+}
+.video-player-error {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  margin: auto;
+  height: fit-content;
+  max-width: 480px;
+  padding: 16px 24px;
+  border-radius: 12px;
+  background: rgba(0, 0, 0, 0.72);
+  font-size: 13px;
+  line-height: 1.6;
+  text-align: center;
+  white-space: pre-line;
+}
+/* 上の題名と下の操作: 端を暗くして重ねる。再生中にマウスを止めると一緒に消える */
+.vp-top,
+.vp-controls {
+  position: absolute;
+  left: 0;
+  right: 0;
+  z-index: 1;
+  /* 暗くした所を押しても、下の動画 (再生 / 一時停止) に届くように */
+  pointer-events: none;
+  opacity: 0;
+  transition:
+    opacity 0.25s var(--ease),
+    transform 0.25s var(--ease);
+}
+.vp-top {
+  top: 0;
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  padding: 16px 24px 56px;
+  /* 端の線が見えないように、なだらかに薄くする */
+  background: linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.3) 30%, rgba(0, 0, 0, 0.12) 60%, rgba(0, 0, 0, 0.03) 85%, transparent);
+  transform: translateY(-4px);
+}
+.vp-controls {
+  bottom: 0;
+  padding: 72px 16px 8px;
+  background: linear-gradient(transparent, rgba(0, 0, 0, 0.04) 15%, rgba(0, 0, 0, 0.18) 40%, rgba(0, 0, 0, 0.42) 70%, rgba(0, 0, 0, 0.62));
+  transform: translateY(4px);
+}
+.vp-frame.awake .vp-top,
+.vp-frame.paused .vp-top,
+.vp-frame.awake .vp-controls,
+.vp-frame.paused .vp-controls,
+.vp-controls:focus-within {
+  opacity: 1;
+  transform: none;
+}
+.vp-controls > *,
+.vp-top > * {
+  pointer-events: auto;
+}
+.vp-title {
+  min-width: 0;
+  font-size: 15px;
+  font-weight: 600;
+  line-height: 20px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
+}
+.vp-count {
+  flex: none;
+  font-size: 12px;
+  line-height: 20px;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+/* 再生位置: 枠の幅いっぱい。触ると少し太くなる */
+.vp-seek {
+  display: block;
+  width: calc(100% - 16px);
+  margin: 0 8px;
+  transition: height var(--dur) var(--ease);
+}
+.vp-seek:hover,
+.vp-seek:active {
+  height: 6px;
+  border-radius: 3px;
+}
+.vp-row {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  height: 48px;
+}
+.vp-time {
+  display: flex;
+  gap: 4px;
+  margin-left: 4px;
+  font-size: 12px;
+  line-height: 16px;
+  font-variant-numeric: tabular-nums;
+}
+.vp-sep,
+.vp-dur {
+  color: var(--muted);
+}
+.vp-space {
+  flex: 1;
+}
+/* 音量: 普段はアイコンだけ。触るとスライダーが横に開く */
+.vp-volume {
+  display: flex;
+  align-items: center;
+}
+.vp-volume .vp-vol {
+  width: 0;
+  margin: 0;
+  opacity: 0;
+  transition:
+    width 0.2s var(--ease),
+    margin 0.2s var(--ease),
+    opacity 0.2s var(--ease);
+}
+.vp-volume:hover .vp-vol,
+.vp-volume:focus-within .vp-vol {
+  width: 80px;
+  margin: 0 8px 0 4px;
+  opacity: 1;
+}
+.vp-btn {
+  flex: none;
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  display: grid;
+  place-items: center;
+  border: none;
+  border-radius: 8px;
+  background: none;
+  color: #fff;
+  opacity: 0.9;
+  cursor: pointer;
+  transition:
+    background var(--dur) var(--ease),
+    opacity var(--dur) var(--ease);
+}
+.vp-btn:hover {
+  opacity: 1;
+  background: rgba(255, 255, 255, 0.14);
+}
+.vp-btn svg {
+  width: 24px;
+  height: 24px;
+  fill: currentColor;
+}
+.vp-toggle svg {
+  width: 28px;
+  height: 28px;
+}
+/* 止めているときの真ん中の再生のボタン (読み込み中は出さない) */
+.vp-big {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  width: 72px;
+  height: 72px;
+  margin: auto;
+  padding: 0;
+  display: grid;
+  place-items: center;
+  border: none;
+  border-radius: 16px;
+  background: rgba(0, 0, 0, 0.45);
+  -webkit-backdrop-filter: blur(16px);
+  backdrop-filter: blur(16px);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.16);
+  color: #fff;
+  cursor: pointer;
+  opacity: 0;
+  transform: scale(0.88);
+  pointer-events: none;
+  transition:
+    opacity 0.2s var(--ease),
+    transform 0.2s var(--ease),
+    background var(--dur) var(--ease);
+}
+.vp-frame.paused:not(.loading) .vp-big {
+  opacity: 1;
+  transform: none;
+  pointer-events: auto;
+}
+.vp-big:hover {
+  background: rgba(0, 0, 0, 0.6);
+}
+.vp-big svg {
+  width: 32px;
+  height: 32px;
+  fill: currentColor;
+}
+/* 全画面: 枠を画面いっぱいに (ウィンドウも全画面にする) */
+.vp-frame.fs {
+  position: fixed;
+  inset: 0;
+  z-index: 70;
+  aspect-ratio: auto;
+  border-radius: 0;
+  box-shadow: none;
+}
+.vp-frame.fs .vp-controls {
+  padding: 96px 24px 16px;
+}
+.vp-frame.fs .vp-top {
+  padding: 24px 32px 72px;
+}
+.vis-viewer-nav.off {
+  visibility: hidden;
+}
+/* 前後のボタン: 右上の閉じると同じ角丸の四角 (少し大きく) */
+.vis-viewer-nav {
+  justify-self: center;
+  height: 40px;
+  border-radius: 8px;
+  color: rgba(255, 255, 255, 0.8);
+  border-color: rgba(255, 255, 255, 0.28);
+}
+.vis-viewer-nav:hover:not(:disabled) {
+  color: #fff;
+  border-color: rgba(255, 255, 255, 0.6);
+}
+.btn.icon.vis-viewer-nav svg {
+  width: 24px;
+  height: 24px;
+}
+.vis-viewer-info {
+  grid-column: 1 / -1;
+  text-align: center;
+  padding: 8px 16px 24px;
+  font-size: 13px;
+  opacity: 0.8;
+}
+/* 右上の閉じる: ほかの閉じるボタン (設定など) と同じ角丸の四角。暗い背景なので枠と文字を白に寄せる */
+.vis-viewer-close {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  color: rgba(255, 255, 255, 0.8);
+  border-color: rgba(255, 255, 255, 0.28);
+}
+.vis-viewer-close:hover:not(:disabled) {
+  color: #fff;
+  border-color: rgba(255, 255, 255, 0.6);
+}
+.vis-form {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 8px 16px;
+  align-items: center;
+  margin: 16px 0;
+}
+.vis-form input[type="number"],
+.vis-form select {
+  width: 100%;
+  height: 32px;
+  padding: 0 8px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--bg);
+  color: var(--text);
+  font: inherit;
+  outline: none;
+}
+.vis-form input[type="number"]:focus,
+.vis-form select:focus {
+  border-color: var(--accent);
+}
+.vis-form input[type="number"] {
+  width: 96px;
+}
+
+/* 設定の「匿名の利用状況を送る」の説明: 送らないもの (個人情報) は枠に入れていつも出し、項目に ✕ を付ける。
+   送るものは押すと開く (同じ見た目の箇条書きを並べると、送らないものを送るものと見誤るため) */
+.set-analytics-lead {
+  margin-top: 4px;
+}
+.set-analytics-private {
+  margin-top: 8px;
+  padding: 8px 16px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--bg);
+}
+.set-analytics-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 600;
+  font-size: 12px;
+  line-height: 20px;
+}
+.set-analytics-head svg {
+  width: 16px;
+  height: 16px;
+  flex: none;
+  color: var(--accent);
+}
+.set-analytics-no {
+  list-style: none;
+  margin: 4px 0 8px;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 4px 16px;
+  font-size: 12px;
+}
+.set-analytics-no li {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  line-height: 18px;
+}
+.set-analytics-no svg {
+  width: 12px;
+  height: 12px;
+  margin: 3px 2px 0;
+  flex: none;
+  color: var(--muted);
+}
+.set-analytics-private p {
+  margin: 0;
+}
+.set-analytics-sent {
+  margin-top: 8px;
+}
+.set-analytics-sent summary {
+  font-size: 12px;
+  color: var(--accent);
+  cursor: pointer;
+  width: fit-content;
+}
+.set-analytics-sent ul {
+  margin: 4px 0 0;
+  padding-left: 16px;
+}
+.set-analytics-sent li + li {
+  margin-top: 4px;
+}
+/* 動画の一覧の画像は切り抜かずに全体を出す (縦横比が違うものは黒い帯で埋める。動画の再生画面と同じ見え方) */
+.vis-cards.video .vis-thumb img {
+  object-fit: contain;
+  background: #000;
+}
+
+/* ビデオの見方の切り替え (曲の一覧の .view-switch と同じ置き方。上の線は .vis-view の線を使う) */
+.vis-switch {
+  border-top: none;
+  border-bottom: 1px solid var(--border);
+  flex: none;
+}
+.vis-switch.hidden {
+  display: none;
+}
+.vis-switch > .vis-layout {
+  grid-column: 2;
+}
+.vis-layout .seg-item span {
+  padding: 4px 16px;
+  white-space: nowrap;
+}
+/* ビデオのリスト: 1 行ずつ (チェック・小さい画像・題名と補足・種類・長さ・大きさ) */
+.vis-cards.video.list {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+.vis-row {
+  display: grid;
+  /* 列は「表示する項目」で変わるので visual.ts が --vis-cols に入れる (項目名と同じ) */
+  grid-template-columns: var(--vis-cols, 24px 80px minmax(0, 1fr) 128px 72px 80px 8px);
+  align-items: center;
+  gap: 16px;
+  padding: 4px 8px;
+  margin: 0;
+  border-radius: 6px;
+}
+.vis-row .vis-thumb {
+  width: 80px;
+  border-radius: 4px;
+}
+.vis-row.selected .vis-thumb {
+  box-shadow: none;
+}
+.vis-row .vis-thumb > svg {
+  width: 20px;
+  height: 20px;
+}
+.vis-row .vis-title {
+  margin-top: 0;
+}
+.vis-row .vis-sub {
+  margin-top: 4px;
+}
+/* リストのチェックは曲の一覧の行と同じ (いつも出し、普段は薄く) */
+.vis-row .vis-chk {
+  position: static;
+  width: 24px;
+  height: 32px;
+  opacity: 1;
+}
+.vis-row .vis-chk .box {
+  width: 16px;
+  height: 16px;
+  border-color: var(--muted);
+  background: var(--panel);
+  box-shadow: none;
+  opacity: 0.55;
+}
+.vis-row:hover .vis-chk .box {
+  opacity: 1;
+}
+.vis-row.selected .vis-chk .box {
+  opacity: 1;
+  background: var(--accent);
+  border-color: var(--accent);
+}
+.vis-row-kind {
+  font-size: 12px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.vis-row-num {
+  font-size: 12px;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+/* ビデオのリストは一覧の余白を 8px に詰める */
+.vis-grid.list {
+  padding: 8px;
+}
+/* 列が収まらないときは、行を列の最小の幅の合計まで広げて横にスクロールさせる (行の背景も右端まで届かせる) */
+.vis-grid.list .vis-cards {
+  min-width: var(--vis-min, 0);
+}
+/* 種類の見出しは、行の中身 (チェック) の位置にそろえる */
+.vis-grid.list .vis-sec {
+  padding-left: 8px;
+}
+/* ビデオのリストの項目名: 曲の一覧の見出しと同じ見た目。列は .vis-row と同じ (一覧の余白 8px + 行の余白 8px、
+   スクロールバーの分も空けて列をそろえる) */
+.vis-head {
+  display: grid;
+  grid-template-columns: var(--vis-cols, 24px 80px minmax(0, 1fr) 128px 72px 80px 8px);
+  align-items: center;
+  gap: 16px;
+  height: 33px;
+  padding: 0 16px;
+  overflow: hidden;
+  scrollbar-gutter: stable;
+  border-bottom: 1px solid var(--border);
+  font-size: 11px;
+  color: var(--muted);
+  font-weight: 600;
+  flex: none;
+}
+.vis-head.hidden {
+  display: none;
+}
+.vis-head .num {
+  text-align: right;
+}
+/* 右端の「表示する項目」の歯車: 曲の一覧の見出しと同じく右上に重ねる (列の並びの最後の 8px と間の 16px の上)。
+   項目名と一緒に横へスクロールしないよう、位置は .vis-main を基準にする */
+.vis-colset {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  display: flex;
+}
+.vis-colset .btn {
+  height: 24px;
+  background: var(--bg);
+}
+.vis-colset .btn.icon svg.icon-line {
+  width: 16px;
+  height: 16px;
+}
+.vis-th {
+  position: relative;
+  align-self: stretch;
+  display: flex;
+  align-items: center;
+  min-width: 0;
+  white-space: nowrap;
+}
+.vis-th.num {
+  justify-content: flex-end;
+}
+/* 境目は列の間 (16px) の真ん中。題名の列が残りを埋めるので、右の列の左端に置く */
+.col-grip.at-left {
+  right: auto;
+  left: -12px;
+}
+.col-grip.at-left::after {
+  right: auto;
+  left: 3px;
+}
+.vis-head .th.chk {
+  position: static;
+  padding: 0;
+  display: grid;
+  place-items: center;
+  height: 32px;
+}
+/* 項目名があるときは、最初の種類の見出しの上を詰める */
+.vis-head:not(.hidden) ~ .vis-grid > .vis-sec:first-child {
+  margin-top: 0;
+}
+/* 写真のリスト: チェック・小さい正方形の画像・名前・撮影日・サイズ */
+.vis-cards.list {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+.vis-row.photo-row .vis-thumb {
+  width: 40px;
+  aspect-ratio: 1;
+}
+/* iPod OS の写真は名前が無いので、撮影日を主にする (撮影日の列は出さない) */
+.vis-row.photo-row.noname .vis-title {
+  font-weight: normal;
+}
+
+/* 曲名の横の「タグを読めない」印 (押すと詳細情報) */
+.cell.title .read-error {
+  display: flex;
+  flex: none;
+  width: 16px;
+  height: 16px;
+  color: var(--warn-text);
+  cursor: pointer;
+}
+.read-error svg {
+  width: 16px;
+  height: 16px;
+  fill: currentColor;
+}
+/* 詳細情報の「タグの構造」 */
+.dt-pre {
+  margin: 0;
+  padding: 8px;
+  border-radius: 4px;
+  background: var(--row-hover);
+  font: 12px/16px ui-monospace, "Cascadia Mono", Consolas, monospace;
+  white-space: pre;
+  overflow-x: auto;
+  user-select: text;
+  -webkit-user-select: text;
+}
+/* 飛ばした枠の一覧など、エラーの文の改行を活かす */
+.dt-error {
+  white-space: pre-line;
+}
+/* 飛ばして読めたお知らせ: エラーではないので赤くしない (「テキストでコピー」にはエラーと同じく入る) */
+.dt-error.dt-note {
+  color: var(--muted) !important;
+}
+
+/* ---------- セレクトボックス (すべて共通) ---------- */
+/* 矢印は自前で描き、右端から 8px 内側に置く (標準の矢印は枠にくっつく)。フォーカスは入力欄と同じく枠の色で示す。
+   場所ごとの規則 (大きさ・背景の色) は background や padding をまとめて書いていて矢印と右の余白を消すので、
+   この規則はファイルの最後に置き、同じ強さのセレクタ (select:not([multiple]) = クラス 1 つ分) で上書きする */
+select:not([multiple]) {
+  -webkit-appearance: none;
+  appearance: none;
+  padding-right: 32px;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M4 6l4 4 4-4' fill='none' stroke='%238a9099' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 8px center;
+  background-size: 16px 16px;
+  text-overflow: ellipsis;
+  outline: none;
+  cursor: pointer;
+}
+select:not([multiple]):focus-visible {
+  border-color: var(--accent);
+}
+
+/* ---------- 自前のタイトルバー (Windows・Mac。ui/titlebar.ts) ---------- */
+body.tb-win {
+  --tb-h: 32px;
+}
+/* Mac は OS の信号機のボタンが標準のタイトルバー (28px) の中央に来る */
+body.tb-mac {
+  --tb-h: 28px;
+}
+/* 全画面 (動画・Mac の緑のボタン) の間は隠す */
+body.has-titlebar.win-full {
+  --tb-h: 0px;
+}
+body.has-titlebar.win-full .titlebar {
+  display: none;
+}
+.titlebar {
+  position: relative;
+  flex: none;
+  height: var(--tb-h);
+  display: flex;
+  align-items: center;
+  background: var(--sidebar);
+  color: var(--text);
+}
+.tb-title {
+  padding-left: 16px;
+  font-size: 12px;
+  line-height: 16px;
+  white-space: nowrap;
+}
+/* Mac は題名を中央に (左は信号機のボタン) */
+.tb-mac .tb-title {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 0;
+  font-weight: 600;
+  font-size: 13px;
+}
+.tb-space {
+  flex: 1;
+  align-self: stretch;
+}
+/* ほかのウィンドウを使っている間は OS の枠と同じく文字を薄く */
+.win-blur .tb-title,
+.win-blur .tb-cap:not(:hover) {
+  color: var(--muted);
+}
+.tb-update {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  height: 24px;
+  margin-right: 8px;
+  padding: 0 8px;
+  border: 0;
+  border-radius: 4px;
+  background: transparent;
+  color: var(--muted);
+  font: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 16px;
+  cursor: pointer;
+  transition:
+    background var(--dur) var(--ease),
+    color var(--dur) var(--ease);
+}
+/* 新しい版があるときだけ色を付ける (無い間は薄い文字で、押すと確認する) */
+.tb-update.active {
+  color: var(--ok);
+  animation: tb-update-in 0.28s var(--ease);
+}
+/* Mac は窓の角の丸みが大きく、右上に寄せると角で切れる */
+.tb-mac .tb-update {
+  height: 20px;
+  margin-right: 16px;
+}
+.tb-update:hover {
+  background: var(--row-hover);
+}
+.tb-update:not(.active):hover {
+  color: var(--text);
+}
+.tb-update svg.icon-line {
+  width: 16px;
+  height: 16px;
+}
+@keyframes tb-update-in {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+}
+/* 最小化・最大化・閉じる。大きさと字は Windows 11 の枠のボタンと同じ (46 × 32、Segoe Fluent Icons の 10px) */
+.tb-caption {
+  display: flex;
+  align-self: stretch;
+}
+.tb-cap {
+  width: 46px;
+  height: 100%;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--text);
+  font: 10px/1 "Segoe Fluent Icons", "Segoe MDL2 Assets";
+  cursor: default;
+  transition: background 80ms linear;
+}
+.tb-cap:hover {
+  background: rgba(127, 127, 127, 0.16);
+}
+.tb-cap:active {
+  background: rgba(127, 127, 127, 0.26);
+}
+.tb-close:hover {
+  background: #c42b1c;
+  color: #fff;
+}
+.tb-close:active {
+  background: #b0291b;
+  color: #fff;
+}
+/* 画面いっぱいに重ねるもの (設定・ダイアログ・写真・ファイルを落とすときの表示) はタイトルバーの下から。
+   覆うと開いている間ウィンドウを動かせず、Windows では最小化・閉じるも押せなくなる */
+.drop-overlay,
+.settings-page,
+.modal-back,
+.vis-viewer {
+  top: var(--tb-h);
+}
+
+/* ---------- プレイリストの並び替えのパネル (playlist-reorder.ts、配布リポジトリの Issue #22) ---------- */
+.reorder-panel {
+  width: 264px;
+  flex: none;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  border-top: 1px solid var(--border);
+  border-left: 1px solid var(--border);
+  background: var(--panel);
+  animation: rp-in 0.24s var(--ease);
+}
+@keyframes rp-in {
+  from {
+    opacity: 0;
+    transform: translateX(16px);
+  }
+}
+.rp-head {
+  padding: 16px 16px 8px;
+}
+.rp-head h3 {
+  margin: 0;
+  font-size: 15px;
+}
+.rp-name {
+  margin-top: 4px;
+  font-size: 12px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.rp-body {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 0 16px 16px;
+}
+.rp-help {
+  margin: 0 0 16px;
+  font-size: 12px;
+  line-height: 1.6;
+}
+.rp-label {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 8px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--muted);
+}
+.rp-current {
+  color: var(--accent);
+}
+/* 並べ方は 2 列 (縦に長くして、向きと保存のチェックが画面の外に出ないように) */
+.rp-keys {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4px;
+  list-style: none;
+  margin: 0 0 16px;
+  padding: 0;
+}
+.rp-key {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  height: 32px;
+  padding: 0 8px;
+  border: none;
+  border-radius: 6px;
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  white-space: nowrap;
+  cursor: pointer;
+}
+.rp-key:hover {
+  background: var(--row-hover);
+}
+.rp-key.active {
+  background: var(--accent-soft);
+  color: var(--accent);
+  font-weight: 600;
+}
+.rp-order {
+  display: grid;
+  margin-bottom: 16px;
+}
+.rp-order .seg-item input:checked + span {
+  background: var(--panel);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
+}
+.rp-order .seg-item.disabled,
+.rp-keep.disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+.rp-keep {
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+  font-size: 12px;
+  line-height: 1.6;
+  cursor: pointer;
+}
+.rp-keep input {
+  margin: 2px 0 0;
+  accent-color: var(--accent);
+}
+.rp-foot {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  padding: 16px;
+  border-top: 1px solid var(--border);
+}
+/* 並び替え中は、保存かキャンセルで終えるまでサイドバーとツールバー・見方の切り替えを押せなくする */
+body.reordering .main-side,
+body.reordering .content > .toolbar > :not(.view-head),
+body.reordering #view-switch {
+  opacity: 0.5;
+  pointer-events: none;
+  transition: opacity 0.2s;
+}

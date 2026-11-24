@@ -1,0 +1,8 @@
+node_modules/
+dist/
+target/
+src-tauri/gen/
+
+# 手元のメモ
+CLAUDE.md
+CLAUDE.local.md

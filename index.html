@@ -1,0 +1,335 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ZenPod</title>
+    <link rel="stylesheet" href="/src/style.css" />
+  </head>
+  <body>
+    <!-- 自前のタイトルバー (Windows・Mac。Linux は OS のまま)。中身は ui/titlebar.ts -->
+    <header id="titlebar" class="titlebar hidden" data-tauri-drag-region>
+      <span id="tb-title" class="tb-title" data-tauri-drag-region></span>
+      <span class="tb-space" data-tauri-drag-region></span>
+      <button id="tb-update" class="tb-update">
+        <!-- 下向きの矢印 (Lucide の download アイコン、ISC ライセンス) -->
+        <svg class="icon-line" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 15V3"/><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m7 10 5 5 5-5"/></svg>
+        <span data-tr="@タイトルバー:アップデート">アップデート</span>
+      </button>
+      <div id="tb-caption" class="tb-caption hidden">
+        <button id="tb-min" class="tb-cap" title="最小化" aria-label="最小化">&#xE921;</button>
+        <button id="tb-max" class="tb-cap" title="最大化" aria-label="最大化">&#xE922;</button>
+        <button id="tb-close" class="tb-cap tb-close" title="閉じる" aria-label="閉じる">&#xE8BB;</button>
+      </div>
+    </header>
+    <!-- 設定 (一覧と入れ替えて表示) -->
+    <!-- 設定: 一覧の上に重ねるモーダル (外側の暗い所を押すか Esc で閉じる) -->
+    <section id="settings" class="settings-page hidden">
+      <div class="settings-dialog" role="dialog" aria-modal="true" aria-labelledby="settings-title">
+      <header class="settings-top">
+        <h2 id="settings-title">設定</h2>
+        <button id="set-back" class="btn icon ghost" title="閉じる (Esc)" aria-label="閉じる"><svg viewBox="0 0 24 24"><path d="M6.4 5 12 10.6 17.6 5 19 6.4 13.4 12l5.6 5.6-1.4 1.4L12 13.4 6.4 19 5 17.6 10.6 12 5 6.4 6.4 5Z"/></svg></button>
+      </header>
+      <div class="body">
+        <!-- 一覧と同じく、左で項目を選んで右に内容を出す -->
+        <aside class="sidebar set-side">
+          <ul id="set-nav" class="side-list"></ul>
+          <!-- 下端: 開発版だけの「デバッグ」(一覧の画面の「アプリの設定」と同じ置き方) -->
+          <div id="set-nav-foot" class="side-foot hidden"><ul class="side-list"></ul></div>
+        </aside>
+        <main class="settings-content">
+          <div id="settings-body" class="settings-body"></div>
+        </main>
+      </div>
+      </div>
+    </section>
+
+    <!-- メイン画面 -->
+    <section id="main" class="main">
+      <header class="topbar">
+        <div class="device">
+          <svg class="device-icon" viewBox="0 0 64 100" aria-hidden="true">
+            <rect x="2" y="2" width="60" height="96" rx="10" class="ipod-body" />
+            <rect x="9" y="9" width="46" height="34" rx="3" class="ipod-screen" />
+            <!-- メニューの行 (上の 1 行は選択中)。Rockbox のときは色を変える -->
+            <g class="ipod-menu">
+              <rect x="13" y="14" width="38" height="6" rx="1" class="ipod-menu-sel" />
+              <rect x="15" y="23" width="26" height="2.5" rx="1" />
+              <rect x="15" y="29" width="30" height="2.5" rx="1" />
+              <rect x="15" y="35" width="22" height="2.5" rx="1" />
+            </g>
+            <circle cx="32" cy="70" r="20" class="ipod-wheel" />
+            <circle cx="32" cy="70" r="7" class="ipod-body" />
+          </svg>
+          <div class="device-meta">
+            <div class="device-name-row">
+              <div id="device-name" class="device-name" title="ダブルクリックで名前を変更"></div>
+              <!-- 読み込み中・ドライブになるのを待っている間の回る印 -->
+              <span id="device-spin" class="spinner small hidden" aria-hidden="true"></span>
+              <button id="btn-rename" class="rename-btn hidden" title="iPod の名前を変更" aria-label="iPod の名前を変更">
+                <!-- 鉛筆 (Lucide の pencil アイコン、ISC ライセンス) -->
+                <svg class="icon-line" viewBox="0 0 24 24" aria-hidden="true"><path d="M21.17 6.81a1 1 0 0 0-3.99-3.99L3.84 16.17a2 2 0 0 0-.5.83l-1.32 4.35a.5.5 0 0 0 .62.62l4.35-1.32a2 2 0 0 0 .83-.5z"/><path d="m15 5 4 4"/></svg>
+              </button>
+            </div>
+            <div id="device-sub" class="device-sub"></div>
+          </div>
+        </div>
+        <div id="capacity" class="capacity" tabindex="0">
+          <div class="cap-bar"><div id="cap-used" class="cap-used"></div></div>
+          <div id="cap-text" class="cap-text"></div>
+          <!-- 内訳: マウスを乗せると出す (main.ts が中身を入れる) -->
+          <div id="cap-pop" class="cap-pop" role="tooltip"></div>
+        </div>
+        <div class="top-actions">
+          <!-- 未接続のときだけ出す (iPod を読み込んでいる間は出さない) -->
+          <button id="btn-open-root" class="btn hidden">
+            <svg viewBox="0 0 24 24" class="btn-ico"><path d="M10 4H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-8l-2-2Z"/></svg>
+            フォルダを指定して開く
+          </button>
+          <button id="btn-eject" class="btn">
+            <svg viewBox="0 0 24 24" class="btn-ico"><path d="M5 17h14v2H5v-2Zm7-12 7 10H5l7-10Z"/></svg>
+            取り出し
+          </button>
+        </div>
+      </header>
+
+      <div id="warn" class="warn hidden"></div>
+
+      <div class="body">
+        <aside class="sidebar main-side" tabindex="0">
+          <!-- 曲の管理のしかた: iPod OS (iTunesDB) / Rockbox (ファイルそのもの)。iPod を開いているときだけ出す。サイドバーをスクロールしても上に残す -->
+          <div id="mode-seg" class="seg mode-seg hidden" role="radiogroup" aria-label="曲の管理のしかた">
+            <label class="seg-item" title="Apple のファームウェア (iTunesDB) で曲を管理します"><input type="radio" name="lib-mode" value="ipod" /><span>iPod OS</span></label>
+            <label class="seg-item" title="Rockbox 用に、曲をアーティスト・アルバムのフォルダに整理して置きます。ここで入れた曲は Apple のファームウェアには表示されません"><input type="radio" name="lib-mode" value="rockbox" /><span>Rockbox</span></label>
+          </div>
+          <div class="side-scroll">
+          <!-- 見出しを押すと開け閉め、見出しをドラッグすると塊ごと並べ替え (開け閉めと並びは設定に覚える。矢印は Lucide の chevron-down、ISC ライセンス) -->
+          <section class="side-sec" data-sec="lib">
+            <div class="side-head"><button class="side-head-toggle" aria-expanded="true"><svg class="icon-line side-chevron" viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg><span>ライブラリ</span></button></div>
+            <ul id="lib-list" class="side-list"></ul>
+          </section>
+          <section class="side-sec" data-sec="pl">
+            <div class="side-head">
+              <button class="side-head-toggle" aria-expanded="true"><svg class="icon-line side-chevron" viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg><span>プレイリスト</span></button>
+              <button id="btn-new-pl" class="btn icon mini" title="新規プレイリスト" aria-label="新規プレイリスト">＋</button>
+            </div>
+            <ul id="pl-list" class="side-list"></ul>
+          </section>
+          <section class="side-sec" data-sec="pod">
+            <div class="side-head">
+              <button class="side-head-toggle" aria-expanded="true"><svg class="icon-line side-chevron" viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg><span data-tr="@side:ポッドキャスト">ポッドキャスト</span></button>
+              <span class="side-head-btns">
+                <!-- 同期 (Lucide の refresh-cw アイコン、ISC ライセンス) -->
+                <button id="btn-sync-pod" class="btn icon mini hidden" title="すべての番組を同期" aria-label="すべての番組を同期"><svg class="icon-line" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/><path d="M8 16H3v5"/></svg></button>
+                <button id="btn-add-pod" class="btn icon mini" title="番組を登録" aria-label="番組を登録">＋</button>
+              </span>
+            </div>
+            <ul id="pod-side-list" class="side-list"></ul>
+          </section>
+          <section class="side-sec" data-sec="pc">
+            <div class="side-head">
+              <button class="side-head-toggle" aria-expanded="true"><svg class="icon-line side-chevron" viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg><span>PC</span></button>
+              <button id="btn-add-pc" class="btn icon mini" title="音楽フォルダを追加" aria-label="音楽フォルダを追加">＋</button>
+            </div>
+            <ul id="pc-list" class="side-list"></ul>
+          </section>
+          </div>
+          <!-- アプリ全体の設定 (上部のバーは iPod のまとまりなので、そこには置かない) -->
+          <div class="side-foot">
+            <button id="btn-settings" class="side-settings">
+              <!-- 歯車 (Lucide の settings アイコン、ISC ライセンス) -->
+              <svg class="icon-line btn-ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg>
+              アプリの設定
+            </button>
+          </div>
+        </aside>
+        <div id="side-resizer" class="side-resizer" title="ドラッグで幅を変更 (ダブルクリックで元に戻す)"></div>
+
+        <main class="content">
+          <div class="toolbar">
+            <div class="view-head">
+              <button id="btn-album-back" class="btn hidden" title="アルバムの一覧に戻る (Esc)">← アルバム</button>
+              <img id="album-head-art" class="album-head-art hidden" alt="" />
+              <h2 id="view-title"></h2>
+              <div class="view-meta muted"><span id="view-count"></span><span id="view-stats"></span></div>
+            </div>
+            <div class="spacer"></div>
+            <!-- スマートプレイリストを開いているときだけ出す -->
+            <button id="btn-edit-rules" class="btn hidden" type="button"><svg class="icon-line btn-ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h9M17 6h3M4 12h3M11 12h9M4 18h11M19 18h1"/><circle cx="15" cy="6" r="2"/><circle cx="9" cy="12" r="2"/><circle cx="17" cy="18" r="2"/></svg>ルールを編集</button>
+            <!-- 手で作ったプレイリストを開いているときだけ出す。右に並び替えのパネルを出す (playlist-reorder.ts) -->
+            <button id="btn-reorder" class="btn hidden" type="button"><svg class="icon-line btn-ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 4v16M3 8l4-4 4 4M17 20V4M13 16l4 4 4-4"/></svg>並び替え</button>
+            <input id="search" class="search" type="search" placeholder="検索" autocomplete="off" />
+            <button id="btn-add" class="btn primary">＋ 曲を追加</button>
+          </div>
+          <!-- 見方の切り替え: ツールバーの下の段の中央 -->
+          <div id="view-switch" class="view-switch">
+            <div id="layout-toggle" class="seg layout-toggle" role="radiogroup" aria-label="表示">
+              <label class="seg-item" title="曲の一覧"><input type="radio" name="layout" value="tracks" /><span data-tr="@view:曲">曲</span></label>
+              <label class="seg-item" title="アルバムごとにジャケットで表示"><input type="radio" name="layout" value="albums" /><span data-tr="@view:アルバム">アルバム</span></label>
+              <label class="seg-item" title="アーティストごとに、アルバム別に表示"><input type="radio" name="layout" value="artists" /><span data-tr="@view:アーティスト">アーティスト</span></label>
+            </div>
+            <!-- 並べ替え: 左にそろえた長さの違う 3 本の線 -->
+            <button id="btn-sort" class="btn sort-btn" type="button" aria-haspopup="menu" title="並べ替え"><svg class="icon-line" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h18"/><path d="M3 12h12"/><path d="M3 18h6"/></svg><span id="sort-label"></span></button>
+          </div>
+
+          <!-- 曲の一覧。アーティスト表示では左にアーティストの一覧を出す -->
+          <div id="list-area" class="list-area">
+            <div id="artist-list" class="artist-list hidden" tabindex="0">
+              <ul class="side-list"></ul>
+              <div class="artist-empty muted hidden">一致するアーティストがありません</div>
+            </div>
+            <div id="artist-resizer" class="side-resizer hidden" title="ドラッグで幅を変更 (ダブルクリックで元に戻す)"></div>
+            <div id="table" class="table">
+              <div id="thead" class="thead"></div>
+              <div id="tbody" class="tbody" tabindex="0">
+                <div id="rows" class="rows"></div>
+                <div id="empty-view" class="empty-view hidden">
+                  <div class="drop-hint">
+                    <svg viewBox="0 0 24 24"><path d="M12 3v10.55A4 4 0 1 0 14 17V7h4V3h-6Z"/></svg>
+                    <div id="empty-view-text">ここに曲やフォルダをドラッグ＆ドロップ</div>
+                    <div id="empty-view-sub" class="drop-hint-sub hidden"></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <!-- プレイリストの並び替えのパネル (並び替え中だけ) -->
+            <aside id="reorder-panel" class="reorder-panel hidden"></aside>
+          </div>
+
+          <!-- ポッドキャストの番組 (サイドバーの「ポッドキャスト」)。表示中は曲の一覧の代わりにこれを出す -->
+          <div id="pod-view" class="pod-view hidden">
+            <div id="pod-head" class="pod-head"></div>
+            <div id="pod-listbar" class="pod-listbar"></div>
+            <div id="pod-eps" class="pod-eps"></div>
+            <div id="pod-selbar" class="selbar pod-selbar hidden"></div>
+          </div>
+
+          <!-- ライブラリの「ビデオ」「写真」(ui/visual.ts)。表示中は曲の一覧の代わりにこれを出す -->
+          <div id="vis-view" class="vis-view hidden">
+            <!-- ビデオの見方の切り替え (曲の一覧の「曲 / アルバム / アーティスト」と同じ置き方) -->
+            <div id="vis-switch" class="view-switch vis-switch hidden">
+              <div id="vis-layout" class="seg vis-layout" role="radiogroup" aria-label="表示">
+                <label class="seg-item"><input type="radio" name="vis-layout" value="list" /><span>リスト</span></label>
+                <label class="seg-item"><input type="radio" name="vis-layout" value="grid" /><span>サムネイル</span></label>
+              </div>
+            </div>
+            <div class="vis-body">
+              <!-- 写真のリストの左: アルバムの一覧 (アーティスト表示の左と同じ置き方) -->
+              <aside id="vis-side" class="vis-side hidden" tabindex="0"><ul class="side-list"></ul></aside>
+              <div id="vis-side-resizer" class="side-resizer hidden" title="ドラッグで幅を変更 (ダブルクリックで元に戻す)"></div>
+              <div class="vis-main">
+                <!-- リストの項目名 (一覧の上に固定。列は .vis-row と同じ) -->
+                <div id="vis-head" class="vis-head hidden"></div>
+                <div id="vis-grid" class="vis-grid" tabindex="0"></div>
+              </div>
+            </div>
+            <div id="vis-selbar" class="selbar vis-selbar hidden"></div>
+          </div>
+
+          <!-- アルバムごとにジャケットで並べる表示 -->
+          <div id="album-grid" class="album-grid hidden" tabindex="0"></div>
+
+          <!-- Rockbox のテーマ (サイドバーの「テーマ」)。表示中は一覧の代わりにこれだけを出す -->
+
+          <!-- iPod の一覧を開いているが iPod が無いとき (PC のフォルダは iPod 無しでも使える) -->
+          <!-- モードの切り替え・開き直しで読み込んでいる間、今の一覧の上に重ねる -->
+          <div id="switch-overlay" class="switch-overlay hidden" role="status" aria-live="polite">
+            <div class="switch-card">
+              <span class="spinner"></span>
+              <div id="switch-title" class="switch-title"></div>
+              <div id="switch-sub" class="switch-sub muted"></div>
+            </div>
+          </div>
+          <div id="connect-view" class="connect-view hidden">
+            <div class="empty-card">
+              <svg class="empty-ipod" viewBox="0 0 64 100" aria-hidden="true">
+                <rect x="2" y="2" width="60" height="96" rx="10" class="ipod-body" />
+                <rect x="9" y="9" width="46" height="34" rx="3" class="ipod-screen" />
+                <circle cx="32" cy="70" r="20" class="ipod-wheel" />
+                <circle cx="32" cy="70" r="7" class="ipod-body" />
+              </svg>
+              <h1 id="connect-title">iPod を接続してください</h1>
+              <p id="connect-text" class="muted">
+                USB で接続した iPod を自動で検出します。<br />
+                Windows で使う場合は Windows 形式 (FAT32) の iPod が必要です。<br />
+                PC の音楽フォルダは iPod を接続しなくても編集できます。
+              </p>
+              <p id="connect-wait" class="muted hidden"></p>
+              <div id="connect-actions">
+                <div id="device-list" class="device-list"></div>
+                <button id="btn-pick-root" class="btn ghost">フォルダを指定して開く</button>
+              </div>
+            </div>
+          </div>
+
+          <div id="selbar" class="selbar hidden">
+            <span id="sel-count" class="sel-count"><span id="sel-n"></span><span id="sel-detail" class="sel-detail"></span></span>
+            <div class="spacer"></div>
+            <button id="btn-sel-export" class="btn">PC に書き出し</button>
+            <button id="btn-sel-remove" class="btn danger"></button>
+            <button id="btn-sel-more" class="btn" title="選択した曲に対する操作"><span>メニュー</span><svg class="icon-line sel-more-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m6 15 6-6 6 6"/></svg></button>
+            <button id="btn-sel-clear" class="btn icon" title="選択を解除 (Esc)" aria-label="選択を解除"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6.4 5 12 10.6 17.6 5 19 6.4 13.4 12l5.6 5.6-1.4 1.4L12 13.4 6.4 19 5 17.6 10.6 12 5 6.4 6.4 5Z"/></svg></button>
+          </div>
+          <!-- 再生中の操作: 一覧の下だけに出す (サイドバーの下には伸ばさない) -->
+          <div id="player" class="player hidden">
+            <!-- Spotify と同じ 3 列: 左に曲、中央に操作と再生位置、右に音量と閉じる -->
+            <div class="player-left">
+              <span id="pl-art" class="player-art" aria-hidden="true"></span>
+              <div class="player-info">
+                <div id="pl-title" class="player-title"></div>
+                <div id="pl-sub" class="player-sub"></div>
+              </div>
+            </div>
+            <div class="player-center">
+              <div class="player-controls">
+                <button id="pl-shuffle" class="btn icon ghost player-mode" title="シャッフル" aria-label="シャッフル" aria-pressed="false"><svg viewBox="0 0 24 24"><path d="M10.59 9.17 5.41 4 4 5.41l5.17 5.17 1.42-1.41ZM14.5 4l2.04 2.04L4 18.59 5.41 20 17.96 7.46 20 9.5V4h-5.5Zm.33 9.41-1.41 1.41 3.13 3.13L14.5 20H20v-5.5l-2.04 2.04-3.13-3.13Z"/></svg></button>
+                <button id="pl-prev" class="btn icon ghost" title="前の曲" aria-label="前の曲"><svg viewBox="0 0 24 24"><path d="M6 6h2v12H6V6Zm3.5 6 8.5 6V6l-8.5 6Z"/></svg></button>
+                <button id="pl-toggle" class="btn icon player-play" title="再生 / 一時停止 (スペース)" aria-label="再生 / 一時停止"></button>
+                <button id="pl-next" class="btn icon ghost" title="次の曲" aria-label="次の曲"><svg viewBox="0 0 24 24"><path d="M16 6h2v12h-2V6ZM6 18l8.5-6L6 6v12Z"/></svg></button>
+                <button id="pl-repeat" class="btn icon ghost player-mode" title="リピート" aria-label="リピート" aria-pressed="false"></button>
+              </div>
+              <div class="player-progress">
+                <span id="pl-cur" class="player-time">0:00</span>
+                <input id="pl-seek" class="player-seek" type="range" min="0" max="1000" value="0" aria-label="再生位置" />
+                <span id="pl-dur" class="player-time">0:00</span>
+              </div>
+            </div>
+            <div class="player-right">
+              <button id="pl-mute" class="btn icon ghost" title="ミュート" aria-label="ミュート" aria-pressed="false"></button>
+              <input id="pl-vol" class="player-vol" type="range" min="0" max="100" value="80" title="音量" aria-label="音量" />
+              <button id="pl-close" class="btn icon ghost" title="停止して閉じる" aria-label="停止して閉じる"><svg viewBox="0 0 24 24"><path d="M6.4 5 12 10.6 17.6 5 19 6.4 13.4 12l5.6 5.6-1.4 1.4L12 13.4 6.4 19 5 17.6 10.6 12 5 6.4 6.4 5Z"/></svg></button>
+            </div>
+          </div>
+        </main>
+      </div>
+
+    </section>
+
+    <!-- 下のバー: 曲の形式と転送の進み具合。設定の画面でも転送中は出す -->
+    <footer class="status">
+      <div class="spacer"></div>
+      <button id="status-format" class="status-format hidden" title="詳細情報を表示"></button>
+      <div id="transfer" class="transfer hidden">
+        <!-- Steam のダウンロード表示のように: ジャケット、上の行に「転送中 n / m」と %、下に細いバー -->
+        <span id="transfer-art" class="transfer-art" aria-hidden="true"></span>
+        <div class="transfer-meter">
+          <div class="transfer-row"><span id="transfer-label"></span><span id="transfer-pct" class="transfer-pct"></span></div>
+          <div class="transfer-bar"><div id="transfer-fill"></div></div>
+        </div>
+        <button id="btn-cancel" class="btn mini">中止</button>
+      </div>
+    </footer>
+
+    <div id="drop-overlay" class="drop-overlay hidden">
+      <div class="drop-card">
+        <svg viewBox="0 0 24 24"><path d="M19 9h-4V3H9v6H5l7 7 7-7ZM5 18v2h14v-2H5Z"/></svg>
+        <div id="drop-text">ドロップして転送</div>
+      </div>
+    </div>
+    <div id="drag-ghost" class="drag-ghost hidden"></div>
+    <div id="menu-root"></div>
+    <div id="modal-root"></div>
+    <div id="toast-root" class="toast-root"></div>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>

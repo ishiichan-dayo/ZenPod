@@ -17,6 +17,7 @@ body:
       options:
         - Windows
         - macOS
+        - Linux
     validations:
       required: false
   - type: dropdown

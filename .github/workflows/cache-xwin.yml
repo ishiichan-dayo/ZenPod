@@ -1,0 +1,42 @@
+name: cache-xwin
+
+# リリースの Windows 版 (build.yml の build-windows) が使う MSVC の CRT と Windows SDK のキャッシュを保つ。
+# キャッシュは 7 日使わないと消えるので、週に 1 回読む。無ければダウンロードして作る (Microsoft から 15 分ほど)。
+# main で動くので、作ったキャッシュはタグのビルドからも読める。キーと場所は build.yml と同じにする
+
+on:
+  schedule:
+    - cron: "17 3 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  keep:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    env:
+      XWIN_ARCH: x86_64
+      XWIN_CACHE_DIR: /home/runner/.cache/cargo-xwin
+    steps:
+      - id: restore
+        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: /home/runner/.cache/cargo-xwin
+          key: xwin-0.23.1-x86_64-v1
+      - name: 無ければダウンロード
+        if: steps.restore.outputs.cache-hit != 'true'
+        run: |
+          V=0.23.1
+          F="cargo-xwin-v${V}.x86_64-unknown-linux-musl.tar.gz"
+          curl -fsSL -o "$RUNNER_TEMP/$F" "https://github.com/rust-cross/cargo-xwin/releases/download/v${V}/$F"
+          echo "c492c6dfb7e5ac0eee586b796e0fc950ba13077e7f0bbb046f445d71790d5360  $RUNNER_TEMP/$F" | sha256sum -c -
+          tar xzf "$RUNNER_TEMP/$F" -C "$RUNNER_TEMP" cargo-xwin
+          "$RUNNER_TEMP/cargo-xwin" xwin cache xwin
+          ls "$XWIN_CACHE_DIR/xwin"
+      - if: steps.restore.outputs.cache-hit != 'true'
+        uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: /home/runner/.cache/cargo-xwin
+          key: xwin-0.23.1-x86_64-v1

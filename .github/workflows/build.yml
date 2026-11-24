@@ -1,0 +1,459 @@
+name: release
+
+# Windows / macOS / Linux 版をビルドし、このリポジトリのリリースとして公開する。
+# アプリはそのリリースの latest.json を見て自動アップデートする。
+#
+# リリースは main から手で実行する: 注釈付きタグ vX.Y.Z (メッセージがリリースノート) を main の先頭に付けて push し、
+#   gh workflow run release -R ishiichan-dayo/ZenPod --ref main -f publish=true
+# タグの push では動かさない。main で動かすと Rust のキャッシュが main に保存され、次のリリースで読める
+# (タグで保存したキャッシュは次のタグから読めない)。依存のコンパイルが省けて分が減る
+#
+# 必要な secrets (environment「release」に登録。environment は main だけから使えるようにしておく):
+#   TAURI_SIGNING_PRIVATE_KEY            アップデート署名用の秘密鍵
+#   TAURI_SIGNING_PRIVATE_KEY_PASSWORD   その鍵のパスワード
+#
+# 秘密情報と書き込みの権限は使うジョブにだけ渡す。依存パッケージのコード (npm の build、cargo の build.rs や proc-macro) が
+# 動くビルドのジョブには渡さない (依存が 1 つ乗っ取られただけで鍵が抜かれ、更新でマルウェアを配れてしまうため)
+#   build-*  秘密情報なし・読み取りだけ。署名は使い捨ての鍵でして、その署名は捨てる
+#   sign     本物の鍵で署名して latest.json を作る。動かすのは lockfile で固定した tauri CLI だけ
+#   publish  GITHUB_TOKEN (contents: write) でリリースを作って添付し、公開する (publish のときだけ)
+# publish を付けずに実行すると公開はせず、署名までした成果物を Actions に 1 日残す (試運転用)。
+# 試運転では Mac のビルドを飛ばせる (mac を false に。publish のときは必ず作る)
+#
+# Windows 版は Linux の上で cargo-xwin で作り、
+# テストは Linux 版のジョブで回す (依存のコンパイルを分け合う)。成果物は 1 回で約 0.5 GB なので 1 日で消す
+#
+# Action はタグを書き換えられても中身が変わらないよう、コミットの SHA で固定する
+
+on:
+  workflow_dispatch:
+    inputs:
+      publish:
+        description: "公開する (タグ v<版> が実行するコミットに付いていること)"
+        type: boolean
+        default: false
+      early:
+        description: "先行版にする (GitHub のプレリリースにして Latest にしない。起動時の確認と「アップデートを確認」では案内せず、設定の「先行版」の「確認」でだけ案内する。報告してくれた人に先に試してもらう小さな修正向け。正式版と同じ番号で作り、確かめてもらったら scripts/promote.sh でビルドし直さずに正式版にする)"
+        type: boolean
+        default: false
+      mac:
+        description: "Mac 版もビルドする (試運転だけ。publish のときは必ず作る。Mac は 1 分の料金が Linux の約 10 倍)"
+        type: boolean
+        default: true
+
+permissions:
+  contents: read
+
+env:
+  RELEASE_OWNER: ${{ github.repository_owner }}
+  RELEASE_REPO: ${{ github.event.repository.name }}
+  # 利用状況の送り先 (src/infra/analytics.ts)。リポジトリの Variables に置く (フォークには引き継がれない)。
+  # 無ければアプリは送らない。公開するときは meta が有無を確かめる
+  VITE_ANALYTICS_URL: ${{ vars.ANALYTICS_URL }}
+  VITE_ANALYTICS_WEBSITE: ${{ vars.ANALYTICS_WEBSITE }}
+
+jobs:
+  # バージョンとリリースノート (タグのメッセージ)
+  meta:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      notes: ${{ steps.notes.outputs.notes }}
+      version: ${{ steps.notes.outputs.version }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: バージョンとリリースノートを取得
+        id: notes
+        env:
+          PUBLISH: ${{ inputs.publish }}
+        run: |
+          VERSION=$(node -p "require('./src-tauri/tauri.conf.json').version")
+          TAG="v${VERSION}"
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          # 公開するときは、注釈付きタグ v<版> がこの実行のコミットに付いていること (actions/checkout は
+          # タグを取らないので取り直す)。メッセージがリリースノート
+          if [ "$PUBLISH" = "true" ]; then
+            if [ -z "${VITE_ANALYTICS_URL}" ] || [ -z "${VITE_ANALYTICS_WEBSITE}" ]; then
+              echo "::error::リポジトリの Variables に ANALYTICS_URL と ANALYTICS_WEBSITE が無い"; exit 1
+            fi
+            if [ "${GITHUB_REF}" != "refs/heads/main" ]; then
+              echo "::error::公開は main から実行する (今は ${GITHUB_REF})"; exit 1
+            fi
+            git fetch --force origin "refs/tags/${TAG}:refs/tags/${TAG}" || { echo "::error::タグ ${TAG} がありません"; exit 1; }
+            if [ "$(git rev-parse "${TAG}^{commit}")" != "${GITHUB_SHA}" ]; then
+              echo "::error::タグ ${TAG} が main の先頭 (${GITHUB_SHA}) に付いていません"; exit 1
+            fi
+            if [ "$(git cat-file -t "${TAG}")" != "tag" ]; then
+              echo "::error::タグ ${TAG} が注釈付きタグではありません (メッセージがリリースノートになる)"; exit 1
+            fi
+            git tag -l --format='%(contents)' "${TAG}" > release-notes.txt
+          fi
+          [ -s release-notes.txt ] || echo "ZenPod v${VERSION}" > release-notes.txt
+          # 区切りは毎回変える (ノートに同じ行があっても途中で切れないように)
+          EOF_MARK="NOTES_$(openssl rand -hex 16)"
+          { echo "notes<<${EOF_MARK}"; cat release-notes.txt; echo "${EOF_MARK}"; } >> "$GITHUB_OUTPUT"
+
+  # テスト → Linux 版 (AppImage と .deb)。古めの Ubuntu で作ると、glibc の古い Linux でも AppImage が動く
+  build-linux:
+    # 版とタグが合わないときなど meta が失敗したら、ビルドを始めない
+    needs: [meta]
+    runs-on: ubuntu-22.04
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 24
+      - uses: dtolnay/rust-toolchain@89b12181fb390509a0842a86cc55eeb8eb928c1d # stable
+      # キャッシュは同じ ref か main のものしか読めない。リリースは main で動かすので、次のリリースで読める
+      - uses: swatinem/rust-cache@6323deb102c322ba6fcbdcafc7e3dddab59af2b6 # v2.9.2
+        with:
+          save-if: ${{ github.ref == 'refs/heads/main' }}
+      # AppImage に入れる GStreamer (アプリ内の再生に使う) と、テストの ffmpeg
+      # (変換やタグ書き込みのテストは ffmpeg が無いと何も確かめずに通る)
+      - name: ビルドに要るもの
+        # apt が止まることがある。遅ければ scripts/ci-apt.sh が公式のミラーに替えてやり直す (1 回 7 分 × 2)
+        timeout-minutes: 16
+        run: |
+          scripts/ci-apt.sh libwebkit2gtk-4.1-dev libayatana-appindicator3-dev librsvg2-dev patchelf \
+            gstreamer1.0-plugins-base gstreamer1.0-plugins-good gstreamer1.0-libav ffmpeg
+      # リリースの最適化で回す (この後の Linux 版のビルドと依存のコンパイルを分け合う)
+      - run: cargo test --release --locked -p ipod-core -p zenpod-app
+      - run: npm ci
+      # 配布物に入れる依存のライセンスの一覧が、今の依存と合っているか (依存を変えたら作り直してコミットする)
+      - name: THIRD_PARTY_LICENSES.md が最新か
+        run: |
+          python3 scripts/third-party-licenses.py
+          git diff --exit-code THIRD_PARTY_LICENSES.md || { echo "::error::python3 scripts/third-party-licenses.py で作り直してコミットする"; exit 1; }
+      # 更新用のファイル (.app.tar.gz など) は署名の鍵が無いと作られないので、使い捨ての鍵を渡す。
+      # ここでできた署名は使わない (本物の鍵での署名は sign のジョブ)
+      - name: 使い捨ての署名の鍵
+        run: |
+          npx tauri signer generate --ci -w "$RUNNER_TEMP/throwaway.key" -p throwaway
+          echo "TAURI_SIGNING_PRIVATE_KEY=$(cat "$RUNNER_TEMP/throwaway.key")" >> "$GITHUB_ENV"
+          echo "TAURI_SIGNING_PRIVATE_KEY_PASSWORD=throwaway" >> "$GITHUB_ENV"
+      - name: ビルド
+        env:
+          # AppImage に libwayland を入れない (ホストのものを使う)。区切りは ;
+          LINUXDEPLOY_EXCLUDED_LIBRARIES: "libwayland-*"
+        run: npx tauri build --bundles appimage,deb -- --locked
+      # AppImage に libwayland が入っていると、新しい Mesa の EGL が読み込めず WebKitWebProcess が落ちる
+      # (SteamOS 3.9 で発生)。Tauri CLI 2.12 の linuxdeploy でも client 以外は入るので、上の LINUXDEPLOY_EXCLUDED_LIBRARIES で外す。入っていたら止める
+      - name: AppImage に libwayland が入っていないか確かめる
+        run: |
+          cd target/release/bundle/appimage
+          ./*.AppImage --appimage-extract >/dev/null
+          if ls squashfs-root/usr/lib | grep '^libwayland-'; then echo "::error::AppImage に libwayland が入っている"; exit 1; fi
+          rm -rf squashfs-root
+      # 添付する名前にそろえて集める (以前の tauri-action と同じ名前。latest.json の URL もこの名前)
+      - name: 成果物を集める
+        run: |
+          V=$(node -p "require('./src-tauri/tauri.conf.json').version")
+          mkdir -p out
+          cp "target/release/bundle/appimage/ZenPod_${V}_amd64.AppImage" "target/release/bundle/deb/ZenPod_${V}_amd64.deb" out/
+          ls -l out
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: bundle-linux
+          path: out/*
+          if-no-files-found: error
+          retention-days: 1
+
+  # Windows 版 (NSIS のインストーラ) を Linux の上で cargo-xwin でクロスビルドする (手元の scripts/win.sh と同じ。
+  # Windows のランナーは 1 分の料金が Linux の約 1.7 倍)。Ubuntu 24.04 なのは、22.04 の NSIS 3.08 に Tauri が使う RestartManager.nsh が無いため。
+  # MSVC の CRT と Windows SDK (約 0.5 GB、x86_64 だけ) は Microsoft からのダウンロードに 15 分ほどかかるので、キャッシュから取る
+  # (main で保存したものはタグのビルドでも読める。7 日使わないと消えるので cache-xwin.yml が週に 1 回読む)
+  build-windows:
+    needs: [meta]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    env:
+      XWIN_ARCH: x86_64
+      XWIN_CACHE_DIR: /home/runner/.cache/cargo-xwin
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 24
+      - uses: dtolnay/rust-toolchain@89b12181fb390509a0842a86cc55eeb8eb928c1d # stable
+        with:
+          targets: x86_64-pc-windows-msvc
+      - uses: swatinem/rust-cache@6323deb102c322ba6fcbdcafc7e3dddab59af2b6 # v2.9.2
+        with:
+          save-if: ${{ github.ref == 'refs/heads/main' }}
+      # キーは cache-xwin.yml と同じにする
+      - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: /home/runner/.cache/cargo-xwin
+          key: xwin-0.23.1-x86_64-v1
+      - name: ビルドに要るもの
+        # apt が止まることがある。遅ければ scripts/ci-apt.sh が公式のミラーに替えてやり直す (1 回 7 分 × 2)
+        timeout-minutes: 16
+        run: |
+          scripts/ci-apt.sh clang lld llvm nsis
+          # clang-cl・lld-link・llvm-lib は llvm の版ごとのフォルダにある
+          echo "$(dirname "$(readlink -f "$(command -v clang)")")" >> "$GITHUB_PATH"
+      # cargo-xwin は配布されているビルド済みのものを、チェックサムを確かめて使う (版は scripts/setup-win-toolchain.sh の手元と同じ)
+      - name: cargo-xwin
+        run: |
+          V=0.23.1
+          F="cargo-xwin-v${V}.x86_64-unknown-linux-musl.tar.gz"
+          curl -fsSL -o "$RUNNER_TEMP/$F" "https://github.com/rust-cross/cargo-xwin/releases/download/v${V}/$F"
+          echo "c492c6dfb7e5ac0eee586b796e0fc950ba13077e7f0bbb046f445d71790d5360  $RUNNER_TEMP/$F" | sha256sum -c -
+          mkdir -p "$HOME/.local/bin"
+          tar xzf "$RUNNER_TEMP/$F" -C "$HOME/.local/bin" cargo-xwin
+          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+      - run: npm ci
+      - name: 使い捨ての署名の鍵
+        run: |
+          npx tauri signer generate --ci -w "$RUNNER_TEMP/throwaway.key" -p throwaway
+          echo "TAURI_SIGNING_PRIVATE_KEY=$(cat "$RUNNER_TEMP/throwaway.key")" >> "$GITHUB_ENV"
+          echo "TAURI_SIGNING_PRIVATE_KEY_PASSWORD=throwaway" >> "$GITHUB_ENV"
+      # Windows はインストーラ (NSIS の .exe) だけ作る。.msi は使われていない (ダウンロード 0 回) ので作らない
+      - name: ビルド
+        run: npx tauri build --runner cargo-xwin --target x86_64-pc-windows-msvc --bundles nsis -- --locked
+      - name: 成果物を集める
+        run: |
+          V=$(node -p "require('./src-tauri/tauri.conf.json').version")
+          mkdir -p out
+          cp "target/x86_64-pc-windows-msvc/release/bundle/nsis/ZenPod_${V}_x64-setup.exe" out/
+          ls -l out
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: bundle-windows
+          path: out/*
+          if-no-files-found: error
+          retention-days: 1
+
+  # Mac 版 (Apple Silicon / Intel の両方が入った universal)。テストは build-linux で回すので待たない
+  # (テストが落ちれば sign・publish は動かない)
+  build-mac:
+    needs: [meta]
+    if: inputs.publish || inputs.mac
+    runs-on: macos-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 24
+      - uses: dtolnay/rust-toolchain@89b12181fb390509a0842a86cc55eeb8eb928c1d # stable
+        with:
+          targets: aarch64-apple-darwin,x86_64-apple-darwin
+      - uses: swatinem/rust-cache@6323deb102c322ba6fcbdcafc7e3dddab59af2b6 # v2.9.2
+        with:
+          save-if: ${{ github.ref == 'refs/heads/main' }}
+      - run: npm ci
+      - name: 使い捨ての署名の鍵
+        run: |
+          npx tauri signer generate --ci -w "$RUNNER_TEMP/throwaway.key" -p throwaway
+          echo "TAURI_SIGNING_PRIVATE_KEY=$(cat "$RUNNER_TEMP/throwaway.key")" >> "$GITHUB_ENV"
+          echo "TAURI_SIGNING_PRIVATE_KEY_PASSWORD=throwaway" >> "$GITHUB_ENV"
+      - name: ビルド
+        run: npx tauri build --target universal-apple-darwin -- --locked
+      # アプリ全体が Bundle ID の名前で ad-hoc 署名されているか (tauri.macos.conf.json の signingIdentity "-")。
+      # 署名が無いと、macOS が許可をこのアプリのものとして覚えられず、何度も聞いてくる (配布リポジトリの Issue #17)
+      - name: 署名を確かめる
+        run: |
+          APP=target/universal-apple-darwin/release/bundle/macos/ZenPod.app
+          codesign --verify --deep --strict --verbose=2 "$APP"
+          codesign -dv "$APP" 2>&1 | tee sig.txt
+          grep -q '^Identifier=app.ipodsync.desktop$' sig.txt
+          grep -q '^Signature=adhoc$' sig.txt
+      - name: 成果物を集める
+        run: |
+          V=$(node -p "require('./src-tauri/tauri.conf.json').version")
+          B=target/universal-apple-darwin/release/bundle
+          mkdir -p out
+          cp "$B/dmg/ZenPod_${V}_universal.dmg" out/
+          cp "$B/macos/ZenPod.app.tar.gz" out/ZenPod_universal.app.tar.gz
+          ls -l out
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: bundle-mac
+          path: out/*
+          if-no-files-found: error
+          retention-days: 1
+
+  # 本物の鍵で署名して latest.json を作る。鍵はこのジョブの署名のステップにだけ渡す
+  sign:
+    needs: [meta, build-linux, build-windows, build-mac]
+    # 試運転で Mac を飛ばしたときも動かす (publish のときは Mac も必ず作る)
+    if: ${{ !cancelled() && needs.build-linux.result == 'success' && needs.build-windows.result == 'success' && (needs.build-mac.result == 'success' || needs.build-mac.result == 'skipped') }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    # 署名の鍵は environment「release」にだけ置く (main 以外のブランチ・PR からは読めない)
+    environment: release
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 24
+      # tauri CLI を lockfile の版で入れる。インストール時のスクリプトは動かさない
+      - run: npm ci --ignore-scripts
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          pattern: bundle-*
+          path: release
+          merge-multiple: true
+      - name: 署名
+        env:
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
+          VERSION: ${{ needs.meta.outputs.version }}
+        run: |
+          cd release
+          shopt -s nullglob
+          for f in ./*_x64-setup.exe ./*.app.tar.gz ./*.AppImage ./*.deb; do
+            npx tauri signer sign --app-version "$VERSION" "$f"
+          done
+      # 以前の tauri-action と同じ形 (アプリの更新確認はこれを読む)
+      - name: latest.json
+        env:
+          NOTES: ${{ needs.meta.outputs.notes }}
+          VERSION: ${{ needs.meta.outputs.version }}
+          EARLY: ${{ inputs.early }}
+        run: |
+          node - <<'JS'
+          const fs = require("fs");
+          const v = process.env.VERSION;
+          // その版のリリースの添付を指す (先行版はプレリリースで releases/latest から辿れない。2.8.11 までは releases/latest)
+          const base = `https://github.com/${process.env.RELEASE_OWNER}/${process.env.RELEASE_REPO}/releases/download/v${v}/`;
+          const entry = (name) => ({
+            signature: fs.readFileSync(`release/${name}.sig`, "utf8").trim(),
+            url: base + name,
+          });
+          // 試運転で Mac を飛ばしたときは Mac の項目を入れない
+          const mac = fs.existsSync("release/ZenPod_universal.app.tar.gz.sig") ? entry("ZenPod_universal.app.tar.gz") : undefined;
+          const appimage = entry(`ZenPod_${v}_amd64.AppImage`);
+          const nsis = entry(`ZenPod_${v}_x64-setup.exe`);
+          const json = {
+            version: v,
+            notes: process.env.NOTES.trim(),
+            pub_date: new Date().toISOString(),
+            // 先行版 (アプリは「先行版を確認」のときだけ案内する。updater は知らない項目を読み飛ばす)
+            ...(process.env.EARLY === "true" ? { early: true } : {}),
+            platforms: {
+              "darwin-aarch64": mac,
+              "darwin-x86_64": mac,
+              "darwin-aarch64-app": mac,
+              "darwin-x86_64-app": mac,
+              "linux-x86_64": appimage,
+              "linux-x86_64-appimage": appimage,
+              "linux-x86_64-deb": entry(`ZenPod_${v}_amd64.deb`),
+              "windows-x86_64": nsis,
+              "windows-x86_64-nsis": nsis,
+            },
+          };
+          fs.writeFileSync("release/latest.json", JSON.stringify(json, null, 2));
+          JS
+          rm release/*.sig
+          ls -l release
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: release
+          path: release/*
+          if-no-files-found: error
+          retention-days: 1
+
+  # 全 OS の成果物と latest.json が揃ってから、リリースを作って添付し、公開する
+  # リリースページの本文は、タグのメッセージの後に「どれをダウンロードするか」の案内を付ける
+  # (案内はアプリの更新案内 (latest.json の notes) には入れない)
+  publish:
+    needs: [meta, sign]
+    if: inputs.publish
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    environment: release
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: release
+          path: release
+      - uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
+        env:
+          NOTES: ${{ needs.meta.outputs.notes }}
+          VERSION: ${{ needs.meta.outputs.version }}
+          EARLY: ${{ inputs.early }}
+        with:
+          github-token: ${{ github.token }}
+          script: |
+            const fs = require("fs");
+            const v = process.env.VERSION;
+            const repo = { owner: process.env.RELEASE_OWNER, repo: process.env.RELEASE_REPO };
+            // 添付がそろっていなければ公開しない
+            const want = [`ZenPod_${v}_x64-setup.exe`, `ZenPod_${v}_universal.dmg`, "ZenPod_universal.app.tar.gz",
+              `ZenPod_${v}_amd64.AppImage`, `ZenPod_${v}_amd64.deb`, "latest.json"];
+            const missing = want.filter((n) => !fs.existsSync(`release/${n}`));
+            if (missing.length) {
+              core.setFailed(`添付が足りません: ${missing.join(", ")}`);
+              return;
+            }
+            const guide = [
+              "## ダウンロード / Download",
+              "",
+              `- **Windows 10 / 11 (64-bit)**: \`ZenPod_${v}_x64-setup.exe\``,
+              `- **macOS (Apple Silicon / Intel)**: \`ZenPod_${v}_universal.dmg\``,
+              `- **Linux (x86_64)**: \`ZenPod_${v}_amd64.AppImage\` / Debian・Ubuntu: \`ZenPod_${v}_amd64.deb\``,
+              "",
+              `\`.app.tar.gz\` と \`latest.json\` はアプリの自動アップデート用なので、ダウンロードは不要です。`,
+              `\`.app.tar.gz\` and \`latest.json\` are used by the app's automatic updates, so you don't need to download them.`,
+              "",
+              "### 初めて起動するとき / First launch",
+              "",
+              "- **Windows**：「Windows によって PC が保護されました」と表示されたら「詳細情報」→「実行」",
+              "  If you see \"Windows protected your PC\", click \"More info\" → \"Run anyway\"",
+              "- **macOS 15 (Sequoia) 以降**：一度アプリを開いて警告を閉じたあと、「システム設定」→「プライバシーとセキュリティ」の下のほうにある「このまま開く」",
+              "  macOS 15 (Sequoia) or later: try opening the app once and close the warning, then System Settings → Privacy & Security → \"Open Anyway\"",
+              "- **macOS 14 以前**：Finder でアプリを右クリック →「開く」",
+              "  macOS 14 or earlier: right-click the app in Finder → \"Open\"",
+              "- **Linux (AppImage)**：ファイルに実行の許可を付けてから開く (\`chmod +x ZenPod_*.AppImage\`)",
+              "  Linux (AppImage): make the file executable before opening it (\`chmod +x ZenPod_*.AppImage\`)",
+              "- **Linux (.deb)**：ダウンロードしたフォルダで \`sudo apt install ./ZenPod_*.deb\`",
+              "  Linux (.deb): run \`sudo apt install ./ZenPod_*.deb\` in the folder you downloaded it to",
+            ].join("\n");
+            const notes = process.env.NOTES.trim();
+            // 先行版はプレリリースにして Latest にしない (リリースの一覧で普通の版と同じに見えないように。
+            // アプリの起動時の確認先 releases/latest/download/latest.json にも出ない。設定の「先行版」の「確認」は一覧から探す)
+            const early = process.env.EARLY === "true";
+            // 下書きで作って全部添付してから公開する (途中で失敗しても、半端なリリースを latest にしない)
+            const { data: release } = await github.rest.repos.createRelease({
+              ...repo,
+              tag_name: `v${v}`,
+              target_commitish: "main",
+              name: `ZenPod v${v}`,
+              body: notes,
+              draft: true,
+            });
+            for (const name of fs.readdirSync("release")) {
+              const data = fs.readFileSync(`release/${name}`);
+              await github.rest.repos.uploadReleaseAsset({
+                ...repo,
+                release_id: release.id,
+                name,
+                data,
+                headers: { "content-type": "application/octet-stream", "content-length": data.length },
+              });
+              core.info(`添付: ${name}`);
+            }
+            await github.rest.repos.updateRelease({
+              ...repo,
+              release_id: release.id,
+              body: `${notes}\n\n${guide}`,
+              draft: false,
+              prerelease: early,
+              make_latest: early ? "false" : "true",
+            });

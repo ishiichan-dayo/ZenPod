@@ -100,6 +100,13 @@ pub const PHOTO: &[ArtFormat] = &[f(1017, 56, 56), f(1016, 140, 140)];
 /// iPod nano 1G / 2G。libgpod の ipod_nano_cover_art_info
 pub const NANO: &[ArtFormat] = &[f(1031, 42, 42), f(1027, 100, 100)];
 
+/// iPod nano 5G。libgpod の ipod_nano5g_cover_art_info
+pub const NANO5: &[ArtFormat] = &[f(1056, 128, 128), f(1078, 80, 80), f(1073, 240, 240), f(1074, 50, 50)];
+/// iPod nano 6G。libgpod には無く、iOpenPod が実機のデータから作った表 (本体の SysInfoExtended があればそちらを使う)
+pub const NANO6: &[ArtFormat] = &[f(1073, 240, 240), f(1085, 88, 88), f(1089, 58, 58), f(1074, 50, 50)];
+/// iPod nano 7G。NANO6 と同じく iOpenPod の表。1016 は 57 画素を 4 バイトそろえの行 (116 バイト)
+pub const NANO7: &[ArtFormat] = &[f(1010, 240, 240), f(1013, 50, 50), f(1015, 58, 58), fa(1016, 57, 57, 4)];
+
 // ---- 写真の形式 (libgpod 0.8.3 の itdb_device.c の *_photo_info) ----
 /// iPod photo (カラー液晶の 4G)
 pub const PHOTO_PHOTOS: &[ArtFormat] = &[
@@ -116,6 +123,8 @@ pub const VIDEO_PHOTOS: &[ArtFormat] = &[f(1036, 50, 41), f(1015, 130, 88), f(10
 pub const CLASSIC_PHOTOS: &[ArtFormat] = &[fp(1067, 720, 480, Pix::I420), f(1024, 320, 240), f(1066, 64, 64)];
 /// iPod nano 4G (縦にも回すので 240×320 がある。JPEG の 1081 は libgpod も書かない)
 pub const NANO4_PHOTOS: &[ArtFormat] = &[f(1024, 320, 240), f(1066, 64, 64), f(1079, 80, 80), f(1083, 240, 320)];
+/// iPod nano 5G (JPEG の 1081 は libgpod も書かない)
+pub const NANO5_PHOTOS: &[ArtFormat] = &[f(1087, 384, 384), f(1079, 80, 80), f(1066, 64, 64)];
 
 fn known_format(id: u32) -> Option<ArtFormat> {
     CLASSIC
@@ -129,6 +138,11 @@ fn known_format(id: u32) -> Option<ArtFormat> {
         .chain(VIDEO_PHOTOS)
         .chain(CLASSIC_PHOTOS)
         .chain(NANO4_PHOTOS)
+        // 番号がほかの機種と重なるもの (nano 7G の 1015 など) は前の表を優先する
+        .chain(NANO5)
+        .chain(NANO6)
+        .chain(NANO7)
+        .chain(NANO5_PHOTOS)
         .copied()
         .find(|f| f.id == id)
 }

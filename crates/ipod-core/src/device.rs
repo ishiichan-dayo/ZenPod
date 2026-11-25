@@ -19,7 +19,12 @@ pub enum ChecksumKind {
     None,
     /// iPod Classic / nano 3G・4G
     Hash58,
-    /// hash72 / hashAB が必要な機種 (nano 5G 以降) — 非対応
+    /// nano 5G: hash72 と hash58 の両方。hash72 の材料 (HashInfo) は iTunes で一度同期した iPod から取る
+    Hash72,
+    /// nano 6G / 7G
+    #[serde(rename = "hashAB")]
+    HashAb,
+    /// 分からない署名 (iPod touch など) — 非対応
     Unsupported,
 }
 
@@ -50,6 +55,8 @@ pub struct DeviceInfo {
     pub music_dirs: Option<u32>,
     /// iPod shuffle なら iTunesSD の形式 (保存のときに iTunesDB と一緒に書く)
     pub shuffle: Option<SdFormat>,
+    /// nano 5G 以降: 縮めた iTunesCDB と SQLite のデータベース (iTunes Library.itlp) で持つ
+    pub sqlite_db: bool,
     pub total_bytes: u64,
     pub free_bytes: u64,
 }
@@ -275,16 +282,27 @@ pub fn probe_timed(root: &Path, existing_db_scheme: Option<u16>, times: &mut Ope
     // ジャケットの形式は本体の SysInfoExtended を優先する (libgpod と同じ)。無ければ機種の既定値
     let art_formats = Some(sysinfo_art_formats(&sysinfo_ext)).filter(|f| !f.is_empty()).unwrap_or_else(|| m.art_formats.to_vec());
 
-    let checksum = match db_version {
-        Some(0..=2) => ChecksumKind::None,
-        Some(3) => ChecksumKind::Hash58,
-        Some(_) => ChecksumKind::Unsupported,
-        None => match existing_db_scheme {
+    let checksum = match (model_checksum, db_version) {
+        // nano 5G の本体は DBVersion を 3 (hash58) と返すことがあるが、iTunes は hash72 もかける。機種が分かればそちらで決める
+        (c @ (ChecksumKind::Hash72 | ChecksumKind::HashAb), _) => c,
+        (_, Some(0..=2)) => ChecksumKind::None,
+        (_, Some(3)) => ChecksumKind::Hash58,
+        (_, Some(4)) => ChecksumKind::Hash72,
+        (_, Some(5)) => ChecksumKind::HashAb,
+        (_, Some(_)) => ChecksumKind::Unsupported,
+        // mhbd の hashing_scheme (1: hash58, 2: hash72, 3: hashAB)
+        (_, None) => match existing_db_scheme {
             Some(1) => ChecksumKind::Hash58,
-            Some(2..) => ChecksumKind::Unsupported,
+            Some(2) => ChecksumKind::Hash72,
+            Some(3) => ChecksumKind::HashAb,
+            Some(4..) => ChecksumKind::Unsupported,
             _ => model_checksum,
         },
     };
+    // SQLite のデータベースを使う機種 (libgpod は SysInfoExtended の SQLiteDB で見る)
+    let sqlite_db = plist_bool(&sysinfo_ext, "SQLiteDB").unwrap_or(false)
+        || matches!(m.generation, Some(Gen::Nano5 | Gen::Nano6 | Gen::Nano7))
+        || matches!(checksum, ChecksumKind::Hash72 | ChecksumKind::HashAb);
 
     let space_started = std::time::Instant::now();
     let (total_bytes, free_bytes) = (fs4::total_space(root).unwrap_or(0), fs4::available_space(root).unwrap_or(0));
@@ -304,6 +322,7 @@ pub fn probe_timed(root: &Path, existing_db_scheme: Option<u16>, times: &mut Ope
         video: m.generation.is_none_or(Gen::video),
         music_dirs,
         shuffle,
+        sqlite_db,
         total_bytes,
         free_bytes,
     }
@@ -352,6 +371,19 @@ fn sysinfo_value(text: &str, key: &str) -> Option<String> {
 /// SysInfoExtended (XML plist) から <key>K</key><string>V</string> を抜く簡易パーサ
 fn plist_string(xml: &str, key: &str) -> Option<String> {
     plist_value(xml, key, "string")
+}
+
+/// plist の `<key>…</key><true/>` / `<false/>`
+fn plist_bool(xml: &str, key: &str) -> Option<bool> {
+    let k = format!("<key>{key}</key>");
+    let rest = xml[xml.find(&k)? + k.len()..].trim_start();
+    if rest.starts_with("<true/>") {
+        Some(true)
+    } else if rest.starts_with("<false/>") {
+        Some(false)
+    } else {
+        None
+    }
 }
 
 fn plist_integer(xml: &str, key: &str) -> Option<u32> {
@@ -451,8 +483,9 @@ enum Gen {
     Classic3,
     Nano3,
     Nano4,
-    /// nano 5G 以降 (署名の方式が違い、書き込めない)
-    Nano5Plus,
+    Nano5,
+    Nano6,
+    Nano7,
     /// shuffle 1G〜4G (画面が無い。曲の一覧は iTunesSD)
     Shuffle1,
     Shuffle2,
@@ -479,8 +512,9 @@ impl Gen {
             Gen::Classic3 => "iPod classic (7G)",
             Gen::Nano3 => "iPod nano (3G)",
             Gen::Nano4 => "iPod nano (4G)",
-            // tr: 使う側で訳す (model_lookup)
-            Gen::Nano5Plus => "iPod nano (5G 以降)",
+            Gen::Nano5 => "iPod nano (5G)",
+            Gen::Nano6 => "iPod nano (6G)",
+            Gen::Nano7 => "iPod nano (7G)",
             Gen::Shuffle1 => "iPod shuffle (1G)",
             Gen::Shuffle2 => "iPod shuffle (2G)",
             Gen::Shuffle3 => "iPod shuffle (3G)",
@@ -500,7 +534,8 @@ impl Gen {
     fn checksum(self) -> ChecksumKind {
         match self {
             Gen::Classic1 | Gen::Classic2 | Gen::Classic3 | Gen::Nano3 | Gen::Nano4 => ChecksumKind::Hash58,
-            Gen::Nano5Plus => ChecksumKind::Unsupported,
+            Gen::Nano5 => ChecksumKind::Hash72,
+            Gen::Nano6 | Gen::Nano7 => ChecksumKind::HashAb,
             _ => ChecksumKind::None,
         }
     }
@@ -508,33 +543,38 @@ impl Gen {
     /// アートワーク形式 (空ならアートワーク非対応)。既存の ArtworkDB があればそちらが優先される。
     /// 白黒液晶の 1G〜4G と mini は画像を表示できない
     fn art_formats(self) -> &'static [crate::ipod::artwork::ArtFormat] {
-        use crate::ipod::artwork::{CLASSIC, NANO, NANO4, PHOTO, VIDEO};
+        use crate::ipod::artwork::{CLASSIC, NANO, NANO4, NANO5, NANO6, NANO7, PHOTO, VIDEO};
         match self {
             Gen::Photo => PHOTO,
             Gen::Nano1 | Gen::Nano2 => NANO,
             Gen::Video1 | Gen::Video2 => VIDEO,
             Gen::Classic1 | Gen::Classic2 | Gen::Classic3 | Gen::Nano3 => CLASSIC,
             Gen::Nano4 => NANO4,
+            Gen::Nano5 => NANO5,
+            Gen::Nano6 => NANO6,
+            Gen::Nano7 => NANO7,
             _ => &[],
         }
     }
 
     /// 写真の形式 (空なら写真を表示できない)
     fn photo_formats(self) -> &'static [crate::ipod::artwork::ArtFormat] {
-        use crate::ipod::artwork::{CLASSIC_PHOTOS, NANO_PHOTOS, NANO4_PHOTOS, PHOTO_PHOTOS, VIDEO_PHOTOS};
+        use crate::ipod::artwork::{CLASSIC_PHOTOS, NANO_PHOTOS, NANO4_PHOTOS, NANO5_PHOTOS, PHOTO_PHOTOS, VIDEO_PHOTOS};
         match self {
             Gen::Photo => PHOTO_PHOTOS,
             Gen::Nano1 | Gen::Nano2 => NANO_PHOTOS,
             Gen::Video1 | Gen::Video2 => VIDEO_PHOTOS,
             Gen::Classic1 | Gen::Classic2 | Gen::Classic3 | Gen::Nano3 => CLASSIC_PHOTOS,
             Gen::Nano4 => NANO4_PHOTOS,
+            // 6G / 7G の写真の形式は libgpod に無く、確かめようがないので出さない
+            Gen::Nano5 => NANO5_PHOTOS,
             _ => &[],
         }
     }
 
     /// 動画を再生できるか (video 5G 以降と nano 3G 以降)
     fn video(self) -> bool {
-        matches!(self, Gen::Video1 | Gen::Video2 | Gen::Classic1 | Gen::Classic2 | Gen::Classic3 | Gen::Nano3 | Gen::Nano4 | Gen::Nano5Plus)
+        matches!(self, Gen::Video1 | Gen::Video2 | Gen::Classic1 | Gen::Classic2 | Gen::Classic3 | Gen::Nano3 | Gen::Nano4 | Gen::Nano5 | Gen::Nano7)
     }
 }
 
@@ -642,6 +682,38 @@ const MODELS: &[(&str, u32, Gen, u32)] = &[
     ("B915", 16, Gen::Nano4, 14),
     ("B917", 16, Gen::Nano4, 14),
     ("B918", 16, Gen::Nano4, 14),
+    ("C027", 8, Gen::Nano5, 14),
+    ("C031", 8, Gen::Nano5, 14),
+    ("C034", 8, Gen::Nano5, 14),
+    ("C037", 8, Gen::Nano5, 14),
+    ("C040", 8, Gen::Nano5, 14),
+    ("C043", 8, Gen::Nano5, 14),
+    ("C046", 8, Gen::Nano5, 14),
+    ("C049", 8, Gen::Nano5, 14),
+    ("C050", 8, Gen::Nano5, 14),
+    ("C060", 16, Gen::Nano5, 14),
+    ("C062", 16, Gen::Nano5, 14),
+    ("C064", 16, Gen::Nano5, 14),
+    ("C066", 16, Gen::Nano5, 14),
+    ("C068", 16, Gen::Nano5, 14),
+    ("C070", 16, Gen::Nano5, 14),
+    ("C072", 16, Gen::Nano5, 14),
+    ("C074", 16, Gen::Nano5, 14),
+    ("C075", 16, Gen::Nano5, 14),
+    ("C525", 8, Gen::Nano6, 14),
+    ("C688", 8, Gen::Nano6, 14),
+    ("C689", 8, Gen::Nano6, 14),
+    ("C690", 8, Gen::Nano6, 14),
+    ("C691", 8, Gen::Nano6, 14),
+    ("C692", 8, Gen::Nano6, 14),
+    ("C693", 8, Gen::Nano6, 14),
+    ("C526", 16, Gen::Nano6, 14),
+    ("C694", 16, Gen::Nano6, 14),
+    ("C695", 16, Gen::Nano6, 14),
+    ("C696", 16, Gen::Nano6, 14),
+    ("C697", 16, Gen::Nano6, 14),
+    ("C698", 16, Gen::Nano6, 14),
+    ("C699", 16, Gen::Nano6, 14),
     // shuffle の 1GB 未満 (512MB) は 0 と書く
     ("9724", 0, Gen::Shuffle1, 3),
     ("9725", 1, Gen::Shuffle1, 3),
@@ -694,7 +766,9 @@ fn gen_from_usb(pid: u16) -> Option<Gen> {
         0x1261 => Gen::Classic1,
         0x1262 => Gen::Nano3,
         0x1263 => Gen::Nano4,
-        0x1265..=0x1267 => Gen::Nano5Plus,
+        0x1265 => Gen::Nano5,
+        0x1266 => Gen::Nano6,
+        0x1267 => Gen::Nano7,
         0x1300 => Gen::Shuffle1,
         0x1301 => Gen::Shuffle2,
         0x1302 => Gen::Shuffle3,
@@ -967,7 +1041,10 @@ mod tests {
         let (name, _, art, dirs) = l(None, Some(0x1204));
         assert_eq!((name.as_str(), art, dirs), ("iPod photo (4G)", PHOTO, None));
         assert_eq!(l(None, Some(0x1209)).2, VIDEO);
-        assert_eq!(l(None, Some(0x1266)).1, ChecksumKind::Unsupported);
+        assert_eq!(l(None, Some(0x1265)).1, ChecksumKind::Hash72);
+        assert_eq!(l(None, Some(0x1266)).1, ChecksumKind::HashAb);
+        assert_eq!(l(Some("MC027"), None).0, "iPod nano (5G) 8GB");
+        assert_eq!(l(Some("MC699"), None).3, Some(14));
         // 分からない機種
         assert_eq!(l(Some("xZZZZ"), None).0, "iPod");
         // 写真と動画

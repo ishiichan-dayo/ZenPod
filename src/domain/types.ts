@@ -58,7 +58,7 @@ export interface DeviceInfo {
   firewireId: string | null;
   firewireIdSource: "sysInfoExtended" | "sysInfo" | "usb" | "manual" | null;
   usbProductId: number | null;
-  checksum: "none" | "hash58" | "unsupported";
+  checksum: "none" | "hash58" | "hash72" | "hashAB" | "unsupported";
   /** iPod OS で写真を表示できる機種か (型番から) */
   photos: boolean;
   /** iPod OS で動画を再生できる機種か (型番から。分からなければ true) */

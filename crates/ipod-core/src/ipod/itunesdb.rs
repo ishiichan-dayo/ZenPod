@@ -595,7 +595,7 @@ impl ITunesDb {
         }
     }
 
-    /// hashing_scheme (0: なし, 1: hash58, 2: hash72, 4: hashAB)
+    /// hashing_scheme (0: なし, 1: hash58, 2: hash72, 3: hashAB)
     pub fn hashing_scheme(&self) -> u16 {
         rd16(&self.header, 0x30)
     }
@@ -1489,6 +1489,54 @@ pub fn parse_otg(db: &ITunesDb, data: &[u8]) -> Vec<u64> {
             db.tracks.get(idx).map(|t| t.dbid())
         })
         .collect()
+}
+
+// ---------------- SQLite のライブラリ (sqlitedb.rs) 用の読み取り ----------------
+
+impl Track {
+    /// mhit 0xA4 の値そのまま (1 = アートワークあり、2 = なし。古い DB は 0)
+    pub fn artwork_flag(&self) -> u8 {
+        self.hdr[0xA4]
+    }
+    /// iTunes で付けた評価 (app_rating)
+    pub fn app_rating(&self) -> u8 {
+        self.hdr[0x79]
+    }
+    pub fn bpm(&self) -> i16 {
+        rd16(&self.hdr, 0x7A) as i16
+    }
+    /// サウンドチェック (音量をそろえる値)
+    pub fn soundcheck(&self) -> u32 {
+        rd32(&self.hdr, 0x4C)
+    }
+    pub fn gapless_track_flag(&self) -> u16 {
+        rd16(&self.hdr, 0x100)
+    }
+    /// チャプタの MHOD (17) の生バイト (ヘッダ込み)
+    pub fn chapter_mhod(&self) -> Option<&[u8]> {
+        self.raw_mhods.iter().find(|m| rd32(m, 0x0C) == 17).map(|m| m.as_slice())
+    }
+}
+
+impl Playlist {
+    /// 作った日時 (mhyp 0x18、Mac の時刻)
+    pub fn timestamp_mac(&self) -> u32 {
+        rd32(&self.hdr, 0x18)
+    }
+    /// 並べ方 (mhyp 0x2C、libgpod の sortorder)
+    pub fn sort_order(&self) -> u32 {
+        rd32(&self.hdr, 0x2C)
+    }
+}
+
+impl ITunesDb {
+    /// Genius の CUID (mhsd 9 の中身。libgpod の parse_genius_mhsd と同じく最初の 0 まで)
+    pub fn genius_cuid(&self) -> Option<String> {
+        let (_, raw) = self.preserved_mhsd.iter().find(|(t, _)| *t == 9)?;
+        let body = raw.get(rd32(raw, 4) as usize..)?;
+        let end = body.iter().position(|&b| b == 0).unwrap_or(body.len());
+        Some(String::from_utf8_lossy(&body[..end]).into_owned())
+    }
 }
 
 #[cfg(test)]

@@ -361,7 +361,7 @@ pub fn merge_stats(db: &mut ITunesDb, itunes_sd: &[u8], stats: &[u8]) -> usize {
     let Some((format, paths)) = sd_paths(itunes_sd) else { return 0 };
     let Some(stats) = parse_stats(format, stats) else { return 0 };
     if stats.len() != paths.len() {
-        log::warn!("iTunesStats: {} 件、iTunesSD: {} 曲で合わないので取り込まない", stats.len(), paths.len());
+        log::warn!("iTunesStats: {} entries but iTunesSD has {} tracks, not merging", stats.len(), paths.len());
         return 0;
     }
     let by_path: HashMap<String, usize> = db.tracks.iter().enumerate().map(|(i, t)| (sd_path(t).to_ascii_lowercase(), i)).collect();

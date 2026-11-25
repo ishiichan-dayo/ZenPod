@@ -135,6 +135,29 @@ PORTED = [
         "start": "Copyright (C) 2007 Christophe Fergeau",
         "end": "OF SUCH DAMAGE.",
     },
+    {
+        "name": "dstaley/hashab",
+        "license": "Unlicense",
+        "url": "https://github.com/dstaley/hashab",
+        "file": "crates/ipod-core/src/ipod/hashab.rs",
+        "start": "This is free and unencumbered software",
+        "end": "<https://unlicense.org>",
+    },
+    {
+        "name": "RHash (edonr.c, in dstaley/hashab)",
+        "license": "0BSD",
+        "url": "https://github.com/rhash/RHash",
+        "file": "crates/ipod-core/src/ipod/hashab.rs",
+        "start": "Copyright (c) 2011, Aleksey Kravchenko",
+        "end": "PERFORMANCE OF THIS SOFTWARE.",
+    },
+    {
+        # LGPL-2.1-or-later のコードを GPL-3.0-or-later (ZenPod の LICENSE) として使う。文は LICENSE と同じなので載せない
+        "name": "libgpod (itdb_hash72.c, itdb_zlib.c, itdb_sqlite.c, iTunesSD in itdb_itunesdb.c)",
+        "license": "LGPL-2.1-or-later, used under GPL-3.0-or-later",
+        "url": "https://sourceforge.net/projects/gtkpod/",
+        "file": "crates/ipod-core/src/ipod/{hash72,cdb,sqlitedb,shuffle}.rs",
+    },
 ]
 
 
@@ -195,10 +218,11 @@ def main():
         out.append("")
         out.append(f"- **{item['name']}** ({item['license']}) — {item['url']} (ported to `{item['file']}`)")
         out.append("")
-        out.append("```text")
-        out.append(ported_notice(item))
-        out.append("```")
-        out.append("")
+        if "start" in item:
+            out.append("```text")
+            out.append(ported_notice(item))
+            out.append("```")
+            out.append("")
     for texts, ps in sorted(groups.items(), key=lambda kv: kv[1][0]["name"].lower()):
         out.append("---")
         out.append("")

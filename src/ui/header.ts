@@ -136,7 +136,7 @@ export function renderHeader() {
   const warn = $("warn");
   if (s.writableError) {
     warn.classList.remove("hidden");
-    const needGuid = d.checksum === "hash58" && !d.firewireId;
+    const needGuid = (d.checksum === "hash58" || d.checksum === "hash72" || d.checksum === "hashAB") && !d.firewireId;
     warn.innerHTML = `<span>⚠ ${esc(tr("読み取り専用: {reason}", { reason: s.writableError ?? "" }))}</span>${needGuid ? `<button class="btn mini" id="btn-warn-guid">${esc(tr("FireWire GUID を入力"))}</button>` : ""}`;
     document.getElementById("btn-warn-guid")?.addEventListener("click", () => {
       state.settingsCat = "ipod";

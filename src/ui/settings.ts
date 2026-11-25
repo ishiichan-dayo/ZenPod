@@ -534,7 +534,7 @@ export function renderSettingsDevice() {
     <div class="set-info">
       <span>${esc(tr("モデル"))}</span><span>${esc(d.modelName)}${d.modelNumber ? ` (${esc(d.modelNumber)})` : ""}</span>
       <span>${esc(tr("場所"))}</span><span>${esc(d.root)}</span>
-      <span>${esc(tr("DB の署名"))}</span><span>${d.checksum === "hash58" ? tr("hash58 (FireWire GUID が必要)") : d.checksum === "none" ? tr("不要") : tr("非対応")}</span>
+      <span>${esc(tr("DB の署名"))}</span><span>${checksumLabel(d.checksum)}</span>
     </div>
     <div class="field" id="set-guid-field"></div>`;
   renderGuidField(el.querySelector<HTMLElement>("#set-guid-field")!, d, !d.firewireId);
@@ -650,4 +650,20 @@ export async function rebuildRockboxDb() {
   const parts = [tr("Rockbox のデータベースを作りました ({n} 曲)", { n: b.tracks.toLocaleString() })];
   if (b.skipped) parts.push(tr("{n} 曲はタグを読めない形式なので、iPod の「データベース → 今すぐ更新」で入ります", { n: b.skipped }));
   toast(parts.join(" / "), "info", b.skipped ? 10000 : 3500);
+}
+
+/** iPod のデータベースの署名の方式の表示 */
+function checksumLabel(c: DeviceInfo["checksum"]): string {
+  switch (c) {
+    case "none":
+      return tr("不要");
+    case "hash58":
+      return tr("hash58 (FireWire GUID が必要)");
+    case "hash72":
+      return tr("hash72 + hash58 (FireWire GUID と iTunes で一度同期した情報が必要)");
+    case "hashAB":
+      return tr("hashAB (FireWire GUID が必要)");
+    default:
+      return tr("非対応");
+  }
 }

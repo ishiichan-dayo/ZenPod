@@ -1,10 +1,14 @@
 //! iPod OS モード (Apple のファームウェア): iTunesDB を読み書きして、曲の追加・削除・プレイリスト編集・保存を行う。
 
 pub mod artwork;
+pub mod cdb;
 pub mod hash58;
+pub mod hashab;
+pub mod hash72;
 pub mod itunesdb;
 mod photos;
 pub mod shuffle;
+pub mod sqlitedb;
 mod videos;
 
 use crate::t;
@@ -28,6 +32,7 @@ use crate::media::{self, convert};
 use crate::smartpl::{FIELDS_NOT_ON_IPOD, Rules, SmartDef, SmartPrefs, now_mac_local};
 
 const BACKUP_NAME: &str = "iTunesDB.zenpod-backup";
+const CDB_BACKUP_NAME: &str = "iTunesCDB.zenpod-backup";
 const ART_BACKUP_NAME: &str = "ArtworkDB.zenpod-backup";
 /// 画像内容ハッシュ → mhii id (同じジャケットを共有するための索引)
 const ART_INDEX_NAME: &str = "zenpod-art.json";
@@ -63,6 +68,8 @@ pub struct Ipod {
     pub open_times: device::OpenTimes,
     /// 写真の DB (初めて写真を使うときに読む。None = 写真に対応していない)
     photos: std::cell::OnceCell<Option<photos::PhotoState>>,
+    /// nano 5G の hash72 の材料 (HashInfo か、iTunes が署名した iTunesCDB から)
+    hash_info: Option<hash72::HashInfo>,
 }
 
 /// iPod に置くファイル (変換した場合は変換後のもの)
@@ -118,7 +125,18 @@ impl Ipod {
         let mut times = device::OpenTimes::default();
 
         let db_started = std::time::Instant::now();
-        let mut db = if db_path.is_file() {
+        // nano 5G 以降は縮めた iTunesCDB が本体で、iTunesDB は 0 バイト
+        let cdb_raw = fs::read(itunes.join("iTunesCDB")).ok().filter(|d| !d.is_empty());
+        let has_db = fs::metadata(&db_path).is_ok_and(|m| m.is_file() && m.len() > 0);
+        let mut db = if let Some(raw) = &cdb_raw {
+            let data = if cdb::is_compressed(raw) { cdb::decompress(raw)? } else { raw.clone() };
+            let db = ITunesDb::parse(&data)?;
+            let backup = itunes.join(CDB_BACKUP_NAME);
+            if !backup.exists() {
+                let _ = fs::write(&backup, raw);
+            }
+            db
+        } else if has_db {
             let data = fs::read(&db_path)?;
             let db = ITunesDb::parse(&data)?;
             let backup = itunes.join(BACKUP_NAME);
@@ -178,6 +196,14 @@ impl Ipod {
                 dirty = true;
             }
         }
+        // nano 5G 以降の再生回数 (曲は persistentID = dbid で指す)
+        if let Ok(data) = fs::read(itunes.join("PlayCounts.plist")) {
+            let n = merge_play_counts_plist(&mut db, &data);
+            if n > 0 {
+                log::info!("PlayCounts.plist: merged {n} tracks");
+                dirty = true;
+            }
+        }
         for extra in ["iTunesStats", "PlayCounts.plist"] {
             let p = itunes.join(extra);
             if p.exists() {
@@ -185,8 +211,9 @@ impl Ipod {
             }
         }
 
-        let scheme = db_path.is_file().then(|| db.hashing_scheme());
+        let scheme = (cdb_raw.is_some() || has_db).then(|| db.hashing_scheme());
         let info = device::probe_timed(root, scheme, &mut times);
+        let hash_info = if info.checksum == ChecksumKind::Hash72 { load_hash_info(root, &info, cdb_raw.as_deref()) } else { None };
         if info.shuffle.is_some() {
             // シャッフルの順 (iTunesSD の曲の番号) は曲の並びが変わると合わなくなる (libgpod も保存で消す)
             let p = itunes.join("iTunesShuffle");
@@ -212,6 +239,7 @@ impl Ipod {
             rockbox_cache: None,
             open_times: times,
             photos: std::cell::OnceCell::new(),
+            hash_info,
         })
     }
 
@@ -235,13 +263,16 @@ impl Ipod {
     pub fn check_writable(&self) -> Result<()> {
         match self.info.checksum {
             ChecksumKind::Unsupported => Err(Error::Unsupported(
-                t!("この iPod は hash72 / hashAB 署名が必要なため書き込みに対応していません"),
+                t!("この iPod のデータベースの署名の方式に対応していないため書き込めません"),
             )),
-            ChecksumKind::Hash58 if self.info.firewire_id_bytes().is_none() => {
+            ChecksumKind::Hash58 | ChecksumKind::Hash72 | ChecksumKind::HashAb if self.info.firewire_id_bytes().is_none() => {
                 Err(Error::Unsupported(
                     t!("FireWire GUID を取得できません。設定から手動で入力してください"),
                 ))
             }
+            ChecksumKind::Hash72 if self.hash_info.is_none() => Err(Error::Unsupported(t!(
+                "この iPod nano (5G) に書き込むには、一度 iTunes (Mac は Finder) で同期してから開き直してください (署名に使う情報を iPod から取り出します)"
+            ))),
             _ => Ok(()),
         }
     }
@@ -292,11 +323,41 @@ impl Ipod {
         // 曲の追加・削除・編集をスマートプレイリストに反映する
         self.db.refresh_smart_playlists(now_mac_local());
         let mut bytes = self.db.serialize();
-        if self.info.checksum == ChecksumKind::Hash58 {
-            let fwid = self.info.firewire_id_bytes().expect("checked");
-            hash58::write_hash58(&mut bytes, &fwid);
+        if self.info.sqlite_db {
+            // libgpod と同じ: 縮めた DB の機種は 0x0C を 2 に、0x70 に署名の種類 (hash72 は 2、hashAB は 4)
+            bytes[0x0C..0x10].copy_from_slice(&2u32.to_le_bytes());
+            let kind: u16 = match self.info.checksum {
+                ChecksumKind::Hash72 => 2,
+                ChecksumKind::HashAb => 4,
+                _ => 0,
+            };
+            bytes[0x70..0x72].copy_from_slice(&kind.to_le_bytes());
+            // 0x32〜0x45 (不明な 20 バイト) は 0 にする。hashAB の SHA1 にここを含めるか (libgpod は含め、iOpenPod は
+            // Apple の署名から 0 にして計算すると確かめた) が食い違うが、0 なら同じになる。libgpod も新しく書く DB では 0
+            bytes[0x32..0x46].fill(0);
+            // 署名は縮めたあとのバイト列にかける
+            bytes = cdb::compress(&bytes)?;
         }
-        write_atomic(&itunes.join("iTunesDB"), &bytes)?;
+        let fwid = self.info.firewire_id_bytes();
+        match self.info.checksum {
+            ChecksumKind::Hash58 => hash58::write_hash58(&mut bytes, &fwid.expect("checked")),
+            ChecksumKind::Hash72 => {
+                // iTunes と同じく hashing_scheme は 1 で、hash72 をかけてから (hash72 を含めて) hash58 をかける
+                hash72::write_hash72(&mut bytes, self.hash_info.as_ref().expect("checked"), 1);
+                hash58::write_hash58(&mut bytes, &fwid.expect("checked"));
+            }
+            ChecksumKind::HashAb => hashab::write_hashab(&mut bytes, &fwid.expect("checked")),
+            ChecksumKind::None | ChecksumKind::Unsupported => {}
+        }
+        if self.info.sqlite_db {
+            // 本体が曲の一覧に使うのは SQLite のデータベース (iTunes Library.itlp)。iTunesCDB より先に書く
+            self.write_sqlite(&itunes)?;
+            write_atomic(&itunes.join("iTunesCDB"), &bytes)?;
+            // iTunesCDB と中身のある iTunesDB が両方あると本体が迷う (libgpod と同じく 0 バイトにする)
+            write_atomic(&itunes.join("iTunesDB"), &[])?;
+        } else {
+            write_atomic(&itunes.join("iTunesDB"), &bytes)?;
+        }
         // shuffle は iTunesDB ではなく iTunesSD で再生する (serialize で振ったアルバムの番号を使うので後に書く)
         if let Some(format) = self.info.shuffle {
             write_atomic(&itunes.join("iTunesSD"), &shuffle::write_itunes_sd(&self.db, format))?;
@@ -307,6 +368,27 @@ impl Ipod {
         self.dirty = false;
         self.info.free_bytes = fs4::available_space(self.root()).unwrap_or(self.info.free_bytes);
         Ok(())
+    }
+
+    /// nano 5G 以降の SQLite のデータベースと、その Locations.itdb の署名 (cbk) を書く。
+    /// 本体が求める後処理の SQL は SysInfoExtended にあれば流す (nano 5G は必須、6G / 7G には無いことがある)
+    fn write_sqlite(&self, itunes: &Path) -> Result<()> {
+        let fwid = self.info.firewire_id_bytes().expect("checked");
+        let sysinfo_ext = fs::read_to_string(self.root().join("iPod_Control").join("Device").join("SysInfoExtended")).unwrap_or_default();
+        let post_process = sqlitedb::post_process_commands(&sysinfo_ext);
+        let uuid = self.info.firewire_id.clone().unwrap_or_default();
+        let checksum = self.info.checksum;
+        let hash_info = self.hash_info.clone();
+        let sign = move |sha1: &[u8; 20]| -> Result<Vec<u8>> {
+            match (checksum, &hash_info) {
+                (ChecksumKind::Hash72, Some(h)) => Ok(h.sign(sha1).to_vec()),
+                (ChecksumKind::HashAb, _) => Ok(hashab::calc_hashab(sha1, &fwid, hashab::HASHAB_RND).to_vec()),
+                // tr: 訳さない (check_writable で止まるので起きない)
+                _ => Err(Error::Other("no signature for Locations.itdb.cbk".into())),
+            }
+        };
+        let opts = sqlitedb::ItlpOptions { uuid: &uuid, post_process: post_process.as_ref() };
+        sqlitedb::write_itlp(itunes, &self.db, &opts, &sign)
     }
 
     // ---------------- views ----------------
@@ -1773,6 +1855,65 @@ fn load_art(root: &Path, model_formats: &[ArtFormat]) -> Option<ArtState> {
 }
 
 /// 一時ファイルに書いてから置き換える
+/// nano 5G 以降の本体が書く PlayCounts.plist (`tracks` の配列。1 曲は persistentID・playCount・playMacOSDate・
+/// skipCount・skipMacOSDate・userRating・bookmarkTimeInMS) を iTunesDB の曲に足す。読み方は libgpod 0.8.3 の
+/// playcounts_plist_read と同じ。戻り値は反映した曲の数
+fn merge_play_counts_plist(db: &mut ITunesDb, data: &[u8]) -> usize {
+    let Ok(v) = plist::Value::from_reader(std::io::Cursor::new(data)) else { return 0 };
+    let Some(list) = v.as_dictionary().and_then(|d| d.get("tracks")).and_then(|t| t.as_array()) else { return 0 };
+    let index: HashMap<u64, usize> = db.tracks.iter().enumerate().map(|(i, t)| (t.dbid(), i)).collect();
+    let int = |d: &plist::Dictionary, k: &str| -> u64 {
+        d.get(k).and_then(|v| v.as_signed_integer().map(|i| i as u64).or_else(|| v.as_unsigned_integer())).unwrap_or(0)
+    };
+    let mut merged = 0;
+    for d in list.iter().filter_map(|v| v.as_dictionary()) {
+        let Some(&i) = d.get("persistentID").and_then(|_| index.get(&int(d, "persistentID"))) else { continue };
+        let t = &mut db.tracks[i];
+        let plays = int(d, "playCount") as u32;
+        if plays != 0 {
+            t.set_playcount(t.playcount().saturating_add(plays));
+            t.set_mark_unplayed(1);
+        }
+        let played = int(d, "playMacOSDate") as u32;
+        if played != 0 {
+            t.set_last_played_mac(played);
+        }
+        let skips = int(d, "skipCount") as u32;
+        if skips != 0 {
+            t.set_skipcount(t.skipcount().saturating_add(skips));
+        }
+        let skipped = int(d, "skipMacOSDate") as u32;
+        if skipped != 0 {
+            t.set_last_skipped_mac(skipped);
+        }
+        let rating = int(d, "userRating");
+        if (1..=100).contains(&rating) {
+            t.set_rating(rating as u8);
+        }
+        let bookmark = int(d, "bookmarkTimeInMS") as u32;
+        if bookmark != 0 {
+            t.set_bookmark_ms(bookmark);
+        }
+        merged += 1;
+    }
+    merged
+}
+
+/// nano 5G の hash72 の材料。`iPod_Control/Device/HashInfo` (libgpod と同じ形) が無ければ、iTunes が署名した
+/// iTunesCDB から取り出して HashInfo に書いておく (ZenPod が書き直したあとでも、同じ材料なので取り出せる)
+fn load_hash_info(root: &Path, info: &DeviceInfo, cdb_raw: Option<&[u8]>) -> Option<hash72::HashInfo> {
+    let fwid = info.firewire_id_bytes()?;
+    let path = root.join("iPod_Control").join("Device").join("HashInfo");
+    if let Some(h) = fs::read(&path).ok().and_then(|d| hash72::HashInfo::parse(&d, &fwid)) {
+        return Some(h);
+    }
+    let h = hash72::extract_from_db(cdb_raw?, &fwid)?;
+    if let Err(e) = fs::write(&path, h.to_bytes()) {
+        log::warn!("HashInfo: {e}");
+    }
+    Some(h)
+}
+
 /// shuffle で再生できない形式の変換先。shuffle は AIFF を再生できず (iTunesSD に AIFF の種類が無い)、
 /// 1G / 2G は ALAC も再生できないので、ALAC にする曲は非可逆の変換先 (ALAC なら AAC 256kbps) にする
 fn shuffle_target(shuffle: Option<shuffle::SdFormat>, fmt: Format, target: Option<ConvertTarget>, opts: &AddOptions) -> Option<ConvertTarget> {

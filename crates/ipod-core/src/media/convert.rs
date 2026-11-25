@@ -64,23 +64,8 @@ pub fn convert(ffmpeg: &Path, src: &Path, dst: &Path, target: ConvertTarget, src
     let mut cmd = Command::new(ffmpeg);
     cmd.args(["-nostdin", "-hide_banner", "-loglevel", "error", "-y", "-i"])
         .arg(src)
-        .args(["-map", "0:a:0", "-map_metadata", metadata_source(src), "-vn"]);
-    match target {
-        ConvertTarget::Alac => {
-            // iPod classic の ALAC は 16bit / 48kHz まで
-            cmd.args(["-c:a", "alac", "-sample_fmt", "s16p"]);
-        }
-        ConvertTarget::Aac { kbps } => {
-            cmd.args(["-c:a", "aac", "-b:a", &format!("{kbps}k")]);
-        }
-        ConvertTarget::Mp3 { kbps } => {
-            // iPod は ID3v2.4 のタグを読めないことがあるので v2.3 で書く
-            cmd.args(["-c:a", "libmp3lame", "-b:a", &format!("{kbps}k"), "-id3v2_version", "3"]);
-        }
-    }
-    if src_rate > 48000 {
-        cmd.args(["-ar", &out_rate(src_rate).to_string()]);
-    }
+        .args(["-map", "0:a:0", "-map_metadata", metadata_source(src), "-vn"])
+        .args(codec_args(target, src_rate));
     if target.ext() == "m4a" {
         cmd.args(FASTSTART);
     }
@@ -90,6 +75,42 @@ pub fn convert(ffmpeg: &Path, src: &Path, dst: &Path, target: ConvertTarget, src
         log::warn!("copy_pictures_and_lyrics: {e}");
     }
     Ok(())
+}
+
+/// ffmpeg に渡す、符号化の引数 (入力と出力のあいだ)
+fn codec_args(target: ConvertTarget, src_rate: u32) -> Vec<String> {
+    let rate = (src_rate > 48000).then(|| out_rate(src_rate));
+    let mut args: Vec<String> = Vec::new();
+    match target {
+        ConvertTarget::Alac => {
+            // iPod classic の ALAC は 16bit / 48kHz まで。24bit の曲をただ切り捨てて 16bit にすると、
+            // 小さい音 (フェードアウトなど) にざらつきが出る。ffmpeg の既定はディザなしなので、
+            // aresample でディザをかけて 16bit にし (サンプリング周波数の変換も同時に)、そのまま ALAC にする。
+            // 元が 16bit の曲は何も変わらない (ビットが一致する)
+            let mut filter = String::from("aresample=osf=s16p:dither_method=triangular");
+            if let Some(r) = rate {
+                filter.push_str(&format!(":osr={r}"));
+            }
+            args.extend(["-af".into(), filter]);
+            args.extend(["-c:a", "alac", "-sample_fmt", "s16p"].map(String::from));
+        }
+        ConvertTarget::Aac { kbps } => {
+            // ffmpeg の AAC エンコーダは intensity stereo・PNS・TNS を既定で使う。iPod のデコーダはこれらを
+            // うまく扱えず、短い「ザッ」というノイズ (片方のチャンネルだけのことが多い) になるので、すべて切って素の AAC-LC にする
+            args.extend(["-c:a", "aac", "-profile:a", "aac_low", "-aac_is", "0", "-aac_pns", "0", "-aac_tns", "0"].map(String::from));
+            args.extend(["-b:a".into(), format!("{kbps}k")]);
+        }
+        ConvertTarget::Mp3 { kbps } => {
+            // iPod は ID3v2.4 のタグを読めないことがあるので v2.3 で書く
+            args.extend(["-c:a".into(), "libmp3lame".into(), "-b:a".into(), format!("{kbps}k")]);
+            args.extend(["-id3v2_version", "3"].map(String::from));
+        }
+    }
+    // ALAC はディザと同時に aresample で変換済み
+    if let (Some(r), false) = (rate, target == ConvertTarget::Alac) {
+        args.extend(["-ar".into(), r.to_string()]);
+    }
+    args
 }
 
 /// iPod は 48kHz まで。それより高いサンプリング周波数は、割り切れる方 (44.1kHz 系 / 48kHz 系) に落とす
@@ -541,6 +562,68 @@ mod tests {
         assert!(afconvert_supports(Path::new("x.FLAC"), ConvertTarget::Alac));
         assert!(!afconvert_supports(Path::new("x.flac"), ConvertTarget::Mp3 { kbps: 320 }));
         assert!(!afconvert_supports(Path::new("x.ogg"), ConvertTarget::Aac { kbps: 256 }));
+    }
+
+    #[test]
+    fn ffmpeg_arguments() {
+        let join = |t, rate| codec_args(t, rate).join(" ");
+        // ALAC: ディザをかけて 16bit に。48kHz を超える曲はサンプリング周波数もここで落とす
+        assert_eq!(join(ConvertTarget::Alac, 44100), "-af aresample=osf=s16p:dither_method=triangular -c:a alac -sample_fmt s16p");
+        assert_eq!(join(ConvertTarget::Alac, 96000), "-af aresample=osf=s16p:dither_method=triangular:osr=48000 -c:a alac -sample_fmt s16p");
+        // AAC: iPod がうまく扱えない符号化の道具は使わない
+        assert_eq!(
+            join(ConvertTarget::Aac { kbps: 256 }, 44100),
+            "-c:a aac -profile:a aac_low -aac_is 0 -aac_pns 0 -aac_tns 0 -b:a 256k"
+        );
+        assert_eq!(
+            join(ConvertTarget::Aac { kbps: 256 }, 88200),
+            "-c:a aac -profile:a aac_low -aac_is 0 -aac_pns 0 -aac_tns 0 -b:a 256k -ar 44100"
+        );
+        assert_eq!(join(ConvertTarget::Mp3 { kbps: 320 }, 192000), "-c:a libmp3lame -b:a 320k -id3v2_version 3 -ar 48000");
+    }
+
+    /// ffmpeg がある環境だけ: 24bit / 96kHz の FLAC が、iPod の再生できる 16bit / 48kHz の ALAC と 48kHz の AAC になる。
+    /// 16bit の FLAC は ALAC にしても音声が一致する (ディザがかからない)
+    #[test]
+    fn high_resolution_flac_converts_for_ipod() {
+        let Some(ff) = std::env::var_os("PATH").and_then(|p| std::env::split_paths(&p).map(|d| d.join("ffmpeg")).find(|f| f.is_file())) else {
+            return;
+        };
+        let dir = std::env::temp_dir().join(format!("zenpod-hires-{}", std::process::id()));
+        std::fs::create_dir_all(&dir).unwrap();
+        let make = |name: &str, extra: &[&str]| {
+            let p = dir.join(name);
+            let ok = Command::new(&ff)
+                .args(["-v", "error", "-y", "-f", "lavfi", "-i", "sine=frequency=440:duration=1", "-ac", "2", "-c:a", "flac"])
+                .args(extra)
+                .arg(&p)
+                .status()
+                .unwrap()
+                .success();
+            assert!(ok, "{name}");
+            p
+        };
+        let stream = |p: &Path| {
+            let o = Command::new(&ff).arg("-hide_banner").arg("-i").arg(p).output().unwrap();
+            String::from_utf8_lossy(&o.stderr).lines().find(|l| l.contains("Audio:")).unwrap_or("").to_string()
+        };
+        let md5 = |p: &Path| {
+            let o = Command::new(&ff).args(["-v", "error", "-i"]).arg(p).args(["-f", "md5", "-"]).output().unwrap();
+            String::from_utf8(o.stdout).unwrap()
+        };
+        let hires = make("hires.flac", &["-sample_fmt", "s32", "-ar", "96000"]);
+        let alac = dir.join("hires-alac.m4a");
+        convert(&ff, &hires, &alac, ConvertTarget::Alac, 96000).unwrap();
+        let info = stream(&alac);
+        assert!(info.contains("48000 Hz") && info.contains("s16p"), "{info}");
+        let aac = dir.join("hires-aac.m4a");
+        convert(&ff, &hires, &aac, ConvertTarget::Aac { kbps: 256 }, 96000).unwrap();
+        assert!(stream(&aac).contains("48000 Hz"), "{}", stream(&aac));
+        let plain = make("plain.flac", &["-ar", "44100"]);
+        let same = dir.join("plain-alac.m4a");
+        convert(&ff, &plain, &same, ConvertTarget::Alac, 44100).unwrap();
+        assert_eq!(md5(&plain), md5(&same));
+        let _ = std::fs::remove_dir_all(&dir);
     }
 
     #[test]

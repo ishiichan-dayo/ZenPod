@@ -32,4 +32,4 @@ chrono = { version = "0.4.45", default-features = false, features = ["clock"] }
 
 [target.'cfg(windows)'.dependencies]
 # WebView2 が起動後に落ちたことを知るため (wry と同じ版に合わせる)
-webview2-com = "0.38"
+webview2-com = "0.39"

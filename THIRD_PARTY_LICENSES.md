@@ -50,15 +50,15 @@ OF SUCH DAMAGE.
 
 ---
 
-- **@tauri-apps/api** 2.11.1 (Apache-2.0 OR MIT; used under MIT) — https://www.npmjs.com/package/@tauri-apps/api
-- **tauri** 2.11.6 (Apache-2.0 OR MIT; used under MIT) — https://github.com/tauri-apps/tauri
-- **tauri-plugin-dialog** 2.7.3 (Apache-2.0 OR MIT; used under MIT) — https://github.com/tauri-apps/plugins-workspace
-- **tauri-plugin-fs** 2.5.2 (Apache-2.0 OR MIT; used under MIT) — https://github.com/tauri-apps/plugins-workspace
-- **tauri-plugin-process** 2.3.1 (Apache-2.0 OR MIT; used under MIT) — https://github.com/tauri-apps/plugins-workspace
-- **tauri-plugin-updater** 2.12.0 (Apache-2.0 OR MIT; used under MIT) — https://github.com/tauri-apps/plugins-workspace
-- **tauri-runtime** 2.11.3 (Apache-2.0 OR MIT; used under MIT) — https://github.com/tauri-apps/tauri
-- **tauri-runtime-wry** 2.11.4 (Apache-2.0 OR MIT; used under MIT) — https://github.com/tauri-apps/tauri
-- **tauri-utils** 2.9.3 (Apache-2.0 OR MIT; used under MIT) — https://github.com/tauri-apps/tauri
+- **@tauri-apps/api** 2.12.5 (Apache-2.0 OR MIT; used under MIT) — https://www.npmjs.com/package/@tauri-apps/api
+- **tauri** 2.12.7 (Apache-2.0 OR MIT; used under MIT) — https://github.com/tauri-apps/tauri
+- **tauri-plugin-dialog** 2.8.4 (Apache-2.0 OR MIT; used under MIT) — https://github.com/tauri-apps/plugins-workspace
+- **tauri-plugin-fs** 2.7.1 (Apache-2.0 OR MIT; used under MIT) — https://github.com/tauri-apps/plugins-workspace
+- **tauri-plugin-process** 2.4.0 (Apache-2.0 OR MIT; used under MIT) — https://github.com/tauri-apps/plugins-workspace
+- **tauri-plugin-updater** 2.14.1 (Apache-2.0 OR MIT; used under MIT) — https://github.com/tauri-apps/plugins-workspace
+- **tauri-runtime** 2.12.4 (Apache-2.0 OR MIT; used under MIT) — https://github.com/tauri-apps/tauri
+- **tauri-runtime-wry** 2.12.5 (Apache-2.0 OR MIT; used under MIT) — https://github.com/tauri-apps/tauri
+- **tauri-utils** 2.10.4 (Apache-2.0 OR MIT; used under MIT) — https://github.com/tauri-apps/tauri
 
 ```text
 MIT License
@@ -86,9 +86,9 @@ SOFTWARE.
 
 ---
 
-- **@tauri-apps/plugin-dialog** 2.7.3 (MIT OR Apache-2.0; used under MIT) — https://www.npmjs.com/package/@tauri-apps/plugin-dialog
-- **@tauri-apps/plugin-process** 2.3.1 (MIT OR Apache-2.0; used under MIT) — https://www.npmjs.com/package/@tauri-apps/plugin-process
-- **@tauri-apps/plugin-updater** 2.12.0 (MIT OR Apache-2.0; used under MIT) — https://www.npmjs.com/package/@tauri-apps/plugin-updater
+- **@tauri-apps/plugin-dialog** 2.8.4 (MIT OR Apache-2.0; used under MIT) — https://www.npmjs.com/package/@tauri-apps/plugin-dialog
+- **@tauri-apps/plugin-process** 2.4.0 (MIT OR Apache-2.0; used under MIT) — https://www.npmjs.com/package/@tauri-apps/plugin-process
+- **@tauri-apps/plugin-updater** 2.14.1 (MIT OR Apache-2.0; used under MIT) — https://www.npmjs.com/package/@tauri-apps/plugin-updater
 
 ```text
 SPDXVersion: SPDX-2.1
@@ -135,7 +135,7 @@ Creator: Person: Daniel Thompson-Yvetot
 - **serde-untagged** 0.1.9 (MIT OR Apache-2.0; used under MIT) — https://github.com/dtolnay/serde-untagged
 - **serde_core** 1.0.229 (MIT OR Apache-2.0; used under MIT) — https://github.com/serde-rs/serde
 - **serde_json** 1.0.151 (MIT OR Apache-2.0; used under MIT) — https://github.com/serde-rs/json
-- **servo_arc** 0.4.3 (MIT OR Apache-2.0; used under MIT) — https://github.com/servo/stylo
+- **servo_arc** 0.5.0 (MIT OR Apache-2.0; used under MIT) — https://github.com/servo/stylo
 - **simd_cesu8** 1.2.0 (Apache-2.0 OR MIT; used under MIT) — https://github.com/seancroach/simd_cesu8
 - **thiserror** 1.0.69 (MIT OR Apache-2.0; used under MIT) — https://github.com/dtolnay/thiserror
 - **thiserror** 2.0.21 (MIT OR Apache-2.0; used under MIT) — https://github.com/dtolnay/thiserror
@@ -213,8 +213,8 @@ THE SOFTWARE.
 
 ---
 
-- **alloc-no-stdlib** 2.0.4 (BSD-3-Clause) — https://github.com/dropbox/rust-alloc-no-stdlib
-- **brotli-decompressor** 5.0.3 (BSD-3-Clause/MIT; used under MIT) — https://github.com/dropbox/rust-brotli-decompressor
+- **alloc-no-stdlib** 3.0.0 (BSD-3-Clause) — https://github.com/dropbox/rust-alloc-no-stdlib
+- **brotli-decompressor** 6.4.0 (BSD-3-Clause/MIT; used under MIT) — https://github.com/dropbox/rust-brotli-decompressor
 
 ```text
 Copyright (c) 2016 Dropbox, Inc.
@@ -256,40 +256,6 @@ FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
 COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
 IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-```
-
----
-
-- **arbitrary** 1.4.2 (MIT OR Apache-2.0; used under MIT) — https://github.com/rust-fuzz/arbitrary/
-
-```text
-MIT License
-
-Copyright (c) 2019 Manish Goregaokar
-
-Permission is hereby granted, free of charge, to any
-person obtaining a copy of this software and associated
-documentation files (the "Software"), to deal in the
-Software without restriction, including without
-limitation the rights to use, copy, modify, merge,
-publish, distribute, sublicense, and/or sell copies of
-the Software, and to permit persons to whom the Software
-is furnished to do so, subject to the following
-conditions:
-
-The above copyright notice and this permission notice
-shall be included in all copies or substantial portions
-of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF
-ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED
-TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A
-PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT
-SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY
-CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
-OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR
-IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
-DEALINGS IN THE SOFTWARE.
 ```
 
 ---
@@ -434,8 +400,8 @@ THE SOFTWARE.
 
 ---
 
-- **bit-set** 0.8.0 (Apache-2.0 OR MIT; used under MIT) — https://github.com/contain-rs/bit-set
-- **bit-vec** 0.8.0 (Apache-2.0 OR MIT; used under MIT) — https://github.com/contain-rs/bit-vec
+- **bit-set** 0.11.1 (Apache-2.0 OR MIT; used under MIT) — https://github.com/contain-rs/bit-vec
+- **bit-vec** 0.10.2 (Apache-2.0 OR MIT; used under MIT) — https://github.com/contain-rs/bit-vec
 
 ```text
 Copyright (c) 2023 The Rust Project Developers
@@ -570,7 +536,7 @@ DEALINGS IN THE SOFTWARE.
 
 ---
 
-- **brotli** 8.0.4 (BSD-3-Clause AND MIT) — https://github.com/dropbox/rust-brotli
+- **brotli** 9.1.3 (BSD-3-Clause AND MIT) — https://github.com/dropbox/rust-brotli
 
 ```text
 Copyright (c) 2016 Dropbox, Inc.
@@ -1135,7 +1101,7 @@ their own copyright notices and license terms:
 
 ---
 
-- **cfb** 0.7.3 (MIT) — https://github.com/mdsteele/rust-cfb
+- **cfb** 0.14.0 (MIT) — https://github.com/mdsteele/rust-cfb
 
 ```text
 MIT License
@@ -1501,7 +1467,7 @@ DEALINGS IN THE SOFTWARE.
 - **core-foundation-sys** 0.8.7 (MIT OR Apache-2.0; used under MIT) — https://github.com/servo/core-foundation-rs
 - **core-graphics** 0.25.0 (MIT OR Apache-2.0; used under MIT) — https://github.com/servo/core-foundation-rs
 - **core-graphics-types** 0.2.0 (MIT OR Apache-2.0; used under MIT) — https://github.com/servo/core-foundation-rs
-- **string_cache** 0.9.0 (MIT OR Apache-2.0; used under MIT) — https://github.com/servo/string-cache
+- **string_cache** 0.11.0 (MIT OR Apache-2.0; used under MIT) — https://github.com/servo/string-cache
 
 ```text
 Copyright (c) 2012-2013 Mozilla Foundation
@@ -1754,7 +1720,7 @@ DEALINGS IN THE SOFTWARE.
 
 ---
 
-- **cssparser** 0.36.0 (MPL-2.0) — https://github.com/servo/rust-cssparser
+- **cssparser** 0.38.0 (MPL-2.0) — https://github.com/servo/rust-cssparser
 - **dtoa-short** 0.3.5 (MPL-2.0) — https://github.com/upsuper/dtoa-short
 - **option-ext** 0.2.0 (MPL-2.0) — https://github.com/soc/option-ext.git
 
@@ -1764,7 +1730,8 @@ DEALINGS IN THE SOFTWARE.
 
 ---
 
-- **ctor** 0.8.0 (Apache-2.0 OR MIT; used under MIT) — https://github.com/mmastrac/rust-ctor
+- **ctor** 1.0.14 (Apache-2.0 OR MIT; used under MIT) — https://github.com/mmastrac/linktime
+- **link-section** 0.19.4 (Apache-2.0 OR MIT; used under MIT) — https://github.com/mmastrac/linktime
 - **tinyvec** 1.13.3 (Zlib OR Apache-2.0 OR MIT; used under MIT) — https://github.com/Lokathor/tinyvec
 
 ```text
@@ -1952,7 +1919,7 @@ DEALINGS IN THE SOFTWARE.
 
 ---
 
-- **dirs** 6.0.0 (MIT OR Apache-2.0; used under MIT) — https://github.com/soc/dirs-rs
+- **dirs** 7.0.0 (MIT OR Apache-2.0; used under MIT) — https://codeberg.org/dirs/dirs-rs
 - **dirs-sys** 0.5.0 (MIT OR Apache-2.0; used under MIT) — https://github.com/dirs-dev/dirs-sys-rs
 
 ```text
@@ -1979,7 +1946,7 @@ SOFTWARE.
 
 ---
 
-- **dom_query** 0.27.0 (MIT) — https://github.com/niklak/dom_query
+- **dom_query** 0.29.0 (MIT) — https://github.com/niklak/dom_query
 
 ```text
 MIT License
@@ -2757,9 +2724,9 @@ DEALINGS IN THE SOFTWARE.
 
 ---
 
-- **html5ever** 0.38.0 (MIT OR Apache-2.0; used under MIT) — https://github.com/servo/html5ever
-- **markup5ever** 0.38.0 (MIT OR Apache-2.0; used under MIT) — https://github.com/servo/html5ever
-- **web_atoms** 0.2.6 (MIT OR Apache-2.0; used under MIT) — https://github.com/servo/html5ever
+- **html5ever** 0.40.1 (MIT OR Apache-2.0; used under MIT) — https://github.com/servo/html5ever
+- **markup5ever** 0.40.0 (MIT OR Apache-2.0; used under MIT) — https://github.com/servo/html5ever
+- **web_atoms** 0.3.0 (MIT OR Apache-2.0; used under MIT) — https://github.com/servo/html5ever
 
 ```text
 Copyright (c) 2014 The html5ever Project Developers
@@ -3226,7 +3193,7 @@ DEALINGS IN THE SOFTWARE.
 
 ---
 
-- **infer** 0.19.0 (MIT) — https://github.com/bojand/infer
+- **infer** 0.22.0 (MIT) — https://github.com/bojand/infer
 
 ```text
 MIT License
@@ -3396,7 +3363,7 @@ SOFTWARE.
 
 ---
 
-- **json-patch** 3.0.1 (MIT/Apache-2.0; used under MIT) — https://github.com/idubrov/json-patch
+- **json-patch** 4.2.0 (MIT/Apache-2.0; used under MIT) — https://github.com/idubrov/json-patch
 
 ```text
 MIT License
@@ -3424,7 +3391,7 @@ SOFTWARE.
 
 ---
 
-- **jsonptr** 0.6.3 (MIT OR Apache-2.0; used under MIT) — https://github.com/chanced/jsonptr
+- **jsonptr** 0.7.1 (MIT OR Apache-2.0; used under MIT) — https://github.com/chanced/jsonptr
 
 ```text
 MIT License
@@ -3452,7 +3419,7 @@ SOFTWARE.
 
 ---
 
-- **keyboard-types** 0.7.0 (MIT OR Apache-2.0; used under MIT) — https://github.com/pyfisch/keyboard-types
+- **keyboard-types** 0.8.3 (MIT OR Apache-2.0; used under MIT) — https://github.com/rust-windowing/keyboard-types
 
 ```text
 Copyright (c) 2017 Pyfisch
@@ -3774,7 +3741,7 @@ THE SOFTWARE.
 
 ---
 
-- **minisign-verify** 0.2.5 (MIT) — https://github.com/jedisct1/rust-minisign-verify
+- **minisign-verify** 0.3.0 (MIT) — https://github.com/jedisct1/rust-minisign-verify
 
 ```text
 Copyright (c) 2019-2025 Frank Denis
@@ -3932,7 +3899,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 ---
 
-- **muda** 0.19.3 (Apache-2.0 OR MIT; used under MIT) — https://github.com/tauri-apps/muda
+- **muda** 0.20.0 (Apache-2.0 OR MIT; used under MIT) — https://github.com/tauri-apps/muda
 
 ```text
 MIT License
@@ -4107,7 +4074,9 @@ DEALINGS IN THE SOFTWARE.
 ---
 
 - **phf** 0.13.1 (MIT) — https://github.com/rust-phf/rust-phf
+- **phf** 0.14.0 (MIT) — https://github.com/rust-phf/rust-phf
 - **phf_shared** 0.13.1 (MIT) — https://github.com/rust-phf/rust-phf
+- **phf_shared** 0.14.0 (MIT) — https://github.com/rust-phf/rust-phf
 
 ```text
 The MIT License (MIT)
@@ -4527,7 +4496,7 @@ THE SOFTWARE.
 
 ---
 
-- **rfd** 0.16.0 (MIT) — https://github.com/PolyMeilex/rfd
+- **rfd** 0.17.2 (MIT) — https://github.com/PolyMeilex/rfd
 
 ```text
 MIT License
@@ -5191,7 +5160,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 ---
 
-- **swift-rs** 1.0.8 (MIT OR Apache-2.0; used under MIT) — https://github.com/Brendonovich/swift-rs
+- **swift-rs** 1.0.9 (MIT OR Apache-2.0; used under MIT) — https://github.com/Brendonovich/swift-rs
 
 ```text
 Copyright (c) 2023 The swift-rs Developers
@@ -5278,7 +5247,7 @@ DEALINGS IN THE SOFTWARE.
 
 ---
 
-- **tao** 0.35.3 (Apache-2.0) — https://github.com/tauri-apps/tao
+- **tao** 0.37.3 (Apache-2.0) — https://github.com/tauri-apps/tao
 
 ```text
 [Apache-2.0: full text at the end of this file]
@@ -5784,7 +5753,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 ---
 
-- **urlpattern** 0.3.0 (MIT) — https://github.com/denoland/rust-urlpattern
+- **urlpattern** 0.6.0 (MIT) — https://github.com/denoland/rust-urlpattern
 
 ```text
 MIT License
@@ -5899,6 +5868,34 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
+```
+
+---
+
+- **web-time** 1.1.0 (MIT OR Apache-2.0; used under MIT) — https://github.com/daxpedda/web-time
+
+```text
+MIT License
+
+Copyright (c) 2023 dAxpeDDa
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
 ```
 
 ---
@@ -6078,7 +6075,7 @@ SOFTWARE.
 
 ---
 
-- **window-vibrancy** 0.6.0 (Apache-2.0 OR MIT; used under MIT) — https://github.com/tauri-apps/tauri-plugin-vibrancy
+- **window-vibrancy** 0.8.1 (Apache-2.0 OR MIT; used under MIT) — https://github.com/tauri-apps/tauri-plugin-vibrancy
 
 ```text
 MIT License
@@ -6106,52 +6103,37 @@ SOFTWARE.
 
 ---
 
-- **windows** 0.61.3 (MIT OR Apache-2.0; used under MIT) — https://github.com/microsoft/windows-rs
-- **windows-collections** 0.2.0 (MIT OR Apache-2.0; used under MIT) — https://github.com/microsoft/windows-rs
-- **windows-core** 0.61.2 (MIT OR Apache-2.0; used under MIT) — https://github.com/microsoft/windows-rs
+- **windows** 0.62.2 (MIT OR Apache-2.0; used under MIT) — https://github.com/microsoft/windows-rs
+- **windows-collections** 0.3.2 (MIT OR Apache-2.0; used under MIT) — https://github.com/microsoft/windows-rs
 - **windows-core** 0.62.2 (MIT OR Apache-2.0; used under MIT) — https://github.com/microsoft/windows-rs
-- **windows-future** 0.2.1 (MIT OR Apache-2.0; used under MIT) — https://github.com/microsoft/windows-rs
-- **windows-link** 0.1.3 (MIT OR Apache-2.0; used under MIT) — https://github.com/microsoft/windows-rs
+- **windows-future** 0.3.2 (MIT OR Apache-2.0; used under MIT) — https://github.com/microsoft/windows-rs
 - **windows-link** 0.2.1 (MIT OR Apache-2.0; used under MIT) — https://github.com/microsoft/windows-rs
-- **windows-numerics** 0.2.0 (MIT OR Apache-2.0; used under MIT) — https://github.com/microsoft/windows-rs
+- **windows-numerics** 0.3.1 (MIT OR Apache-2.0; used under MIT) — https://github.com/microsoft/windows-rs
 - **windows-registry** 0.6.1 (MIT OR Apache-2.0; used under MIT) — https://github.com/microsoft/windows-rs
-- **windows-result** 0.3.4 (MIT OR Apache-2.0; used under MIT) — https://github.com/microsoft/windows-rs
 - **windows-result** 0.4.1 (MIT OR Apache-2.0; used under MIT) — https://github.com/microsoft/windows-rs
-- **windows-strings** 0.4.2 (MIT OR Apache-2.0; used under MIT) — https://github.com/microsoft/windows-rs
 - **windows-strings** 0.5.1 (MIT OR Apache-2.0; used under MIT) — https://github.com/microsoft/windows-rs
 - **windows-sys** 0.45.0 (MIT OR Apache-2.0; used under MIT) — https://github.com/microsoft/windows-rs
 - **windows-sys** 0.52.0 (MIT OR Apache-2.0; used under MIT) — https://github.com/microsoft/windows-rs
-- **windows-sys** 0.59.0 (MIT OR Apache-2.0; used under MIT) — https://github.com/microsoft/windows-rs
-- **windows-sys** 0.60.2 (MIT OR Apache-2.0; used under MIT) — https://github.com/microsoft/windows-rs
 - **windows-sys** 0.61.2 (MIT OR Apache-2.0; used under MIT) — https://github.com/microsoft/windows-rs
 - **windows-targets** 0.42.2 (MIT OR Apache-2.0; used under MIT) — https://github.com/microsoft/windows-rs
 - **windows-targets** 0.52.6 (MIT OR Apache-2.0; used under MIT) — https://github.com/microsoft/windows-rs
-- **windows-targets** 0.53.5 (MIT OR Apache-2.0; used under MIT) — https://github.com/microsoft/windows-rs
-- **windows-threading** 0.1.0 (MIT OR Apache-2.0; used under MIT) — https://github.com/microsoft/windows-rs
+- **windows-threading** 0.2.1 (MIT OR Apache-2.0; used under MIT) — https://github.com/microsoft/windows-rs
 - **windows-version** 0.1.7 (MIT OR Apache-2.0; used under MIT) — https://github.com/microsoft/windows-rs
 - **windows_aarch64_gnullvm** 0.42.2 (MIT OR Apache-2.0; used under MIT) — https://github.com/microsoft/windows-rs
 - **windows_aarch64_gnullvm** 0.52.6 (MIT OR Apache-2.0; used under MIT) — https://github.com/microsoft/windows-rs
-- **windows_aarch64_gnullvm** 0.53.1 (MIT OR Apache-2.0; used under MIT) — https://github.com/microsoft/windows-rs
 - **windows_aarch64_msvc** 0.42.2 (MIT OR Apache-2.0; used under MIT) — https://github.com/microsoft/windows-rs
 - **windows_aarch64_msvc** 0.52.6 (MIT OR Apache-2.0; used under MIT) — https://github.com/microsoft/windows-rs
-- **windows_aarch64_msvc** 0.53.1 (MIT OR Apache-2.0; used under MIT) — https://github.com/microsoft/windows-rs
 - **windows_i686_gnu** 0.42.2 (MIT OR Apache-2.0; used under MIT) — https://github.com/microsoft/windows-rs
 - **windows_i686_gnu** 0.52.6 (MIT OR Apache-2.0; used under MIT) — https://github.com/microsoft/windows-rs
-- **windows_i686_gnu** 0.53.1 (MIT OR Apache-2.0; used under MIT) — https://github.com/microsoft/windows-rs
 - **windows_i686_gnullvm** 0.52.6 (MIT OR Apache-2.0; used under MIT) — https://github.com/microsoft/windows-rs
-- **windows_i686_gnullvm** 0.53.1 (MIT OR Apache-2.0; used under MIT) — https://github.com/microsoft/windows-rs
 - **windows_i686_msvc** 0.42.2 (MIT OR Apache-2.0; used under MIT) — https://github.com/microsoft/windows-rs
 - **windows_i686_msvc** 0.52.6 (MIT OR Apache-2.0; used under MIT) — https://github.com/microsoft/windows-rs
-- **windows_i686_msvc** 0.53.1 (MIT OR Apache-2.0; used under MIT) — https://github.com/microsoft/windows-rs
 - **windows_x86_64_gnu** 0.42.2 (MIT OR Apache-2.0; used under MIT) — https://github.com/microsoft/windows-rs
 - **windows_x86_64_gnu** 0.52.6 (MIT OR Apache-2.0; used under MIT) — https://github.com/microsoft/windows-rs
-- **windows_x86_64_gnu** 0.53.1 (MIT OR Apache-2.0; used under MIT) — https://github.com/microsoft/windows-rs
 - **windows_x86_64_gnullvm** 0.42.2 (MIT OR Apache-2.0; used under MIT) — https://github.com/microsoft/windows-rs
 - **windows_x86_64_gnullvm** 0.52.6 (MIT OR Apache-2.0; used under MIT) — https://github.com/microsoft/windows-rs
-- **windows_x86_64_gnullvm** 0.53.1 (MIT OR Apache-2.0; used under MIT) — https://github.com/microsoft/windows-rs
 - **windows_x86_64_msvc** 0.42.2 (MIT OR Apache-2.0; used under MIT) — https://github.com/microsoft/windows-rs
 - **windows_x86_64_msvc** 0.52.6 (MIT OR Apache-2.0; used under MIT) — https://github.com/microsoft/windows-rs
-- **windows_x86_64_msvc** 0.53.1 (MIT OR Apache-2.0; used under MIT) — https://github.com/microsoft/windows-rs
 
 ```text
 MIT License
@@ -6204,7 +6186,7 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 ---
 
-- **wry** 0.55.1 (Apache-2.0 OR MIT; used under MIT) — https://github.com/tauri-apps/wry
+- **wry** 0.57.3 (Apache-2.0 OR MIT; used under MIT) — https://github.com/tauri-apps/wry
 
 ```text
 MIT License
@@ -6260,37 +6242,6 @@ CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
 OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR
 IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 DEALINGS IN THE SOFTWARE.
-```
-
----
-
-- **zip** 4.6.1 (MIT) — https://github.com/zip-rs/zip2.git
-
-```text
-The MIT License (MIT)
-
-Copyright (c) 2014 Mathijs van de Nes
-
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
-
-Some files in the "tests/data" subdirectory of this repository are under other
-licences; see files named LICENSE.*.txt for details.
 ```
 
 ---
@@ -6380,7 +6331,7 @@ SOFTWARE.
 
 The following packages do not ship a license file; they are used under the license they declare.
 
-- **alloc-stdlib** 0.2.4 (BSD-3-Clause) — https://github.com/dropbox/rust-alloc-no-stdlib
+- **alloc-stdlib** 0.3.0 (BSD-3-Clause) — https://github.com/dropbox/rust-alloc-no-stdlib
 - **block2** 0.6.2 (MIT) — https://github.com/madsmtm/objc2
 - **dispatch2** 0.3.1 (Zlib OR Apache-2.0 OR MIT) — https://github.com/madsmtm/objc2
 - **dlopen2** 0.8.2 (MIT) — https://github.com/OpenByteDev/dlopen2
@@ -6389,6 +6340,7 @@ The following packages do not ship a license file; they are used under the licen
 - **lindera-dictionary** 6.0.0 (MIT) — https://github.com/lindera/lindera
 - **lofty** 0.25.5 (MIT OR Apache-2.0) — https://github.com/Serial-ATA/lofty-rs
 - **ndk** 0.9.0 (MIT OR Apache-2.0) — https://github.com/rust-mobile/ndk
+- **ndk-context** 0.1.1 (MIT OR Apache-2.0) — https://github.com/rust-windowing/android-ndk-rs
 - **ndk-sys** 0.6.0+11769913 (MIT OR Apache-2.0) — https://github.com/rust-mobile/ndk
 - **objc2** 0.6.4 (MIT) — https://github.com/madsmtm/objc2
 - **objc2-app-kit** 0.3.2 (Zlib OR Apache-2.0 OR MIT) — https://github.com/madsmtm/objc2
@@ -6411,14 +6363,9 @@ The following packages do not ship a license file; they are used under the licen
 - **r-efi** 5.3.0 (MIT OR Apache-2.0 OR LGPL-2.1-or-later) — https://github.com/r-efi/r-efi
 - **r-efi** 6.0.0 (MIT OR Apache-2.0 OR LGPL-2.1-or-later) — https://github.com/r-efi/r-efi
 - **rustls-platform-verifier-android** 0.1.1 (MIT OR Apache-2.0) — https://github.com/rustls/rustls-platform-verifier
-- **selectors** 0.36.1 (MPL-2.0) — https://github.com/servo/stylo
-- **unic-char-property** 0.9.0 (MIT/Apache-2.0) — https://github.com/open-i18n/rust-unic/
-- **unic-char-range** 0.9.0 (MIT/Apache-2.0) — https://github.com/open-i18n/rust-unic/
-- **unic-common** 0.9.0 (MIT/Apache-2.0) — https://github.com/open-i18n/rust-unic/
-- **unic-ucd-ident** 0.9.0 (MIT/Apache-2.0) — https://github.com/open-i18n/rust-unic/
-- **unic-ucd-version** 0.9.0 (MIT/Apache-2.0) — https://github.com/open-i18n/rust-unic/
-- **webview2-com** 0.38.2 (MIT) — https://github.com/wravery/webview2-rs
-- **webview2-com-sys** 0.38.2 (MIT) — https://github.com/wravery/webview2-rs
+- **selectors** 0.41.0 (MPL-2.0) — https://github.com/servo/stylo
+- **webview2-com** 0.39.1 (MIT) — https://github.com/wravery/webview2-rs
+- **webview2-com-sys** 0.39.1 (MIT) — https://github.com/wravery/webview2-rs
 - **winapi-i686-pc-windows-gnu** 0.4.0 (MIT/Apache-2.0) — https://github.com/retep998/winapi-rs
 - **winapi-x86_64-pc-windows-gnu** 0.4.0 (MIT/Apache-2.0) — https://github.com/retep998/winapi-rs
 

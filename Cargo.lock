@@ -5820,7 +5820,7 @@ dependencies = [
 
 [[package]]
 name = "zenpod"
-version = "2.11.1"
+version = "2.11.2"
 dependencies = [
  "base64 0.23.1",
  "chrono",

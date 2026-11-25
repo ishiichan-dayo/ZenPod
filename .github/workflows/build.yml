@@ -156,6 +156,8 @@ jobs:
           V=$(node -p "require('./src-tauri/tauri.conf.json').version")
           mkdir -p out
           cp "target/release/bundle/appimage/ZenPod_${V}_amd64.AppImage" "target/release/bundle/deb/ZenPod_${V}_amd64.deb" out/
+          # AppImage に入れた Ubuntu のライブラリの一覧・ライセンス・著作権表示 (リリースに添付する。THIRD_PARTY_LICENSES.md から案内)
+          scripts/linux-bundled-libraries.sh "out/ZenPod_${V}_amd64.AppImage" "out/ZenPod_${V}_linux-libraries.txt"
           ls -l out
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
@@ -396,7 +398,7 @@ jobs:
             const repo = { owner: process.env.RELEASE_OWNER, repo: process.env.RELEASE_REPO };
             // 添付がそろっていなければ公開しない
             const want = [`ZenPod_${v}_x64-setup.exe`, `ZenPod_${v}_universal.dmg`, "ZenPod_universal.app.tar.gz",
-              `ZenPod_${v}_amd64.AppImage`, `ZenPod_${v}_amd64.deb`, "latest.json"];
+              `ZenPod_${v}_amd64.AppImage`, `ZenPod_${v}_amd64.deb`, `ZenPod_${v}_linux-libraries.txt`, "latest.json"];
             const missing = want.filter((n) => !fs.existsSync(`release/${n}`));
             if (missing.length) {
               core.setFailed(`添付が足りません: ${missing.join(", ")}`);
@@ -409,8 +411,8 @@ jobs:
               `- **macOS (Apple Silicon / Intel)**: \`ZenPod_${v}_universal.dmg\``,
               `- **Linux (x86_64)**: \`ZenPod_${v}_amd64.AppImage\` / Debian・Ubuntu: \`ZenPod_${v}_amd64.deb\``,
               "",
-              `\`.app.tar.gz\` と \`latest.json\` はアプリの自動アップデート用なので、ダウンロードは不要です。`,
-              `\`.app.tar.gz\` and \`latest.json\` are used by the app's automatic updates, so you don't need to download them.`,
+              `\`.app.tar.gz\` と \`latest.json\` はアプリの自動アップデート用なので、ダウンロードは不要です。\`linux-libraries.txt\` は AppImage に入れたライブラリのライセンスの一覧です。`,
+              `\`.app.tar.gz\` and \`latest.json\` are used by the app's automatic updates, so you don't need to download them. \`linux-libraries.txt\` lists the licenses of the libraries bundled in the AppImage.`,
               "",
               "### 初めて起動するとき / First launch",
               "",

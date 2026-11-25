@@ -63,6 +63,8 @@ export interface DeviceInfo {
   photos: boolean;
   /** iPod OS で動画を再生できる機種か (型番から。分からなければ true) */
   video: boolean;
+  /** iPod shuffle なら iTunesSD の形式 (v1 = 1G / 2G、v2 = 3G / 4G) */
+  shuffle: "v1" | "v2" | null;
   totalBytes: number;
   freeBytes: number;
 }

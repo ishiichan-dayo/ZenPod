@@ -4,6 +4,7 @@ pub mod artwork;
 pub mod hash58;
 pub mod itunesdb;
 mod photos;
+pub mod shuffle;
 mod videos;
 
 use crate::t;
@@ -15,7 +16,7 @@ use std::path::{Path, PathBuf};
 use self::artwork::{ArtFormat, ArtworkDb, HashIndex};
 use self::itunesdb::*;
 use crate::device::{self, ChecksumKind, DeviceInfo, adopt_legacy_name};
-use crate::domain::audio::{Format, MediaKind};
+use crate::domain::audio::{ConvertTarget, Format, MediaKind};
 use crate::domain::playlist::{PlaylistView, SmartPreview};
 use crate::domain::track::{
     AddOptions, AddOutcome, ArtistUnify, DbDetails, DupKey, ReadingChange, ReadingEdit, Readings, TagEdit, TrackOptions, TrackTagEdit, TrackView,
@@ -169,6 +170,14 @@ impl Ipod {
             pending_cleanup.push(pc);
             dirty = true;
         }
+        // shuffle の再生回数 (本体が前回の iTunesSD の順に書く)
+        if let (Ok(stats), Ok(sd)) = (fs::read(itunes.join("iTunesStats")), fs::read(itunes.join("iTunesSD"))) {
+            let n = shuffle::merge_stats(&mut db, &sd, &stats);
+            if n > 0 {
+                log::info!("iTunesStats: merged {n} tracks");
+                dirty = true;
+            }
+        }
         for extra in ["iTunesStats", "PlayCounts.plist"] {
             let p = itunes.join(extra);
             if p.exists() {
@@ -178,6 +187,17 @@ impl Ipod {
 
         let scheme = db_path.is_file().then(|| db.hashing_scheme());
         let info = device::probe_timed(root, scheme, &mut times);
+        if info.shuffle.is_some() {
+            // シャッフルの順 (iTunesSD の曲の番号) は曲の並びが変わると合わなくなる (libgpod も保存で消す)
+            let p = itunes.join("iTunesShuffle");
+            if p.exists() {
+                pending_cleanup.push(p);
+            }
+            // iTunesSD が無い・壊れている shuffle は、開いたら書き直す
+            if fs::read(itunes.join("iTunesSD")).ok().and_then(|d| shuffle::sd_format_of(&d)) != info.shuffle {
+                dirty = true;
+            }
+        }
         let art_started = std::time::Instant::now();
         let art = load_art(root, &info.art_formats);
         times.art_ms = art_started.elapsed().as_millis() as u64;
@@ -277,6 +297,10 @@ impl Ipod {
             hash58::write_hash58(&mut bytes, &fwid);
         }
         write_atomic(&itunes.join("iTunesDB"), &bytes)?;
+        // shuffle は iTunesDB ではなく iTunesSD で再生する (serialize で振ったアルバムの番号を使うので後に書く)
+        if let Some(format) = self.info.shuffle {
+            write_atomic(&itunes.join("iTunesSD"), &shuffle::write_itunes_sd(&self.db, format))?;
+        }
         for p in self.pending_cleanup.drain(..) {
             let _ = fs::remove_file(p);
         }
@@ -351,6 +375,7 @@ impl Ipod {
             Some(t) if t.should_convert(fmt, info.bitrate_kbps) => Some(t),
             _ => fmt.needs_conversion().then_some(if fmt == Format::ConvertLossless { opts.lossless_to } else { opts.lossy_to }),
         };
+        let target = shuffle_target(self.info.shuffle, fmt, target, opts);
         let mut tmp_file = None;
         let (source, final_fmt, props) = if let Some(target) = target {
             // Mac の FLAC は OS 標準の afconvert で変換できる (ffmpeg が無くてもよい)
@@ -439,7 +464,8 @@ impl Ipod {
             let _ = fs::remove_file(t);
         }
         let track = Box::new(result?);
-        let converted = fmt.needs_conversion();
+        // shuffle で再生できない ALAC・AIFF を変換したときも数える (「変換して転送」で選んだ形式にしたものは数えない)
+        let converted = fmt.needs_conversion() || (opts.convert_all_to.is_none() && target.is_some());
         Ok(if replace.is_some() {
             AddOutcome::Replaced { track, converted }
         } else {
@@ -1747,6 +1773,23 @@ fn load_art(root: &Path, model_formats: &[ArtFormat]) -> Option<ArtState> {
 }
 
 /// 一時ファイルに書いてから置き換える
+/// shuffle で再生できない形式の変換先。shuffle は AIFF を再生できず (iTunesSD に AIFF の種類が無い)、
+/// 1G / 2G は ALAC も再生できないので、ALAC にする曲は非可逆の変換先 (ALAC なら AAC 256kbps) にする
+fn shuffle_target(shuffle: Option<shuffle::SdFormat>, fmt: Format, target: Option<ConvertTarget>, opts: &AddOptions) -> Option<ConvertTarget> {
+    let Some(sd) = shuffle else { return target };
+    let alac_ok = sd == shuffle::SdFormat::V2;
+    let lossy = if opts.lossy_to == ConvertTarget::Alac { ConvertTarget::LOSSY_DEFAULT } else { opts.lossy_to };
+    let fit = |t: ConvertTarget| if t == ConvertTarget::Alac && !alac_ok { lossy } else { t };
+    match target {
+        Some(t) => Some(fit(t)),
+        None => match fmt {
+            Format::Aiff => Some(fit(opts.lossless_to)),
+            Format::Alac if !alac_ok => Some(lossy),
+            _ => None,
+        },
+    }
+}
+
 fn write_atomic(path: &Path, bytes: &[u8]) -> std::io::Result<()> {
     let tmp = path.with_extension("zenpod-tmp");
     {

@@ -8,6 +8,7 @@ use serde::Serialize;
 
 use crate::error::{Error, Result};
 use crate::ipod::hash58::parse_firewire_id;
+use crate::ipod::shuffle::SdFormat;
 
 const APPLE_VID: u16 = 0x05AC;
 
@@ -47,6 +48,8 @@ pub struct DeviceInfo {
     /// iPod_Control/Music の Fxx フォルダの数 (型番から。分からなければ None)
     #[serde(skip)]
     pub music_dirs: Option<u32>,
+    /// iPod shuffle なら iTunesSD の形式 (保存のときに iTunesDB と一緒に書く)
+    pub shuffle: Option<SdFormat>,
     pub total_bytes: u64,
     pub free_bytes: u64,
 }
@@ -150,7 +153,7 @@ fn usb_ipod_guids() -> Vec<String> {
     use nusb::MaybeFuture;
     let Ok(devices) = nusb::list_devices().wait() else { return Vec::new() };
     devices
-        .filter(|d| d.vendor_id() == APPLE_VID && (0x1200..0x1300).contains(&d.product_id()))
+        .filter(|d| d.vendor_id() == APPLE_VID && is_ipod_pid(d.product_id()))
         .filter_map(|d| d.serial_number().map(str::to_ascii_uppercase))
         .filter(|s| s.len() >= 16)
         .map(|s| s[s.len() - 16..].to_string())
@@ -260,7 +263,15 @@ pub fn probe_timed(root: &Path, existing_db_scheme: Option<u16>, times: &mut Ope
     let usb_pid = usb.map(|u| u.0);
     let db_version = plist_integer(&sysinfo_ext, "DBVersion");
     let m = model_lookup(model_number.as_deref(), usb_pid);
-    let (model_name, model_checksum, music_dirs) = (m.name, m.checksum, m.music_dirs);
+    let shuffle = shuffle_format(root, m.generation, &sysinfo_ext);
+    let (mut model_name, model_checksum, mut music_dirs) = (m.name, m.checksum, m.music_dirs);
+    if shuffle.is_some() && m.generation.is_none() {
+        model_name = "iPod shuffle".into();
+    }
+    if shuffle.is_some() {
+        // shuffle は 3 つ (F00〜F02)
+        music_dirs = music_dirs.or(Some(3));
+    }
     // ジャケットの形式は本体の SysInfoExtended を優先する (libgpod と同じ)。無ければ機種の既定値
     let art_formats = Some(sysinfo_art_formats(&sysinfo_ext)).filter(|f| !f.is_empty()).unwrap_or_else(|| m.art_formats.to_vec());
 
@@ -292,8 +303,31 @@ pub fn probe_timed(root: &Path, existing_db_scheme: Option<u16>, times: &mut Ope
         photos: m.generation.is_some_and(|g| !g.photo_formats().is_empty()),
         video: m.generation.is_none_or(Gen::video),
         music_dirs,
+        shuffle,
         total_bytes,
         free_bytes,
+    }
+}
+
+/// iPod shuffle なら iTunesSD の形式。SysInfoExtended の ShadowDBVersion (1 / 2) を優先し、無ければ世代から。
+/// shuffle は SysInfo が無いことが多いので、型番も USB も分からないときは、iPod にある iTunesSD の中身で見分ける
+fn shuffle_format(root: &Path, generation: Option<Gen>, sysinfo_ext: &str) -> Option<SdFormat> {
+    match generation {
+        Some(g) => {
+            let f = g.shuffle()?;
+            Some(match plist_integer(sysinfo_ext, "ShadowDBVersion") {
+                Some(1) => SdFormat::V1,
+                Some(2) => SdFormat::V2,
+                _ => f,
+            })
+        }
+        None => {
+            use std::io::Read;
+            let mut head = [0u8; crate::ipod::shuffle::SD_SNIFF_LEN];
+            let mut f = fs::File::open(root.join("iPod_Control").join("iTunes").join("iTunesSD")).ok()?;
+            let n = f.read(&mut head).ok()?;
+            crate::ipod::shuffle::sd_format_of(&head[..n])
+        }
     }
 }
 
@@ -361,8 +395,17 @@ fn plist_value(xml: &str, key: &str, ty: &str) -> Option<String> {
     Some(rest[..rest.find(&close)?].trim().to_string())
 }
 
-/// ディスクとして使える iPod の USB の product id。0x129x 以降は iPhone・iPod touch・iPad (ディスクにならない)
-const DISK_IPOD_PIDS: std::ops::Range<u16> = 0x1200..0x1290;
+/// iPod の USB の product id (0x12xx。shuffle は 0x1300〜0x1303)
+fn is_ipod_pid(pid: u16) -> bool {
+    (0x1200..0x1300).contains(&pid) || SHUFFLE_PIDS.contains(&pid)
+}
+
+const SHUFFLE_PIDS: std::ops::RangeInclusive<u16> = 0x1300..=0x1303;
+
+/// ディスクとして使える iPod の USB の product id か。0x129x 以降は iPhone・iPod touch・iPad (ディスクにならない)
+fn is_disk_ipod_pid(pid: u16) -> bool {
+    (0x1200..0x1290).contains(&pid) || SHUFFLE_PIDS.contains(&pid)
+}
 
 /// ディスクとして使える iPod が USB につながっているか。
 /// ドライブとして見える前 (OS がディスクを準備している間) からわかるので、待っていることを画面に出せる
@@ -370,7 +413,7 @@ pub fn usb_disk_ipod_connected() -> bool {
     use nusb::MaybeFuture;
     nusb::list_devices()
         .wait()
-        .is_ok_and(|mut l| l.any(|d| d.vendor_id() == APPLE_VID && DISK_IPOD_PIDS.contains(&d.product_id())))
+        .is_ok_and(|mut l| l.any(|d| d.vendor_id() == APPLE_VID && is_disk_ipod_pid(d.product_id())))
 }
 
 /// 接続中の Apple 製 iPod (USB) の (product id, serial)。iPod の USB シリアルは FireWire GUID と同じ。
@@ -378,7 +421,7 @@ fn find_usb_ipod() -> Option<(u16, Option<String>)> {
     use nusb::MaybeFuture;
     let devices = nusb::list_devices().wait().ok()?;
     devices
-        .filter(|d| d.vendor_id() == APPLE_VID && (0x1200..0x1300).contains(&d.product_id()))
+        .filter(|d| d.vendor_id() == APPLE_VID && is_ipod_pid(d.product_id()))
         .map(|d| {
             let serial = d
                 .serial_number()
@@ -410,6 +453,11 @@ enum Gen {
     Nano4,
     /// nano 5G 以降 (署名の方式が違い、書き込めない)
     Nano5Plus,
+    /// shuffle 1G〜4G (画面が無い。曲の一覧は iTunesSD)
+    Shuffle1,
+    Shuffle2,
+    Shuffle3,
+    Shuffle4,
 }
 
 impl Gen {
@@ -433,6 +481,19 @@ impl Gen {
             Gen::Nano4 => "iPod nano (4G)",
             // tr: 使う側で訳す (model_lookup)
             Gen::Nano5Plus => "iPod nano (5G 以降)",
+            Gen::Shuffle1 => "iPod shuffle (1G)",
+            Gen::Shuffle2 => "iPod shuffle (2G)",
+            Gen::Shuffle3 => "iPod shuffle (3G)",
+            Gen::Shuffle4 => "iPod shuffle (4G)",
+        }
+    }
+
+    /// shuffle なら iTunesSD の形式
+    fn shuffle(self) -> Option<SdFormat> {
+        match self {
+            Gen::Shuffle1 | Gen::Shuffle2 => Some(SdFormat::V1),
+            Gen::Shuffle3 | Gen::Shuffle4 => Some(SdFormat::V2),
+            _ => None,
         }
     }
 
@@ -581,6 +642,42 @@ const MODELS: &[(&str, u32, Gen, u32)] = &[
     ("B915", 16, Gen::Nano4, 14),
     ("B917", 16, Gen::Nano4, 14),
     ("B918", 16, Gen::Nano4, 14),
+    // shuffle の 1GB 未満 (512MB) は 0 と書く
+    ("9724", 0, Gen::Shuffle1, 3),
+    ("9725", 1, Gen::Shuffle1, 3),
+    ("A546", 1, Gen::Shuffle2, 3),
+    ("A947", 1, Gen::Shuffle2, 3),
+    ("A949", 1, Gen::Shuffle2, 3),
+    ("A951", 1, Gen::Shuffle2, 3),
+    ("A953", 1, Gen::Shuffle2, 3),
+    ("C167", 1, Gen::Shuffle2, 3),
+    ("B225", 1, Gen::Shuffle2, 3),
+    ("B233", 1, Gen::Shuffle2, 3),
+    ("B231", 1, Gen::Shuffle2, 3),
+    ("B227", 1, Gen::Shuffle2, 3),
+    ("B228", 1, Gen::Shuffle2, 3),
+    ("B229", 1, Gen::Shuffle2, 3),
+    ("B518", 2, Gen::Shuffle2, 3),
+    ("B520", 2, Gen::Shuffle2, 3),
+    ("B522", 2, Gen::Shuffle2, 3),
+    ("B524", 2, Gen::Shuffle2, 3),
+    ("B526", 2, Gen::Shuffle2, 3),
+    ("C306", 2, Gen::Shuffle3, 3),
+    ("C323", 2, Gen::Shuffle3, 3),
+    ("C381", 2, Gen::Shuffle3, 3),
+    ("C384", 2, Gen::Shuffle3, 3),
+    ("C387", 2, Gen::Shuffle3, 3),
+    ("B867", 4, Gen::Shuffle3, 3),
+    ("C164", 4, Gen::Shuffle3, 3),
+    ("C303", 4, Gen::Shuffle3, 3),
+    ("C307", 4, Gen::Shuffle3, 3),
+    ("C328", 4, Gen::Shuffle3, 3),
+    ("C331", 4, Gen::Shuffle3, 3),
+    ("C584", 2, Gen::Shuffle4, 3),
+    ("C585", 2, Gen::Shuffle4, 3),
+    ("C749", 2, Gen::Shuffle4, 3),
+    ("C750", 2, Gen::Shuffle4, 3),
+    ("C751", 2, Gen::Shuffle4, 3),
 ];
 
 /// 型番が分からないとき、USB の製品 ID から世代を決める (usb.ids の Apple の項目)
@@ -598,6 +695,10 @@ fn gen_from_usb(pid: u16) -> Option<Gen> {
         0x1262 => Gen::Nano3,
         0x1263 => Gen::Nano4,
         0x1265..=0x1267 => Gen::Nano5Plus,
+        0x1300 => Gen::Shuffle1,
+        0x1301 => Gen::Shuffle2,
+        0x1302 => Gen::Shuffle3,
+        0x1303 => Gen::Shuffle4,
         _ => return None,
     })
 }
@@ -618,7 +719,8 @@ fn model_lookup(model: Option<&str>, pid: Option<u16>) -> ModelInfo {
         let code = m.get(m.len().saturating_sub(4)..).unwrap_or(m).to_ascii_uppercase();
         if let Some(&(_, gb, g, dirs)) = MODELS.iter().find(|(c, ..)| *c == code) {
             return ModelInfo {
-                name: format!("{} {gb}GB", crate::i18n::tr(g.name())),
+                // shuffle 1G の 512MB は表で 0 にしている
+                name: if gb == 0 { format!("{} 512MB", crate::i18n::tr(g.name())) } else { format!("{} {gb}GB", crate::i18n::tr(g.name())) },
                 checksum: g.checksum(),
                 art_formats: g.art_formats(),
                 music_dirs: Some(dirs),

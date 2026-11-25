@@ -333,6 +333,20 @@ impl Track {
     pub fn set_samplecount(&mut self, v: u64) {
         wr64(&mut self.hdr, 0xBC, v);
     }
+    pub fn samplecount(&self) -> u64 {
+        rd64(&self.hdr, 0xBC)
+    }
+    // ギャップレス再生の情報 (iTunes が書く。shuffle 3G / 4G の iTunesSD に写す)
+    field32!(pregap, set_pregap, 0xB8);
+    field32!(postgap, set_postgap, 0xC8);
+    field32!(gapless_data, set_gapless_data, 0xF8);
+    /// アルバム・アーティストの番号 (`ITunesDb::serialize` で振る)
+    pub fn album_id(&self) -> u32 {
+        rd32(&self.hdr, 0x120)
+    }
+    pub fn artist_id(&self) -> u32 {
+        rd32(&self.hdr, 0x1E0)
+    }
     /// ArtworkDB の mhii id (0 = なし)
     pub fn mhii_link(&self) -> u32 {
         rd32(&self.hdr, 0x160)

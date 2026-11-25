@@ -40,10 +40,13 @@ Details, screenshots and the FAQ are on the **[website](https://ishiichan-dayo.g
 | iPod nano 3G / 4G | Yes | No |
 | iPod photo, iPod nano 1G / 2G | Yes | Yes |
 | iPod 1G–4G (monochrome), iPod mini 1G / 2G | Yes (music only — the screen can't show artwork) | Yes |
-| iPod nano 5G and later, iPod touch | No (read-only) | No |
-| iPod shuffle | No | No |
+| iPod nano 5G | Yes (needs one iTunes sync first) | No |
+| iPod nano 6G / 7G | Yes | No |
+| iPod shuffle 1G–4G | Yes (music only — no screen) | No |
+| iPod touch | No | No |
 
 - Rockbox mode works on iPods with Rockbox 4.0 or later installed. It has been tested on a real iPod classic. To install Rockbox, use Rockbox Utility from the [official Rockbox site](https://www.rockbox.org/) (this app doesn't install Rockbox itself or its bootloader)
+- Writing to iPod shuffle and iPod nano 5G / 6G / 7G hasn't been tested on real devices yet (experimental). An iPod nano 5G needs to be synced once with iTunes (Finder on a Mac) first, because ZenPod reads its signing data from the iPod. Spoken track names (VoiceOver) on iPod shuffle 3G / 4G aren't supported
 - iPods modded with iFlash or other SD adapters work just like stock ones
 - **On Windows, the iPod must be Windows-formatted (FAT32).** Mac-formatted (HFS+) iPods can't be read by Windows — restore it in iTunes to reformat it for Windows. On macOS, both formats work. On Linux, Windows format (FAT32) is recommended
 - iPod 1G / 2G connect over FireWire only, so you'll need an adapter for modern PCs

@@ -41,10 +41,13 @@ https://github.com/user-attachments/assets/ec41166c-ef58-4174-b428-4b8eb114418e
 | iPod nano 3G / 4G | ○ | × |
 | iPod photo・iPod nano 1G / 2G | ○ | ○ |
 | iPod 1G〜4G（白黒液晶）・iPod mini 1G / 2G | ○（画面がアートワーク非対応のため曲のみ） | ○ |
-| iPod nano 5G 以降・iPod touch | ×（読み取りのみ） | × |
-| iPod shuffle | × | × |
+| iPod nano 5G | ○（iTunes で一度同期が必要） | × |
+| iPod nano 6G / 7G | ○ | × |
+| iPod shuffle 1G〜4G | ○（画面が無いため曲のみ） | × |
+| iPod touch | × | × |
 
 - Rockbox モードは、iPod に Rockbox（4.0 以降）が入っていれば使えます。実機での確認は iPod classic で行っています。Rockbox の入れ方は [Rockbox 公式サイト](https://www.rockbox.org/) の Rockbox Utility を使ってください（このアプリは Rockbox 本体やブートローダーは入れません）
+- iPod shuffle と iPod nano 5G / 6G / 7G への書き込みは、実機ではまだ確かめていません（試験的）。iPod nano 5G は、署名に使う情報を iPod から読み取るため、一度 iTunes（Mac は Finder）で同期してから使ってください。iPod shuffle 3G / 4G の曲名の読み上げ（VoiceOver）には対応していません
 - iFlash などで SD カードに換装した iPod も、普通の iPod と同じように使えます
 - **Windows では Windows 形式（FAT32）の iPod が必要です。** Mac 形式（HFS+）の iPod は Windows から読めないため、iTunes で「復元」して Windows 形式に初期化してください。macOS ではどちらの形式でも使えます。Linux では Windows 形式（FAT32）をおすすめします
 - iPod 1G / 2G は FireWire 接続のため、今の PC につなぐには別の機器が必要です

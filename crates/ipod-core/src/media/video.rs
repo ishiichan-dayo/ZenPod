@@ -846,7 +846,8 @@ pub fn convert_args(target: VideoTarget, enc: H264Encoder, info: &VideoInfo) -> 
                     push(&["-c:v", "mpeg4", "-vtag", "mp4v", "-bf", "0", "-b:v", kbps, "-maxrate", "2500k", "-bufsize", "2500k"])
                 }
             }
-            push(&["-c:a", "aac", "-b:a", "128k", "-ac", "2", "-ar", "44100"]);
+            push(&crate::media::convert::IPOD_AAC);
+            push(&["-b:a", "128k", "-ac", "2", "-ar", "44100"]);
             push(&["-map_metadata", "0", "-movflags", "+faststart", "-f", "mp4"]);
         }
         VideoTarget::Rockbox => {
@@ -1323,6 +1324,8 @@ mod tests {
         let a = convert_args(VideoTarget::Ipod(VideoSize::Qvga), H264Encoder::X264, &VideoInfo::default());
         assert!(a.windows(2).any(|w| w == ["-level:v", "1.3"]));
         assert!(a.windows(2).any(|w| w == ["-f", "mp4"]));
+        // 音声は曲の変換と同じく、iPod がうまく扱えない AAC の道具を切る
+        assert!(a.windows(2).any(|w| w == ["-aac_pns", "0"]));
         let r = convert_args(VideoTarget::Rockbox, H264Encoder::X264, &VideoInfo { fps: 29.97, ..Default::default() });
         assert!(r.windows(2).any(|w| w == ["-c:v", "mpeg2video"]));
         assert!(r.windows(2).any(|w| w == ["-r", "30000/1001"]));

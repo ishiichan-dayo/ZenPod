@@ -95,9 +95,7 @@ fn codec_args(target: ConvertTarget, src_rate: u32) -> Vec<String> {
             args.extend(["-c:a", "alac", "-sample_fmt", "s16p"].map(String::from));
         }
         ConvertTarget::Aac { kbps } => {
-            // ffmpeg の AAC エンコーダは intensity stereo・PNS・TNS を既定で使う。iPod のデコーダはこれらを
-            // うまく扱えず、短い「ザッ」というノイズ (片方のチャンネルだけのことが多い) になるので、すべて切って素の AAC-LC にする
-            args.extend(["-c:a", "aac", "-profile:a", "aac_low", "-aac_is", "0", "-aac_pns", "0", "-aac_tns", "0"].map(String::from));
+            args.extend(IPOD_AAC.map(String::from));
             args.extend(["-b:a".into(), format!("{kbps}k")]);
         }
         ConvertTarget::Mp3 { kbps } => {
@@ -191,6 +189,11 @@ pub fn convert_afconvert(afconvert: &Path, src: &Path, dst: &Path, target: Conve
 /// m4a の目次 (moov) をファイルの先頭に置く。iPod は曲を続けて再生するとき次の曲を
 /// メモリに入るぶんだけ先読みするので、大きい曲どうしが続くと末尾の moov まで届かず飛ばされる
 const FASTSTART: [&str; 2] = ["-movflags", "+faststart"];
+
+/// iPod 向けの AAC の ffmpeg の引数 (曲と動画で共用)。ffmpeg の AAC エンコーダは intensity stereo・PNS・TNS を
+/// 既定で使う。iPod のデコーダはこれらをうまく扱えず、短い「ザッ」というノイズ (片方のチャンネルだけのことが多い)
+/// になるので、すべて切って素の AAC-LC にする (Issue #26)
+pub(crate) const IPOD_AAC: [&str; 10] = ["-c:a", "aac", "-profile:a", "aac_low", "-aac_is", "0", "-aac_pns", "0", "-aac_tns", "0"];
 
 /// m4a の目次 (moov) が音声本体 (mdat) より後ろにあるか。先頭の箱だけを読む
 pub fn moov_after_mdat(path: &Path) -> bool {

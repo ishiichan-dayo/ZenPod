@@ -1,6 +1,6 @@
 [package]
 name = "zenpod"
-version = "2.12.0"
+version = "2.12.1"
 description = "iPod classic にドラッグ&ドロップで曲を転送するアプリ"
 license = "GPL-3.0-or-later"
 edition = "2021"

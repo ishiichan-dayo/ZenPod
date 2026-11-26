@@ -18,7 +18,14 @@ pub fn serve(app: &AppHandle, req: &Request<Vec<u8>>) -> Response<Vec<u8>> {
             .unwrap();
     }
     let range = req.headers().get(header::RANGE).and_then(|v| v.to_str().ok());
+    // 再生の始めの要求だけ残す (途中の Range の要求まで残すと多すぎる)。届いているかの手がかり
+    if range.is_none_or(|r| r.starts_with("bytes=0-")) {
+        log::info!("audio request: {} {range:?}", req.uri().path());
+    }
     let reply = app.state::<AppState>().zen.playback.serve(target(req), range);
+    if let AudioReply::Fail { status, message } = &reply {
+        log::warn!("audio request failed: {} {status} {message}", req.uri().path());
+    }
     match reply {
         AudioReply::Partial { mime, start, end, total, body } => Response::builder()
             .status(StatusCode::PARTIAL_CONTENT)

@@ -15,19 +15,19 @@ use crate::state::AppState;
 pub fn open_in_browser(url: &str) -> std::io::Result<()> {
     #[cfg(windows)]
     let mut cmd = {
-        let mut c = std::process::Command::new("rundll32");
+        let mut c = ipod_core::host::command("rundll32");
         c.args(["url.dll,FileProtocolHandler", url]);
         c
     };
     #[cfg(target_os = "macos")]
     let mut cmd = {
-        let mut c = std::process::Command::new("open");
+        let mut c = ipod_core::host::command("open");
         c.arg(url);
         c
     };
     #[cfg(all(unix, not(target_os = "macos")))]
     let mut cmd = {
-        let mut c = std::process::Command::new("xdg-open");
+        let mut c = ipod_core::host::command("xdg-open");
         c.arg(url);
         c
     };
@@ -44,16 +44,16 @@ pub fn reveal_in_folder(path: &std::path::Path) -> std::io::Result<()> {
         let mut arg = std::ffi::OsString::from("/select,\"");
         arg.push(path);
         arg.push("\"");
-        std::process::Command::new("explorer.exe").raw_arg(arg).spawn().map(|_| ())
+        ipod_core::host::command("explorer.exe").raw_arg(arg).spawn().map(|_| ())
     }
     #[cfg(target_os = "macos")]
     {
-        std::process::Command::new("open").arg("-R").arg(path).spawn().map(|_| ())
+        ipod_core::host::command("open").arg("-R").arg(path).spawn().map(|_| ())
     }
     #[cfg(all(unix, not(target_os = "macos")))]
     {
         // ファイルを選んで開けるのは FileManager1 に対応したファイルマネージャー。無ければフォルダだけ開く
-        let shown = std::process::Command::new("dbus-send")
+        let shown = ipod_core::host::command("dbus-send")
             .args(["--session", "--print-reply", "--dest=org.freedesktop.FileManager1", "--type=method_call"])
             .args(["/org/freedesktop/FileManager1", "org.freedesktop.FileManager1.ShowItems"])
             .arg(format!("array:string:{}", file_uri(path)))
@@ -65,7 +65,7 @@ pub fn reveal_in_folder(path: &std::path::Path) -> std::io::Result<()> {
         if shown {
             return Ok(());
         }
-        std::process::Command::new("xdg-open").arg(path.parent().unwrap_or(path)).spawn().map(|_| ())
+        ipod_core::host::command("xdg-open").arg(path.parent().unwrap_or(path)).spawn().map(|_| ())
     }
 }
 

@@ -9,6 +9,7 @@ import { fmtDur } from "../domain/format";
 import { albumKey, artistKey } from "../domain/track-order";
 import type { Track } from "../domain/types";
 import { getStored, setStored } from "../infra/prefs";
+import { invoke } from "../infra/tauri";
 import { albumArtCache, loadAlbumArt } from "./album-grid";
 import { esc, isEnter } from "./dom";
 import { reduceMotion, replayClass, toast } from "./feedback";
@@ -323,9 +324,21 @@ export function bindPlayer() {
   a.addEventListener("error", async () => {
     if (!player.current || !a.getAttribute("src")) return;
     // 失敗の理由 (ffmpeg が無い・曲が見つからない等) はプロトコルの応答本文に入っている
+    let probe = "";
     const msg = await fetch(audioUrl(player.current), { headers: { Range: "bytes=0-0" } })
-      .then((r) => (r.ok ? "" : r.text()))
-      .catch(() => "");
+      .then((r) => {
+        probe = `HTTP ${r.status}`;
+        return r.ok ? "" : r.text();
+      })
+      .catch((e) => {
+        probe = `fetch: ${e}`;
+        return "";
+      });
+    // 理由が分からないとき (WebView の中で止まった) の手がかりを zenpod.log に残す
+    const err = a.error;
+    void invoke("ui_log", {
+      msg: `playback failed: media=${err?.code ?? "?"} ${err?.message ?? ""} / ${probe} ${msg}`.trim(),
+    }).catch(() => {});
     toast(msg || tr("この曲は再生できませんでした"), "error", 6000);
     $("pl-sub").textContent = tr("再生できませんでした");
     renderPlayer();

@@ -61,7 +61,7 @@ fn windows_package_locations() -> Vec<PathBuf> {
 
 /// `src` を iPod で再生できる形式 (`target`) に変換して `dst` に書く
 pub fn convert(ffmpeg: &Path, src: &Path, dst: &Path, target: ConvertTarget, src_rate: u32) -> Result<()> {
-    let mut cmd = Command::new(ffmpeg);
+    let mut cmd = crate::host::command(ffmpeg);
     cmd.args(["-nostdin", "-hide_banner", "-loglevel", "error", "-y", "-i"])
         .arg(src)
         .args(["-map", "0:a:0", "-map_metadata", metadata_source(src), "-vn"])
@@ -175,7 +175,7 @@ pub fn convert_afconvert(afconvert: &Path, src: &Path, dst: &Path, target: Conve
     let pcm = dst.with_extension("caf");
     let result = (|| {
         for args in afconvert_args(src, &pcm, dst, target, src_rate) {
-            run(Command::new(afconvert).args(args), "afconvert")?;
+            run(crate::host::command(afconvert).args(args), "afconvert")?;
         }
         crate::media::copy_tags_to_m4a(src, dst).map_err(|e| Error::Convert(t!("タグを書き込めません: {e}", e = e)))
     })();
@@ -233,7 +233,7 @@ pub fn moov_after_mdat(path: &Path) -> bool {
 
 /// 音声はそのまま (再エンコードせず) に、m4a の目次を先頭へ並べ替える
 pub fn faststart(ffmpeg: &Path, src: &Path, dst: &Path) -> Result<()> {
-    let mut cmd = Command::new(ffmpeg);
+    let mut cmd = crate::host::command(ffmpeg);
     cmd.args(["-nostdin", "-hide_banner", "-loglevel", "error", "-y", "-i"])
         .arg(src)
         .args(["-map", "0", "-c", "copy", "-map_metadata", "0"])

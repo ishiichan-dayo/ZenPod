@@ -174,14 +174,13 @@ fn mac_download_url(base: &str, location: &str) -> Result<String> {
 /// codesign で確かめる。チェックサムは zip と同じ配布元から取るので、それだけでは配布元が乗っ取られたときに防げない
 #[cfg(target_os = "macos")]
 fn verify_signature(exe: &Path) -> Result<()> {
-    use std::process::Command;
     let fail = || Error::Other(t!("ffmpeg の署名を確かめられませんでした"));
     // Developer ID の証明書 (Apple のルートから続く) で、チームが MAC_TEAM_ID のもの
     let requirement = format!(
         "=anchor apple generic and certificate 1[field.1.2.840.113635.100.6.2.6] exists \
          and certificate leaf[field.1.2.840.113635.100.6.1.13] exists and certificate leaf[subject.OU] = \"{MAC_TEAM_ID}\""
     );
-    let verified = Command::new("/usr/bin/codesign")
+    let verified = crate::host::command("/usr/bin/codesign")
         .args(["--verify", "--strict", "-R"])
         .arg(&requirement)
         .arg(exe)
@@ -192,7 +191,7 @@ fn verify_signature(exe: &Path) -> Result<()> {
         return Err(fail());
     }
     // 念のため表示上のチームも見る (結果は標準エラーに出る)
-    let shown = Command::new("/usr/bin/codesign").args(["-dv", "--verbose=2"]).arg(exe).output().map_err(|_| fail())?;
+    let shown = crate::host::command("/usr/bin/codesign").args(["-dv", "--verbose=2"]).arg(exe).output().map_err(|_| fail())?;
     if team_identifier(&String::from_utf8_lossy(&shown.stderr)) != Some(MAC_TEAM_ID) {
         return Err(fail());
     }

@@ -14,6 +14,7 @@ pub mod device;
 mod dirlist;
 pub mod domain;
 pub mod error;
+pub mod host;
 pub mod i18n;
 pub mod ipod;
 pub mod library;

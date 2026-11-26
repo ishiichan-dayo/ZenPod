@@ -579,7 +579,7 @@ fn no_window(cmd: &mut Command) -> &mut Command {
 
 /// `ffmpeg -i` の表示から情報を読む
 pub fn probe_ffmpeg(ffmpeg: &Path, path: &Path) -> Result<VideoInfo> {
-    let out = no_window(Command::new(ffmpeg).args(["-hide_banner", "-nostdin", "-i"]).arg(path))
+    let out = no_window(crate::host::command(ffmpeg).args(["-hide_banner", "-nostdin", "-i"]).arg(path))
         .stdout(Stdio::null())
         .stderr(Stdio::piped())
         .output()
@@ -776,7 +776,7 @@ fn encoders(ffmpeg: &Path) -> String {
     if let Some(s) = cache.lock().unwrap().get(ffmpeg) {
         return s.clone();
     }
-    let out = no_window(Command::new(ffmpeg).args(["-hide_banner", "-nostdin", "-encoders"]))
+    let out = no_window(crate::host::command(ffmpeg).args(["-hide_banner", "-nostdin", "-encoders"]))
         .stderr(Stdio::null())
         .output()
         .map(|o| String::from_utf8_lossy(&o.stdout).into_owned())
@@ -889,7 +889,7 @@ pub struct Progress<'a> {
 /// `src` を `target` の形に変換して `dst` に書く。中止されたら `Error::Cancelled` (書きかけは消す)
 pub fn convert(ffmpeg: &Path, src: &Path, dst: &Path, target: VideoTarget, info: &VideoInfo, progress: &Progress) -> Result<()> {
     let enc = h264_encoder(ffmpeg);
-    let mut cmd = Command::new(ffmpeg);
+    let mut cmd = crate::host::command(ffmpeg);
     cmd.args(["-hide_banner", "-nostdin", "-y", "-loglevel", "error", "-nostats", "-progress", "pipe:1", "-i"])
         .arg(src)
         .args(convert_args(target, enc, info))
@@ -1031,7 +1031,7 @@ pub fn thumbnail(ffmpeg: Option<&Path>, src: &Path, info: &VideoInfo) -> Option<
     let ff = ffmpeg?;
     let at = (info.duration_ms as f64 / 1000.0 * 0.1).min(60.0);
     let out = no_window(
-        Command::new(ff)
+        crate::host::command(ff)
             .args(["-hide_banner", "-nostdin", "-loglevel", "error", "-ss", &format!("{at:.2}"), "-i"])
             .arg(src)
             .args(["-frames:v", "1", "-vf", "scale=w='min(640,iw)':h=-2", "-f", "image2pipe", "-c:v", "mjpeg", "-q:v", "3", "-"]),
@@ -1046,7 +1046,7 @@ pub fn thumbnail(ffmpeg: Option<&Path>, src: &Path, info: &VideoInfo) -> Option<
 /// 開けない画像 (HEIC など) を ffmpeg で PNG にする
 pub fn decode_image_with_ffmpeg(ffmpeg: &Path, src: &Path) -> Option<Vec<u8>> {
     let out = no_window(
-        Command::new(ffmpeg)
+        crate::host::command(ffmpeg)
             .args(["-hide_banner", "-nostdin", "-loglevel", "error", "-i"])
             .arg(src)
             .args(["-frames:v", "1", "-f", "image2pipe", "-c:v", "png", "-"]),
@@ -1197,7 +1197,7 @@ impl Drop for PreviewProcess {
 
 /// start_ms の位置から変換して流し始める
 pub fn spawn_preview(ffmpeg: &Path, plan: &PreviewPlan, src: &Path, start_ms: u32) -> Result<PreviewProcess> {
-    let mut child = no_window(Command::new(ffmpeg).args(preview_args(plan, src, start_ms)))
+    let mut child = no_window(crate::host::command(ffmpeg).args(preview_args(plan, src, start_ms)))
         .stdin(Stdio::null())
         .stdout(Stdio::piped())
         .stderr(Stdio::piped())

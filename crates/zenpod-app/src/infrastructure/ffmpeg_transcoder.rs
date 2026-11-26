@@ -17,7 +17,7 @@ pub struct FfmpegTranscoder;
 
 impl Transcoder for FfmpegTranscoder {
     fn to_flac(&self, ffmpeg: &Path, src: &Path) -> Option<Vec<u8>> {
-        let mut cmd = Command::new(ffmpeg);
+        let mut cmd = ipod_core::host::command(ffmpeg);
         cmd.args(["-v", "error", "-i"])
             .arg(src)
             .args(["-map", "0:a:0", "-f", "flac", "-compression_level", "0", "-"]);
@@ -40,7 +40,7 @@ impl Transcoder for FfmpegTranscoder {
 
 /// `path -version` の出力が "ffmpeg version" で始まるか。`timeout` までに答えなければ false
 fn says_ffmpeg(path: &Path, timeout: Duration) -> bool {
-    let mut cmd = Command::new(path);
+    let mut cmd = ipod_core::host::command(path);
     cmd.arg("-version").stdin(Stdio::null()).stdout(Stdio::piped()).stderr(Stdio::null());
     no_window(&mut cmd);
     let Ok(mut child) = cmd.spawn() else { return false };

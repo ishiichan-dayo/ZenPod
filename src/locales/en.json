@@ -542,6 +542,7 @@
   "ライブラリは削除できません": "The library can't be deleted",
   "並び替え対象がプレイリストの内容と一致しません": "The new order doesn't match the playlist",
   "取り出せませんでした。iPod のファイルを開いているアプリ (エクスプローラーなど) を閉じてから、もう一度お試しください。ケーブルはまだ抜かないでください": "Couldn't eject. Close any apps using files on the iPod (such as File Explorer) and try again. Don't disconnect the cable yet",
+  "取り出せませんでした: {e}。ケーブルはまだ抜かないでください": "Couldn't eject: {e}. Don't disconnect the cable yet",
   "未対応の形式です: .{e}": "Unsupported format: .{e}",
   "タグを書き込めませんでした: {e}": "Couldn't write tags: {e}",
   "タグの読み書きの途中で内部エラーが起きました": "An internal error occurred while reading or writing tags",

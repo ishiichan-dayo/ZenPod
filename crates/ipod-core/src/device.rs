@@ -106,7 +106,7 @@ fn looks_like_ipod(root: &Path) -> bool {
 /// Linux は None
 pub fn drive_wait_reason() -> Option<&'static str> {
     let run = |cmd: &str, args: &[&str]| {
-        let mut c = std::process::Command::new(cmd);
+        let mut c = crate::host::command(cmd);
         c.args(args);
         #[cfg(windows)]
         {
@@ -851,7 +851,6 @@ pub fn remove_apple_double(root: &Path) -> usize {
 /// ドライブそのものではない (「フォルダを指定して開く」で開いた) ときは何もせず false を返す
 /// (OS の取り出しが空振りし、フォルダが消えるのを 30 秒待ったうえで失敗していた)
 pub fn eject(root: &Path) -> Result<bool> {
-    use std::process::Command;
     use std::time::{Duration, Instant};
     const TIMEOUT: Duration = Duration::from_secs(15);
     if !is_volume_root(root) {
@@ -862,7 +861,7 @@ pub fn eject(root: &Path) -> Result<bool> {
     }
     let marker = root.join("iPod_Control");
     let status = if cfg!(target_os = "macos") {
-        Command::new("diskutil").arg("eject").arg(root).status()
+        crate::host::command("diskutil").arg("eject").arg(root).output()
     } else if cfg!(windows) {
         let drive = root.to_string_lossy().trim_end_matches('\\').to_string();
         // InvokeVerb は非同期なので、PowerShell がすぐ終わると取り出しが途中で止まることがある。
@@ -873,20 +872,20 @@ pub fn eject(root: &Path) -> Result<bool> {
              while ((Test-Path '{drive}\\iPod_Control') -and [DateTime]::Now -lt $t) {{ Start-Sleep -Milliseconds 300 }}",
             TIMEOUT.as_secs()
         );
-        let mut cmd = Command::new("powershell");
+        let mut cmd = crate::host::command("powershell");
         cmd.args(["-NoProfile", "-Command", &script]);
         #[cfg(windows)]
         {
             use std::os::windows::process::CommandExt;
             cmd.creation_flags(0x0800_0000);
         }
-        cmd.status()
+        cmd.output()
     } else {
-        Command::new("gio")
+        crate::host::command("gio")
             .args(["mount", "-e"])
             .arg(root)
-            .status()
-            .or_else(|_| Command::new("umount").arg(root).status())
+            .output()
+            .or_else(|_| crate::host::command("umount").arg(root).output())
     };
     let failed = || {
         Error::Other(
@@ -894,8 +893,19 @@ pub fn eject(root: &Path) -> Result<bool> {
         )
     };
     match status {
-        Ok(s) if s.success() => {}
-        Ok(_) => return Err(failed()),
+        Ok(o) if o.status.success() => {}
+        Ok(o) => {
+            // 取り出しのコマンドが言ったこと (使用中・コマンドが起動できなかった など) を zenpod.log に残す
+            let said = String::from_utf8_lossy(&o.stderr).trim().to_string();
+            log::warn!("eject {}: {} {said}", root.display(), o.status);
+            // Linux の gio は理由を英語で返す (使用中なら "target is busy")。使用中とは限らないので、そのまま見せる
+            if cfg!(target_os = "linux") && !said.is_empty() {
+                // 最後の行が理由 (gio は前に警告を出すことがある)
+                let reason = said.lines().last().unwrap_or_default();
+                return Err(Error::Other(t!("取り出せませんでした: {e}。ケーブルはまだ抜かないでください", e = reason)));
+            }
+            return Err(failed());
+        }
         Err(e) => return Err(e.into()),
     }
     let start = Instant::now();

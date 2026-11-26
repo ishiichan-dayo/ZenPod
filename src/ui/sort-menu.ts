@@ -2,7 +2,7 @@
 
 import { t as tr } from "../i18n";
 import { computeRows } from "../app/rows";
-import { albumSort, artistSort, currentPlaylist, isPcView, isRockbox } from "../app/selectors";
+import { albumByName, albumSort, artistSort, currentPlaylist, isPcView, isRockbox } from "../app/selectors";
 import type { AlbumSort, ArtistSort } from "../app/selectors";
 import { $, state } from "../app/state";
 import type { Layout } from "../app/state";
@@ -45,6 +45,8 @@ export function openSortMenu(anchor: HTMLElement) {
       items.push({ label: tr(label), checked: cur.key === k, action: () => applyAlbumSort(k, k === "year" || k === "added") });
     }
     items.push(...dirItems(cur.desc, (d) => applyAlbumSort(cur.key, d)));
+    const on = albumByName();
+    items.push({ sep: true }, { label: tr("アルバム名だけでまとめる"), checked: on, action: () => applyAlbumByName(!on) });
   } else if (state.layout === "artists") {
     const cur = artistSort();
     for (const k of ["name", "count"] as ArtistSort[])
@@ -79,6 +81,14 @@ function applyAlbumSort(key: AlbumSort, desc: boolean) {
   setStored("albumSort", key);
   setStored("albumSortDesc", desc ? "1" : "0");
   $("album-grid").scrollTop = 0;
+  renderAll();
+}
+
+/** 別のアーティストの同じ名前のアルバムも 1 つになるので、既定はオフ */
+function applyAlbumByName(on: boolean) {
+  setStored("albumByName", on ? "1" : null);
+  $("album-grid").scrollTop = 0;
+  computeRows();
   renderAll();
 }
 

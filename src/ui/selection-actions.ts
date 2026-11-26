@@ -3,6 +3,7 @@
 import { t as tr } from "../i18n";
 import { currentPlaylist, editablePlaylist, isPcView, isRockbox, writable } from "../app/selectors";
 import { state } from "../app/state";
+import { albumKey } from "../domain/track-order";
 import type { Snapshot, Track } from "../domain/types";
 import { removeFromIpod } from "./bind";
 import { pickArtwork, removeArtwork, searchArtwork, shrinkArtwork } from "./dialogs/artwork-search";
@@ -118,7 +119,6 @@ function selectionMenuItems(ids: string[]): MenuItem[] {
   const pl = currentPlaylist();
   const tracks = ids.map((id) => state.trackMap.get(id)).filter((t): t is Track => !!t);
   const single = tracks.length === 1;
-  const albumKey = (t: Track) => `${t.album}\u0000${t.albumArtist || t.artist}`;
   const albums = new Set(tracks.map(albumKey));
   const oneAlbum = albums.size === 1 && !!tracks[0]?.album;
   const hasArt = tracks.some((t) => t.artworkId);

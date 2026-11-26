@@ -656,6 +656,7 @@
   "分類 (音楽・ポッドキャスト・オーディオブック)": "Category (Music, Podcast, Audiobook)",
   "この Rockbox の版では、アプリから評価を付けられません": "Ratings can't be set from the app for this version of Rockbox",
   "アルバム名": "Album Name",
+  "アルバム名だけでまとめる": "Group by Album Name Only",
   "名前": "Name",
   "曲の数": "Number of Songs",
   "カスタム": "Custom",

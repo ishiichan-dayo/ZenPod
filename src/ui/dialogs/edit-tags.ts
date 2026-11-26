@@ -6,6 +6,7 @@ import { state } from "../../app/state";
 import { invoke } from "../../infra/tauri";
 import { artSizeHtml, bindArtSize } from "../art-size";
 import { fmtBytes } from "../../domain/format";
+import { albumKey } from "../../domain/track-order";
 import { KIND_LABEL } from "../../domain/types";
 import type { MediaKind, Snapshot, Track } from "../../domain/types";
 import { fetchTagsOnline } from "./fetch-tags";
@@ -74,7 +75,7 @@ export async function editTags(ids: string[]) {
   const sortOf = new Map(sortFields.map((f) => [f.of, f]));
   // ネットで取得は 1 曲か、同じアルバムの曲のとき。アルバム名が空の曲 (情報の無い曲) は、
   // 探したアルバムの曲目から曲ごとに選んで反映するので、一緒に選んでいてもよい
-  const albums = new Set(tracks.filter((t) => t.album).map((t) => `${t.album}\u0000${t.albumArtist || t.artist}`));
+  const albums = new Set(tracks.filter((t) => t.album).map(albumKey));
   const canFetch = single || albums.size <= 1;
   const shown = (t: Track, k: TagKey) => {
     const v = t[k];

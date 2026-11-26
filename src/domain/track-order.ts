@@ -192,8 +192,108 @@ export function releaseRank(t: Track): number {
 
 /**
  * アルバムの見分け方。iPod の曲はアルバム名 + アルバムアーティスト (無ければアーティスト)。
+ * ただしアルバムアーティストの無い曲は、同じアルバム名で共演者が重なる曲を 1 つのアルバムにまとめる
+ * (`indexAlbums`。「A feat. B」「A, C」のように曲ごとにアーティストが違うアルバムがばらばらにならないように)。
  * PC の曲はアルバム名 + フォルダ (シングルのタグに誤ってアルバム名が入っていても別のアルバムになる)
  */
 export function albumKey(t: Track): string {
-  return t.pcPath ? `${t.album}\u0000${releaseDir(t)}` : `${t.album}\u0000${t.albumArtist || t.artist}`;
+  if (t.pcPath) return albumIndex?.byName && t.album ? `${t.album}\u0000` : `${t.album}\u0000${releaseDir(t)}`;
+  return albumIndex?.keys.get(t) ?? `${t.album}\u0000${t.albumArtist || t.artist}`;
+}
+
+/** 区切りで分けたアーティスト名 (元の表記のまま)。「A feat. B」「A, B」「A / B」「A & B」「A × B」「A (feat. B)」 */
+export function splitArtists(s: string): string[] {
+  return s
+    .replace(/[()[\]]/g, " ")
+    .split(/\s*(?:[/,;&×、]|\s(?:feat|ft|featuring|vs)\.?\s)\s*/i)
+    .map((x) => x.trim())
+    .filter(Boolean);
+}
+
+/** アーティスト名を比べるための形 (全角半角・大文字小文字・空白の違いを無視) */
+function nameKey(s: string): string {
+  return s.normalize("NFKC").toLowerCase().replace(/\s+/g, " ").trim();
+}
+
+let albumIndex: { pool: Track[]; n: number; byName: boolean; keys: WeakMap<Track, string> } | null = null;
+
+/**
+ * iPod の曲 (iPod OS / Rockbox) のアルバムのまとまりを数え直す。曲の一覧が替わったときだけ数える。
+ * アルバムアーティストの無い曲を、同じアルバム名の中でアーティスト名の重なりでつなぐ (つながりはたどる:
+ * 「A, B」「B, C」「C」は 1 つ)。まとまりの名前は、アルバムアーティストの付いた同じ名前のアルバムのうち
+ * 名前が重なるものがちょうど 1 つならそれ (そのアルバムに入れる)、無ければアーティスト名の一番小さいもの
+ * (1 人だけのアルバムは今までと同じキーになる)。2 つ以上と重なるときは、どちらにも寄せず今までどおり曲ごとに分ける。
+ * `byName` (アルバム表示の「アルバム名だけでまとめる」) なら、アーティストに関係なくアルバム名だけでまとめる
+ * (別のアーティストの同じ名前のアルバムも 1 つになる。アルバム名の無い曲は今までどおりアーティストごと)。
+ * PC の曲もフォルダに関係なくアルバム名だけでまとめる (`albumKey`。アーティストごとのフォルダに分かれたアルバム用)
+ */
+export function indexAlbums(pool: Track[], byName = false) {
+  if (albumIndex?.pool === pool && albumIndex.n === pool.length && albumIndex.byName === byName) return;
+  const keys = new WeakMap<Track, string>();
+  albumIndex = { pool, n: pool.length, byName, keys };
+  if (byName) {
+    for (const t of pool) if (!t.pcPath && t.album) keys.set(t, `${t.album}\u0000`);
+    return;
+  }
+  const loose = new Map<string, Track[]>();
+  const named = new Map<string, Set<string>>();
+  for (const t of pool) {
+    if (t.pcPath || !t.album) continue;
+    if (t.albumArtist) {
+      let s = named.get(t.album);
+      if (!s) named.set(t.album, (s = new Set()));
+      s.add(t.albumArtist);
+    } else {
+      const list = loose.get(t.album);
+      if (list) list.push(t);
+      else loose.set(t.album, [t]);
+    }
+  }
+  for (const [album, tracks] of loose) {
+    const artists = [...new Set(tracks.map((t) => t.artist))].sort();
+    const owners = [...(named.get(album) ?? [])].map((aa) => ({ aa, names: new Set(splitArtists(aa).map(nameKey)) }));
+    if (artists.length < 2 && !owners.length) continue;
+    const names = artists.map((a) => splitArtists(a).map(nameKey));
+    const parent = artists.map((_, i) => i);
+    const root = (i: number): number => (parent[i] === i ? i : (parent[i] = root(parent[i])));
+    const firstWith = new Map<string, number>();
+    names.forEach((ns, i) => {
+      for (const n of ns) {
+        const j = firstWith.get(n);
+        if (j === undefined) firstWith.set(n, i);
+        else parent[root(i)] = root(j);
+      }
+    });
+    const comps = new Map<number, number[]>();
+    artists.forEach((_, i) => {
+      const r = root(i);
+      const c = comps.get(r);
+      if (c) c.push(i);
+      else comps.set(r, [i]);
+    });
+    const keyOf = new Map<string, string>();
+    for (const members of comps.values()) {
+      const ns = new Set(members.flatMap((i) => names[i]));
+      const hits = owners.filter((o) => [...o.names].some((n) => ns.has(n)));
+      if (hits.length > 1) continue;
+      // members は名前順 (artists を並べてある) なので先頭が一番小さい
+      const owner = hits.length ? hits[0].aa : artists[members[0]];
+      for (const i of members) keyOf.set(artists[i], `${album}\u0000${owner}`);
+    }
+    for (const t of tracks) {
+      const k = keyOf.get(t.artist);
+      if (k) keys.set(t, k);
+    }
+  }
+}
+
+/**
+ * アルバムに出すアーティスト名: 全曲で同じならその名前。違えば、全曲に共通する共演者がいればその名前
+ * (「MF Doom」「MF Doom, Charles Bukowski」なら「MF Doom」)。いなければ null (複数のアーティスト)
+ */
+export function albumArtistName(tracks: Track[]): string | null {
+  const all = [...new Set(tracks.map((t) => t.albumArtist || t.artist))];
+  if (all.length <= 1) return all[0] ?? "";
+  const sets = all.map((a) => new Set(splitArtists(a).map(nameKey)));
+  return splitArtists(all[0]).find((n) => sets.every((s) => s.has(nameKey(n)))) ?? null;
 }

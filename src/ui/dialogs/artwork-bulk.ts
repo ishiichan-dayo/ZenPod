@@ -3,6 +3,7 @@
 // 書き込みは裏で順に行い (待たずに次のアルバムへ)、次のアルバムは見ている間に先に探しておく
 
 import { t as tr } from "../../i18n";
+import { albumArtistName, albumKey } from "../../domain/track-order";
 import type { Snapshot, Track } from "../../domain/types";
 import { esc, isEnter } from "../dom";
 import { call, toast } from "../feedback";
@@ -43,7 +44,7 @@ export function spansAlbums(ids: string[]): boolean {
   const keys = new Set<string>();
   for (const id of ids) {
     const t = findTrack(id);
-    if (t?.album) keys.add(`${t.album}\u0000${t.albumArtist || t.artist}`);
+    if (t?.album) keys.add(albumKey(t));
     if (keys.size > 1) return true;
   }
   return false;
@@ -69,7 +70,7 @@ function albumJobs(ids: string[]): { jobs: AlbumJob[]; noAlbum: number } {
     const tracks = group.map((x) => findTrack(x)).filter((x): x is Track => !!x);
     // PC の曲は埋め込みの画像の有無 (まだ読んでいない曲は無いものとして扱う)、iPod の曲は ArtworkDB の画像
     const hasArt = tracks.some((x) => (x.pcPath ? x.hasPicture === true : x.artworkId > 0));
-    jobs.push({ ids: group, album: t.album, artist: t.albumArtist || t.artist, hasArt });
+    jobs.push({ ids: group, album: t.album, artist: albumArtistName(tracks) ?? (t.albumArtist || t.artist), hasArt });
   }
   return { jobs, noAlbum };
 }

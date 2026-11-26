@@ -3,10 +3,10 @@
 import { t as tr } from "../i18n";
 import { isPodView } from "./podcasts";
 import { isVisualView } from "./visual";
-import { albumSort, artistSort, currentPlaylist, isPcView, isRockbox, onIpodIndex, pcPool, viewKind } from "./selectors";
+import { albumByName, albumSort, artistSort, currentPlaylist, isPcView, isRockbox, onIpodIndex, pcPool, viewKind } from "./selectors";
 import { ALBUM_GAP, ALBUM_HEAD_H, ARTIST_HEAD_H, ROW_H, state } from "./state";
 import type { RowLayout } from "./state";
-import { NUM_KEY, albumKey, artistKey, haystack, ranks, releaseGroups, releaseRank } from "../domain/track-order";
+import { NUM_KEY, albumArtistName, albumKey, artistKey, haystack, indexAlbums, ranks, releaseGroups, releaseRank } from "../domain/track-order";
 import type { RankKey } from "../domain/track-order";
 import type { SortKey, Track } from "../domain/types";
 
@@ -14,6 +14,8 @@ import type { SortKey, Track } from "../domain/types";
 let openAlbumIds = new Set<string>();
 
 export function computeRows() {
+  // iPod の曲のアルバムのまとまり (曲の一覧が替わったときだけ数え直す。PC の表示でも iPod の曲の操作に使う)
+  indexAlbums(state.snap?.tracks ?? [], albumByName());
   if (isPodView() || isVisualView() || state.devSkeleton) {
     state.rows = [];
     state.rowLayout = null;
@@ -197,7 +199,7 @@ export interface AlbumGroup {
 /** 表示中の曲 (検索で絞り込んだあと) をアルバムごとにまとめる。アーティスト → アルバム名の順 */
 let albumGroupsCache: { rows: Track[]; sort: string; groups: AlbumGroup[] } | null = null;
 export function albumGroups(): AlbumGroup[] {
-  const sortSig = `${JSON.stringify(albumSort())}${isPcView() || isRockbox()}`;
+  const sortSig = `${JSON.stringify(albumSort())}${isPcView() || isRockbox()}${albumByName()}`;
   if (albumGroupsCache?.rows === state.rows && albumGroupsCache.sort === sortSig) return albumGroupsCache.groups;
   const byKey = new Map<string, AlbumGroup>();
   for (const t of state.rows) {
@@ -213,8 +215,7 @@ export function albumGroups(): AlbumGroup[] {
   const groups = [...byKey.values()];
   for (const g of groups) {
     g.tracks.sort((a, b) => a.discNr - b.discNr || a.trackNr - b.trackNr);
-    const artists = new Set(g.tracks.map((t) => t.albumArtist || t.artist));
-    g.artist = artists.size > 1 ? tr("複数のアーティスト") : ([...artists][0] ?? "");
+    g.artist = albumArtistName(g.tracks) ?? tr("複数のアーティスト");
     // 1 曲だけ MEDIATYPE が違うことがあるので、一番アルバムらしい曲の種類をアルバムの種類にする
     g.rank = Math.min(...g.tracks.map(releaseRank));
   }

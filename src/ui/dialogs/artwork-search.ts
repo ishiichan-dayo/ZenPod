@@ -8,7 +8,7 @@ import { artSize, artSizeHtml, bindArtSize, setShrinkOnSetPref, shrinkOnSetPref 
 import { rescanCurrentPc } from "../pc";
 import { state } from "../../app/state";
 import { fmtBytes } from "../../domain/format";
-import { releaseDir } from "../../domain/track-order";
+import { albumKey } from "../../domain/track-order";
 import type { Snapshot, Track } from "../../domain/types";
 import { pcArtCache } from "../artwork-cells";
 import { esc, isEnter } from "../dom";
@@ -44,11 +44,9 @@ interface ImageProbe {
 /** 同じアルバム (アルバム名 + アルバムアーティスト/アーティスト) の曲 */
 export function sameAlbumIds(t: Track): string[] {
   if (!t.album) return [t.id];
-  const key = (x: Track) => `${x.album}\u0000${x.albumArtist || x.artist}`;
-  const k = key(t);
-  // PC の曲は同じフォルダの曲に限る (シングルのタグに誤ってアルバム名が入っていることがある)
-  const d = releaseDir(t);
-  return (t.pcPath ? pcPool() : state.snap!.tracks).filter((x) => key(x) === k && releaseDir(x) === d).map((x) => x.id);
+  // PC の曲は同じフォルダの曲に限る (シングルのタグに誤ってアルバム名が入っていることがある。albumKey にフォルダが入る)
+  const k = albumKey(t);
+  return (t.pcPath ? pcPool() : state.snap!.tracks).filter((x) => albumKey(x) === k).map((x) => x.id);
 }
 
 let searchToken = 0;

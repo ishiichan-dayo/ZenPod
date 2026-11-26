@@ -46,6 +46,10 @@ export function albumSort(): { key: AlbumSort; desc: boolean } {
   const k = getStored("albumSort") as AlbumSort | null;
   return { key: k && ["artist", "album", "year", "added"].includes(k) ? k : "artist", desc: getStored("albumSortDesc") === "1" };
 }
+/** アルバム表示で、アルバム名だけでまとめる (既定は iPod の曲がアルバム名 + アルバムアーティスト、PC の曲がアルバム名 + フォルダ) */
+export function albumByName(): boolean {
+  return getStored("albumByName") === "1";
+}
 export function artistSort(): { key: ArtistSort; desc: boolean } {
   const k = getStored("artistSort") as ArtistSort | null;
   return { key: k === "count" ? "count" : "name", desc: getStored("artistSortDesc") === "1" };

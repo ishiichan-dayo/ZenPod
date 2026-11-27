@@ -7,7 +7,7 @@
 // - domain/  型と純粋な決まりごと (DOM も Tauri も知らない)
 
 import { detectLang, lang, setLang, translateStatic } from "./i18n";
-import { invoke } from "./infra/tauri";
+import { initMediaBase, invoke } from "./infra/tauri";
 import { NO_IPOD_AFTER_MS, analyticsLaunch, analyticsNoIpod } from "./app/analytics";
 import { PC_ALL } from "./app/selectors";
 import { loadAppVersion, state } from "./app/state";
@@ -60,6 +60,7 @@ async function main() {
   restoreWidth("--photo-side-w", "photoSideWidth", ARTIST_MIN, ARTIST_MAX);
   state.pc.folders = loadPcFolders();
   await loadAppVersion();
+  void initMediaBase(); // 起動は待たせない (再生できるようになる前に返る)
   analyticsLaunch();
   bindPlayer();
   bind();

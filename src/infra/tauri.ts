@@ -32,3 +32,20 @@ export async function checkEarly(): Promise<Update | null> {
     },
   } as unknown as Update;
 }
+
+/**
+ * 曲・動画を読む URL の頭。Windows の WebView2 では独自プロトコルが http://<名前>.localhost になる。
+ * Linux (WebKitGTK) は独自プロトコルの曲を再生できないので、Rust が開く PC の中だけの HTTP を使う
+ * (src-tauri の media_server.rs。`initMediaBase` で受け取る)
+ */
+let mediaBaseUrl = navigator.userAgent.includes("Windows") ? "http://ipodaudio.localhost/" : "ipodaudio://localhost/";
+
+export function mediaBase(): string {
+  return mediaBaseUrl;
+}
+
+/** 起動したときに 1 回呼ぶ。Linux 以外は何もしない (Rust が null を返す) */
+export async function initMediaBase() {
+  const base = await invoke<string | null>("media_base_url").catch(() => null);
+  if (base) mediaBaseUrl = base;
+}

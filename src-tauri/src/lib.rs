@@ -4,6 +4,7 @@
 //! - `commands`: 画面から呼ぶコマンド (薄いアダプタ)
 //! - `host`: 画面へのイベントとアプリのフォルダ (zenpod-app のポートの実装)
 //! - `audio_protocol`: 再生用の `ipodaudio://`
+//! - `media_server`: Linux の再生用の PC の中だけの HTTP (WebKitGTK は `ipodaudio://` を再生できない)
 //! - `platform`: リンクを開く・起動の見張り・WebView2 が落ちたときの立て直し
 //! - `logging`: ログ (zenpod.log)
 
@@ -11,6 +12,7 @@ mod audio_protocol;
 mod commands;
 mod host;
 mod logging;
+mod media_server;
 mod platform;
 mod state;
 
@@ -159,6 +161,7 @@ pub fn run() {
             visual::export_photos,
             visual::save_pasted_image,
             settings::ui_log,
+            media_server::media_base_url,
         ])
         .setup(|app| {
             if let Ok(dir) = app.path().app_log_dir() {
@@ -166,6 +169,7 @@ pub fn run() {
             }
             let state = app.state::<AppState>();
             state.host.bind(app.handle().clone());
+            media_server::start(app.handle().clone());
             platform::initial_lang(app.handle());
             platform::watch_startup(app.handle());
             state.zen.devices.watch_usb();

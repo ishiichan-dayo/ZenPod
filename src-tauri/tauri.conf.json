@@ -27,8 +27,8 @@
         "script-src": "'self'",
         "style-src": "'self' 'unsafe-inline'",
         "img-src": "'self' data: blob: https://*.mzstatic.com https://*.dzcdn.net https://coverartarchive.org https://archive.org https://*.archive.org",
-        "media-src": "'self' blob: ipodaudio: http://ipodaudio.localhost",
-        "connect-src": "'self' ipc: http://ipc.localhost ipodaudio: http://ipodaudio.localhost https://stats.leatomi.com",
+        "media-src": "'self' blob: ipodaudio: http://ipodaudio.localhost http://127.0.0.1:*",
+        "connect-src": "'self' ipc: http://ipc.localhost ipodaudio: http://ipodaudio.localhost http://127.0.0.1:* https://stats.leatomi.com",
         "object-src": "'none'",
         "base-uri": "'none'",
         "form-action": "'none'"

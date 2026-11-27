@@ -7,7 +7,7 @@ import { t as tr } from "../i18n";
 import { $ } from "../app/state";
 import type { VideoView } from "../domain/visual";
 import { fmtDur } from "../domain/format";
-import { getCurrentWindow, invoke } from "../infra/tauri";
+import { getCurrentWindow, invoke, mediaBase } from "../infra/tauri";
 import { esc } from "./dom";
 import { ICON_CHEVRON_LEFT, ICON_CHEVRON_RIGHT, ICON_CLOSE } from "./icons";
 import { ICON_PAUSE, ICON_PLAY, player, setPlayerVolume, volumeIcon } from "./player";
@@ -23,9 +23,7 @@ interface VideoPlan {
 const AHEAD_SEC = 30;
 
 function videoUrl(id: string): string {
-  // Windows の WebView2 では独自プロトコルが http://<名前>.localhost になる
-  const base = navigator.userAgent.includes("Windows") ? "http://ipodaudio.localhost/" : "ipodaudio://localhost/";
-  return `${base}video/${id}`;
+  return `${mediaBase()}video/${id}`;
 }
 
 /**

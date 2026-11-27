@@ -9,7 +9,7 @@ import { fmtDur } from "../domain/format";
 import { albumKey, artistKey } from "../domain/track-order";
 import type { Track } from "../domain/types";
 import { getStored, setStored } from "../infra/prefs";
-import { invoke } from "../infra/tauri";
+import { invoke, mediaBase } from "../infra/tauri";
 import { albumArtCache, loadAlbumArt } from "./album-grid";
 import { esc, isEnter } from "./dom";
 import { reduceMotion, replayClass, toast } from "./feedback";
@@ -140,8 +140,7 @@ export function findTrack(id: string): Track | undefined {
 }
 
 function audioUrl(id: string): string {
-  // Windows の WebView2 では独自プロトコルが http://<名前>.localhost になる
-  const base = navigator.userAgent.includes("Windows") ? "http://ipodaudio.localhost/" : "ipodaudio://localhost/";
+  const base = mediaBase();
   return id.startsWith("pc:") ? `${base}pc?p=${encodeURIComponent(id.slice(3))}` : base + id;
 }
 

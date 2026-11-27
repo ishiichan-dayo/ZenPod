@@ -102,6 +102,7 @@ pub fn run() {
             pc::remove_pc_folder,
             pc::reorder_pc_folders,
             pc::scan_music_folder,
+            pc::cached_music_folder,
             settings::install_ffmpeg,
             settings::cancel_ffmpeg_install,
             settings::uninstall_ffmpeg,

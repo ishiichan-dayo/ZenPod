@@ -3,6 +3,7 @@
 use ipod_core::device::DeviceInfo;
 use ipod_core::domain::track::TrackView;
 use ipod_core::online::artsearch::SearchProgress;
+use ipod_core::pc::folder::PcTrack;
 use serde::Serialize;
 
 /// 中身はそのまま JSON にする (`OpenProgress(done, total)` は `[done, total]`)
@@ -24,6 +25,8 @@ pub enum AppEvent {
     /// Rockbox のデータベースから埋めた曲を裏でファイルから読み直し、一覧に反映した (替えた曲の数)
     RockboxReread(usize),
     PcScanProgress(Count),
+    /// PC の音楽フォルダの読み込みで、新しく読めた曲 (初めて開くときは時間がかかるので、読めた順に少しずつ出す)
+    PcScanTracks(PcScanTracks),
     AliasProgress(Count),
     /// iPod が USB につながった / 外れた
     UsbIpod(bool),
@@ -44,6 +47,7 @@ impl AppEvent {
             AppEvent::RockboxDbDone(_) => "rockbox-db-done",
             AppEvent::RockboxReread(_) => "rockbox-reread-done",
             AppEvent::PcScanProgress(_) => "pc-scan-progress",
+            AppEvent::PcScanTracks(_) => "pc-scan-tracks",
             AppEvent::AliasProgress(_) => "alias-progress",
             AppEvent::UsbIpod(_) => "usb-ipod",
             AppEvent::PodcastDownload(_) => "podcast-download",
@@ -59,6 +63,13 @@ pub struct OpenPartial {
     pub tracks: Vec<TrackView>,
     /// 前回開いたときの一覧 (iPod の中をたどり終わる前にまとめて 1 回)。false は初めて開くときの読めた曲
     pub cached: bool,
+}
+
+#[derive(Serialize, Clone)]
+pub struct PcScanTracks {
+    /// 読んでいる登録フォルダ
+    pub folder: String,
+    pub tracks: Vec<PcTrack>,
 }
 
 #[derive(Serialize, Clone)]

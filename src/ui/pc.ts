@@ -73,16 +73,38 @@ export function scanPcFolder(folder: string): Promise<void> {
   return pcScanQueue;
 }
 
+/** 登録フォルダの曲を一覧に入れる (同じ ID の曲は置き換える) */
+function setPcFolderTracks(folder: string, tracks: Track[]) {
+  state.pc.tracks.set(folder, tracks);
+  for (const t of tracks) state.pc.byId.set(t.id, t);
+  rankCache.clear();
+}
+
 async function doScanPcFolder(folder: string) {
   state.pc.scanning = folder;
   state.pc.progress = "";
+  // 前回の一覧をすぐ出す (NAS などで、フォルダをたどり直すのに時間がかかるので。配布リポジトリの Issue #16)。
+  // 消えた・増えた・変わった曲は、続けて読み直した結果で置き換える
+  if (!state.pc.tracks.has(folder)) {
+    const cached = await call<PcTrack[]>("cached_music_folder", { path: folder });
+    if (cached?.length && !state.pc.tracks.has(folder)) setPcFolderTracks(folder, cached.map(pcTrackToTrack));
+  }
   renderAll();
   const unlisten = await listen<{ done: number; total: number }>("pc-scan-progress", (ev) => {
     state.pc.progress = `${ev.payload.done.toLocaleString()} / ${ev.payload.total.toLocaleString()}`;
     if (currentPcFolders().includes(folder)) renderRows();
   });
+  // 新しく読めた曲は、読み終わるのを待たずに少しずつ足す (初めて開く大きいフォルダでも、読めた分から見られるように)
+  const unlistenTracks = await listen<{ folder: string; tracks: PcTrack[] }>("pc-scan-tracks", (ev) => {
+    if (ev.payload.folder !== folder) return;
+    const byId = new Map((state.pc.tracks.get(folder) ?? []).map((t) => [t.id, t]));
+    for (const t of ev.payload.tracks.map(pcTrackToTrack)) byId.set(t.id, t);
+    setPcFolderTracks(folder, [...byId.values()]);
+    if (currentPcFolders().includes(folder)) renderAll();
+  });
   const list = await call<PcTrack[]>("scan_music_folder", { path: folder });
   unlisten();
+  unlistenTracks();
   state.pc.scanning = null;
   if (list) {
     const tracks = list.map(pcTrackToTrack);
@@ -91,9 +113,10 @@ async function doScanPcFolder(folder: string) {
       const old = state.pc.byId.get(t.id);
       if (old && t.pcPath && (old.hasPicture !== t.hasPicture || old.size !== t.size)) pcArtCache.delete(t.pcPath);
     }
-    state.pc.tracks.set(folder, tracks);
-    for (const t of tracks) state.pc.byId.set(t.id, t);
-    rankCache.clear();
+    // 消えた曲は ID からも外す (前回の一覧を先に出したときに入れたもの)
+    const now = new Set(tracks.map((t) => t.id));
+    for (const t of state.pc.tracks.get(folder) ?? []) if (!now.has(t.id)) state.pc.byId.delete(t.id);
+    setPcFolderTracks(folder, tracks);
   }
   renderAll();
 }

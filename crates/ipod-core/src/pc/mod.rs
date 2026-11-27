@@ -2,3 +2,4 @@
 
 pub mod folder;
 pub mod itunesxml;
+pub mod netfs;

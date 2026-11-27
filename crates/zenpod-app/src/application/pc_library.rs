@@ -10,7 +10,7 @@ use ipod_core::{media, t};
 use serde::Deserialize;
 
 use super::artwork::{prepared, EmbeddedArt};
-use super::events::{AppEvent, ArtworkProgress, Count};
+use super::events::{AppEvent, ArtworkProgress, Count, PcScanTracks};
 use super::pc_artwork::PcArtwork;
 use super::ports::{AppDirs, EventSink, OnlineCatalog};
 use super::prefs::Prefs;
@@ -49,16 +49,49 @@ impl PcLibrary {
         PcLibrary { prefs, artwork, online, dirs, events }
     }
 
-    /// 登録フォルダ (サブフォルダ含む) の曲を読み取る。前回から変わっていないファイルはキャッシュを使う
-    pub fn scan(&self, path: &str) -> AppResult<Vec<PcTrack>> {
+    /// 曲のタグのキャッシュの場所。v2: 作曲者を追加、v3: リリースの種類を追加 (古いキャッシュは使わず読み直す)
+    fn cache_path(&self) -> Option<PathBuf> {
+        self.dirs.cache_dir().map(|d| d.join("pc-tracks-v3.json"))
+    }
+
+    fn check_registered(&self, path: &str) -> AppResult<()> {
         if !self.prefs.pc_folders().iter().any(|f| f == path) {
             return Err(AppError::msg(t!("登録したフォルダではありません")));
         }
-        // v2: 作曲者を追加、v3: リリースの種類を追加 (古いキャッシュは使わず読み直す)
-        let cache = self.dirs.cache_dir().map(|d| d.join("pc-tracks-v3.json"));
-        Ok(ipod_core::pc::folder::scan(Path::new(path), cache.as_deref(), |done, total| {
-            self.events.emit(AppEvent::PcScanProgress(Count { done, total }));
-        })?)
+        Ok(())
+    }
+
+    /// 前回読んだときの一覧 (フォルダをたどらない)。開いてすぐ出し、`scan` の結果で置き換える (配布リポジトリの Issue #16)
+    pub fn cached(&self, path: &str) -> AppResult<Vec<PcTrack>> {
+        self.check_registered(path)?;
+        Ok(self.cache_path().map(|c| ipod_core::pc::folder::cached_folder_tracks(Path::new(path), &c)).unwrap_or_default())
+    }
+
+    /// 登録フォルダ (サブフォルダ含む) の曲を読み取る。前回から変わっていないファイルはキャッシュを使う。
+    /// 新しく読めた曲は、少しずつ (0.3 秒ごと) `PcScanTracks` で知らせる
+    pub fn scan(&self, path: &str) -> AppResult<Vec<PcTrack>> {
+        self.check_registered(path)?;
+        let cache = self.cache_path();
+        let batch = std::sync::Mutex::new((Vec::new(), std::time::Instant::now()));
+        let flush = |force: bool| {
+            let mut b = batch.lock().unwrap();
+            if !b.0.is_empty() && (force || b.1.elapsed().as_millis() >= 300) {
+                let tracks = std::mem::take(&mut b.0);
+                b.1 = std::time::Instant::now();
+                self.events.emit(AppEvent::PcScanTracks(PcScanTracks { folder: path.to_string(), tracks }));
+            }
+        };
+        let tracks = ipod_core::pc::folder::scan_streaming(
+            Path::new(path),
+            cache.as_deref(),
+            |done, total| self.events.emit(AppEvent::PcScanProgress(Count { done, total })),
+            |t| {
+                batch.lock().unwrap().0.push(t.clone());
+                flush(false);
+            },
+        )?;
+        flush(true);
+        Ok(tracks)
     }
 
     /// 一覧用の小さいジャケット

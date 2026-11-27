@@ -34,6 +34,13 @@ pub fn reorder_pc_folders(state: State<AppState>, folders: Vec<String>) -> CmdRe
     Ok(state.zen.prefs.reorder_pc_folders(folders)?)
 }
 
+/// 登録フォルダの前回の一覧 (フォルダをたどらずにすぐ返す。続けて `scan_music_folder` で読み直す)
+#[tauri::command]
+pub async fn cached_music_folder(app: AppHandle, path: String) -> CmdResult<Vec<PcTrack>> {
+    let zen = zen(&app);
+    Ok(blocking(move || zen.pc.cached(&path)).await??)
+}
+
 /// 登録フォルダ (サブフォルダ含む) の曲を読み取る。前回から変わっていないファイルはキャッシュを使う
 #[tauri::command]
 pub async fn scan_music_folder(app: AppHandle, path: String) -> CmdResult<Vec<PcTrack>> {

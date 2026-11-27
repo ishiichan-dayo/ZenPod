@@ -2,6 +2,8 @@
 //!
 //! タグの読み取りは 1 曲数ミリ秒かかるので、ファイルの更新日時とサイズが前回と同じなら
 //! キャッシュ (JSON) を使い、変わったファイルだけを 4 スレッドで読む。
+//! ネットワーク上のフォルダ (NAS など。`netfs::is_network_path`) は 1 ファイルごとに通信の往復がかかるので、
+//! フォルダをたどるのも 8 スレッド、タグの読み取りは 16 スレッドで同時に進める (配布リポジトリの Issue #16)。
 
 use crate::t;
 use std::collections::HashMap;
@@ -91,27 +93,103 @@ const CACHE_VER: u32 = 4;
 /// フォルダ内の音声ファイル (サブフォルダ含む、パス順)。
 /// 隠しファイル・隠しフォルダは除く (Mac 形式でないドライブに macOS が作る `._曲.flac` は音声ではない)
 pub fn audio_files(root: &Path) -> Vec<PathBuf> {
-    audio_files_with_stat(root).into_iter().map(|(f, _, _)| f).collect()
+    audio_files_with_stat(root, if super::netfs::is_network_path(root) { 8 } else { 1 }).into_iter().map(|(f, _, _)| f).collect()
 }
 
 /// `audio_files` と同じ。更新日時と大きさも、フォルダを読んだときの情報から返す
 /// (Windows はフォルダを読むときに一緒に返るので、ファイルごとに問い合わせない。2 万曲で約 0.66 秒 → ほぼ 0)
-fn audio_files_with_stat(root: &Path) -> Vec<(PathBuf, std::time::SystemTime, u64)> {
-    let mut files: Vec<_> = walkdir::WalkDir::new(root)
-        .follow_links(true)
-        .into_iter()
-        .filter_entry(|e| e.depth() == 0 || !e.file_name().to_string_lossy().starts_with('.'))
-        .flatten()
-        .filter(|e| e.file_type().is_file() && media::is_audio_file(e.path()))
-        .map(|e| {
-            let m = e.metadata().ok();
-            let modified = m.as_ref().and_then(|m| m.modified().ok()).unwrap_or(std::time::UNIX_EPOCH);
-            let size = m.map(|m| m.len()).unwrap_or(0);
-            (e.into_path(), modified, size)
-        })
-        .collect();
+fn audio_files_with_stat(root: &Path, threads: usize) -> Vec<(PathBuf, std::time::SystemTime, u64)> {
+    let mut files: Vec<_> = if threads > 1 {
+        walk_parallel(root, threads)
+    } else {
+        walkdir::WalkDir::new(root)
+            .follow_links(true)
+            .into_iter()
+            .filter_entry(|e| e.depth() == 0 || !e.file_name().to_string_lossy().starts_with('.'))
+            .flatten()
+            .filter(|e| e.file_type().is_file() && media::is_audio_file(e.path()))
+            .map(|e| {
+                let m = e.metadata().ok();
+                let modified = m.as_ref().and_then(|m| m.modified().ok()).unwrap_or(std::time::UNIX_EPOCH);
+                let size = m.map(|m| m.len()).unwrap_or(0);
+                (e.into_path(), modified, size)
+            })
+            .collect()
+    };
     files.sort_by(|a, b| a.0.cmp(&b.0));
     files
+}
+
+/// `audio_files_with_stat` を、いくつかのフォルダを同時に読んで行う (ネットワーク上のフォルダ用)。
+/// 隠しファイル・隠しフォルダは除く。リンクの先のフォルダもたどる (同じフォルダは 1 回だけ)。順は決まらない
+fn walk_parallel(root: &Path, threads: usize) -> Vec<(PathBuf, std::time::SystemTime, u64)> {
+    use std::collections::HashSet;
+    use std::sync::{Condvar, Mutex};
+    struct Queue {
+        dirs: Vec<PathBuf>,
+        /// 読んでいる途中のフォルダの数 (0 でキューも空なら終わり)
+        busy: usize,
+    }
+    let queue = Mutex::new(Queue { dirs: vec![root.to_path_buf()], busy: 0 });
+    let changed = Condvar::new();
+    let out = Mutex::new(Vec::new());
+    let linked = Mutex::new(HashSet::new());
+    let stat = |m: &fs::Metadata| (m.modified().unwrap_or(std::time::UNIX_EPOCH), m.len());
+    std::thread::scope(|sc| {
+        for _ in 0..threads {
+            sc.spawn(|| {
+                loop {
+                    let dir = {
+                        let mut q = queue.lock().unwrap();
+                        loop {
+                            if let Some(d) = q.dirs.pop() {
+                                q.busy += 1;
+                                break d;
+                            }
+                            if q.busy == 0 {
+                                return;
+                            }
+                            q = changed.wait(q).unwrap();
+                        }
+                    };
+                    let (mut dirs, mut files) = (Vec::new(), Vec::new());
+                    for e in fs::read_dir(&dir).into_iter().flatten().flatten() {
+                        if e.file_name().to_string_lossy().starts_with('.') {
+                            continue;
+                        }
+                        let Ok(ft) = e.file_type() else { continue };
+                        let path = e.path();
+                        if ft.is_symlink() {
+                            match fs::metadata(&path) {
+                                Ok(m) if m.is_dir() => {
+                                    // リンクで輪になっていても止まるように、たどったリンク先は覚える
+                                    if fs::canonicalize(&path).is_ok_and(|c| linked.lock().unwrap().insert(c)) {
+                                        dirs.push(path);
+                                    }
+                                }
+                                Ok(m) if m.is_file() && media::is_audio_file(&path) => {
+                                    let (modified, size) = stat(&m);
+                                    files.push((path, modified, size));
+                                }
+                                _ => {}
+                            }
+                        } else if ft.is_dir() {
+                            dirs.push(path);
+                        } else if ft.is_file() && media::is_audio_file(&path) {
+                            let (modified, size) = e.metadata().map(|m| stat(&m)).unwrap_or((std::time::UNIX_EPOCH, 0));
+                            files.push((path, modified, size));
+                        }
+                    }
+                    out.lock().unwrap().extend(files);
+                    let mut q = queue.lock().unwrap();
+                    q.dirs.extend(dirs);
+                    q.busy -= 1;
+                    changed.notify_all();
+                }
+            });
+        }
+    });
+    out.into_inner().unwrap()
 }
 
 /// フォルダの中のファイル全部 (隠しファイル・隠しフォルダは除く、名前の順)
@@ -199,11 +277,54 @@ pub fn scan(
     cache_path: Option<&Path>,
     progress: impl Fn(usize, usize) + Sync,
 ) -> Result<Vec<PcTrack>> {
+    scan_streaming(root, cache_path, progress, |_| {})
+}
+
+/// `scan` と同じ。キャッシュに無い・変わった曲を読めるたびに `on_read` を呼ぶ (読み取りの裏の複数のスレッドから、一覧の順ではなく)。
+/// キャッシュにあった曲では呼ばない (画面は先に `cached_folder_tracks` で出しておく)
+pub fn scan_streaming(
+    root: &Path,
+    cache_path: Option<&Path>,
+    progress: impl Fn(usize, usize) + Sync,
+    on_read: impl Fn(&PcTrack) + Sync,
+) -> Result<Vec<PcTrack>> {
     if !root.is_dir() {
         return Err(Error::Other(t!("フォルダが見つかりません: {p}", p = root.display())));
     }
-    Ok(scan_files_with_stat(audio_files_with_stat(root), cache_path, progress))
+    let remote = super::netfs::is_network_path(root);
+    let (walkers, readers) = if remote { (8, 16) } else { (1, 4) };
+    let files = audio_files_with_stat(root, walkers);
+    Ok(scan_cached(files, cache_path, None, None, Reading { threads: readers, report_cached: false }, progress, on_read))
 }
+
+/// 前回読んだときのキャッシュにある、`root` の中の曲 (フォルダをたどらず、ファイルも開かない。場所の順)。
+/// フォルダを開いたときにすぐ出す一覧で、消えた・増えた・変わった曲は続く `scan` で分かる
+pub fn cached_folder_tracks(root: &Path, cache_path: &Path) -> Vec<PcTrack> {
+    let root = root.to_string_lossy();
+    let root = root.trim_end_matches(['/', '\\']);
+    let mut v: Vec<PcTrack> = load_cache(Some(cache_path))
+        .into_iter()
+        .filter(|(k, c)| c.ver == CACHE_VER && k.strip_prefix(root).is_some_and(|rest| rest.starts_with(['/', '\\'])))
+        .map(|(k, c)| {
+            let mut t = c.track;
+            t.path = k;
+            t
+        })
+        .collect();
+    v.sort_by(|a, b| a.path.cmp(&b.path));
+    v
+}
+
+/// タグの読み方
+#[derive(Clone, Copy)]
+struct Reading {
+    /// 同時に読む数
+    threads: usize,
+    /// キャッシュにあった曲でも `on_track` を呼ぶか
+    report_cached: bool,
+}
+
+const READ_LOCAL: Reading = Reading { threads: 4, report_cached: true };
 
 /// 決めたファイルの曲を読み取る (キャッシュの扱いは `scan` と同じ)。Rockbox の iPod は、
 /// iPod_Control などを除いたファイルを渡す
@@ -231,7 +352,7 @@ pub fn scan_files_with_stat(
     cache_path: Option<&Path>,
     progress: impl Fn(usize, usize) + Sync,
 ) -> Vec<PcTrack> {
-    scan_cached(files, cache_path, None, None, progress, |_| {})
+    scan_cached(files, cache_path, None, None, READ_LOCAL, progress, |_| {})
 }
 
 /// iPod の中の曲を読む (キャッシュ付き)。キャッシュは `root` からの場所 (小文字、"/" 区切り) で覚えるので、
@@ -242,7 +363,7 @@ pub fn scan_device_files(
     root: &Path,
     progress: impl Fn(usize, usize) + Sync,
 ) -> Vec<PcTrack> {
-    scan_cached(files, cache_path, Some(root), None, progress, |_| {})
+    scan_cached(files, cache_path, Some(root), None, READ_LOCAL, progress, |_| {})
 }
 
 /// `scan_device_files` と同じ。曲を読めるたびに (キャッシュにあった曲は最初にまとめて) `on_track` を呼ぶ。
@@ -256,7 +377,7 @@ pub fn scan_device_files_streaming(
     progress: impl Fn(usize, usize) + Sync,
     on_track: impl Fn(&PcTrack) + Sync,
 ) -> Vec<PcTrack> {
-    scan_cached(files, cache_path, Some(root), Some(seed), progress, on_track)
+    scan_cached(files, cache_path, Some(root), Some(seed), READ_LOCAL, progress, on_track)
 }
 
 /// キャッシュの鍵: `root` があればそこからの場所 (小文字)、無ければフルパス
@@ -307,6 +428,7 @@ fn scan_cached(
     cache_path: Option<&Path>,
     root: Option<&Path>,
     seed: Option<Seed>,
+    reading: Reading,
     progress: impl Fn(usize, usize) + Sync,
     on_track: impl Fn(&PcTrack) + Sync,
 ) -> Vec<PcTrack> {
@@ -326,7 +448,9 @@ fn scan_cached(
                 // 覚えたときとドライブ文字が違ってもよいように、場所は今のものにする
                 let mut t = c.track.clone();
                 t.path = f.to_string_lossy().into_owned();
-                on_track(&t);
+                if reading.report_cached {
+                    on_track(&t);
+                }
                 out[i] = Some(t);
             }
             _ => todo.push((i, mtime, size)),
@@ -360,28 +484,32 @@ fn scan_cached(
 
     let total = todo.len();
     let done = AtomicUsize::new(0);
+    // 次に読む曲の番号。読み終えた係から順に取る (遅いファイルがあっても、ほかの係が先へ進める)
+    let next = AtomicUsize::new(0);
+    let threads = reading.threads.clamp(1, total.max(1));
     let read: Vec<(usize, u64, PcTrack, bool)> = std::thread::scope(|sc| {
-        let handles: Vec<_> = todo
-            .chunks(total.div_ceil(4).max(1))
-            .map(|part| {
-                let (files, done, progress, on_track) = (&files, &done, &progress, &on_track);
+        let handles: Vec<_> = (0..threads)
+            .map(|_| {
+                let (files, todo, done, next, progress, on_track) = (&files, &todo, &done, &next, &progress, &on_track);
                 sc.spawn(move || {
-                    part.iter()
-                        .map(|&(i, mtime, size)| {
-                            let (t, ok) = read_track_checked(&files[i], size, root.is_none());
-                            // 開発版だけ: 遅い iPod を真似る (ZENPOD_DEV_READ_DELAY_MS に 1 曲あたりの待ち時間)
-                            #[cfg(debug_assertions)]
-                            if let Some(ms) = std::env::var("ZENPOD_DEV_READ_DELAY_MS").ok().and_then(|v| v.parse().ok()) {
-                                std::thread::sleep(std::time::Duration::from_millis(ms));
-                            }
-                            on_track(&t);
-                            let n = done.fetch_add(1, Ordering::Relaxed) + 1;
-                            if n % 25 == 0 || n == total {
-                                progress(n, total);
-                            }
-                            (i, mtime, t, ok)
-                        })
-                        .collect::<Vec<_>>()
+                    let mut got = Vec::new();
+                    loop {
+                        let k = next.fetch_add(1, Ordering::Relaxed);
+                        let Some(&(i, mtime, size)) = todo.get(k) else { break };
+                        let (t, ok) = read_track_checked(&files[i], size, root.is_none());
+                        // 開発版だけ: 遅い iPod を真似る (ZENPOD_DEV_READ_DELAY_MS に 1 曲あたりの待ち時間)
+                        #[cfg(debug_assertions)]
+                        if let Some(ms) = std::env::var("ZENPOD_DEV_READ_DELAY_MS").ok().and_then(|v| v.parse().ok()) {
+                            std::thread::sleep(std::time::Duration::from_millis(ms));
+                        }
+                        on_track(&t);
+                        let n = done.fetch_add(1, Ordering::Relaxed) + 1;
+                        if n % 25 == 0 || n == total {
+                            progress(n, total);
+                        }
+                        got.push((i, mtime, t, ok));
+                    }
+                    got
                 })
             })
             .collect();
@@ -553,6 +681,59 @@ pub fn rename_many(renames: &[(PathBuf, String)]) -> Result<Vec<PathBuf>> {
 
 #[cfg(test)]
 mod tests {
+
+    /// 同時にたどっても、1 つずつたどったときと同じファイルになる (隠しフォルダは除く・リンクの輪で止まる)
+    #[test]
+    fn parallel_walk_matches_sequential() {
+        let dir = tempfile::tempdir().unwrap();
+        let root = dir.path().join("音楽");
+        for (i, a) in ["A/1", "A/2", "B", "B/ディスク 2", ".hidden", "C/.git"].iter().enumerate() {
+            let d = root.join(a);
+            std::fs::create_dir_all(&d).unwrap();
+            std::fs::write(d.join(format!("{i:02} 曲.flac")), b"x").unwrap();
+            std::fs::write(d.join("cover.jpg"), b"x").unwrap();
+            std::fs::write(d.join("._mac.flac"), b"x").unwrap();
+        }
+        #[cfg(unix)]
+        {
+            // リンクの先のフォルダもたどる。輪になっていても止まる
+            std::os::unix::fs::symlink(root.join("A"), root.join("B/A へのリンク")).unwrap();
+            std::os::unix::fs::symlink(&root, root.join("A/1/上へ")).unwrap();
+        }
+        let names = |v: Vec<(std::path::PathBuf, std::time::SystemTime, u64)>| {
+            let mut n: Vec<String> =
+                v.into_iter().map(|(p, _, size)| format!("{} {size}", p.file_name().unwrap().to_string_lossy())).collect();
+            n.sort();
+            n.dedup();
+            n
+        };
+        let one = super::audio_files_with_stat(&root, 1);
+        let many = super::audio_files_with_stat(&root, 8);
+        assert!(many.windows(2).all(|w| w[0].0 <= w[1].0), "場所の順");
+        assert_eq!(names(many), names(one));
+        let got = names(super::audio_files_with_stat(&root, 8));
+        assert_eq!(got, ["00 曲.flac 1", "01 曲.flac 1", "02 曲.flac 1", "03 曲.flac 1"]);
+    }
+
+    /// 前回のキャッシュから、そのフォルダの中の曲だけをすぐ出す (名前が似ている別のフォルダは含めない)
+    #[test]
+    fn cached_tracks_of_one_folder() {
+        let dir = tempfile::tempdir().unwrap();
+        let root = dir.path().join("Music");
+        let other = dir.path().join("Music 2");
+        for d in [&root, &other] {
+            std::fs::create_dir_all(d).unwrap();
+            std::fs::copy(concat!(env!("CARGO_MANIFEST_DIR"), "/tests/fixtures/audio/plain.mp3"), d.join("a.mp3")).unwrap();
+        }
+        let cache = dir.path().join("cache.json");
+        assert!(super::cached_folder_tracks(&root, &cache).is_empty());
+        super::scan(&root, Some(&cache), |_, _| {}).unwrap();
+        super::scan(&other, Some(&cache), |_, _| {}).unwrap();
+        let got = super::cached_folder_tracks(&root, &cache);
+        assert_eq!(got.len(), 1);
+        assert_eq!(got[0].path, root.join("a.mp3").to_string_lossy());
+        assert_eq!(got, super::scan(&root, Some(&cache), |_, _| {}).unwrap());
+    }
 
     /// macOS が作る `._` のファイルと隠しフォルダの中は曲にしない (Issue #6)
     #[test]

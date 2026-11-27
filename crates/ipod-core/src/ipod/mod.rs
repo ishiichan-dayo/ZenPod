@@ -28,7 +28,7 @@ use crate::domain::track::{
 };
 use crate::domain::{devpath, variants, yomi};
 use crate::error::{Error, Result};
-use crate::media::{self, convert};
+use crate::media::{self, convert, preconvert};
 use crate::smartpl::{FIELDS_NOT_ON_IPOD, Rules, SmartDef, SmartPrefs, now_mac_local};
 
 const BACKUP_NAME: &str = "iTunesDB.zenpod-backup";
@@ -430,21 +430,49 @@ impl Ipod {
     // ---------------- tracks ----------------
 
     /// 1 曲転送する (DB 保存は呼び出し側で save())
-    pub fn add_file(
+    pub fn add_file(&mut self, src: &Path, ffmpeg: Option<&Path>, opts: &AddOptions) -> Result<AddOutcome> {
+        self.add_file_preconverted(src, ffmpeg, opts, None)
+    }
+
+    /// 同じ曲 (iPod にあれば (dbid, 曲名))。重複を調べない設定なら None
+    fn duplicate_for(&mut self, info: &media::MediaInfo, opts: &AddOptions) -> Option<(u64, String)> {
+        if opts.skip_duplicates || opts.replace_duplicates { self.find_duplicate(info) } else { None }
+    }
+
+    /// 変換先 (「変換して転送」なら、選んだ形式にする曲も)。変換しないなら None
+    fn conversion_target(&self, fmt: Format, info: &media::MediaInfo, opts: &AddOptions) -> Option<ConvertTarget> {
+        let target = match opts.convert_all_to {
+            Some(t) if t.should_convert(fmt, info.bitrate_kbps) => Some(t),
+            _ => fmt.needs_conversion().then_some(if fmt == Format::ConvertLossless { opts.lossless_to } else { opts.lossy_to }),
+        };
+        shuffle_target(self.info.shuffle, fmt, target, opts)
+    }
+
+    /// 転送の前に変換しておけるか (`media::preconvert`)。重複で送らない曲・変換の要らない曲は None
+    pub fn conversion_plan(&mut self, src: &Path, opts: &AddOptions) -> Result<Option<preconvert::ConversionPlan>> {
+        let fmt = media::classify(src)?;
+        let info = media::read_info(src)?;
+        if self.duplicate_for(&info, opts).is_some() && !opts.replace_duplicates {
+            return Ok(None);
+        }
+        Ok(self
+            .conversion_target(fmt, &info, opts)
+            .map(|target| preconvert::ConversionPlan { target, sample_rate: info.sample_rate, afconvert: true }))
+    }
+
+    /// 1 曲転送する。`pre` に同じ変換をしておいた一時ファイルがあれば、変換せずにそれを使う
+    pub fn add_file_preconverted(
         &mut self,
         src: &Path,
         ffmpeg: Option<&Path>,
         opts: &AddOptions,
+        pre: Option<&preconvert::Preconverted>,
     ) -> Result<AddOutcome> {
         self.check_writable()?;
         let fmt = media::classify(src)?;
         let info = media::read_info(src)?;
 
-        let dup = if opts.skip_duplicates || opts.replace_duplicates {
-            self.find_duplicate(&info)
-        } else {
-            None
-        };
+        let dup = self.duplicate_for(&info, opts);
         if let Some((dbid, title)) = &dup
             && !opts.replace_duplicates
         {
@@ -453,45 +481,17 @@ impl Ipod {
         let replace = dup.map(|(dbid, _)| dbid);
 
         // 変換が必要なら一時ファイルへ (「変換して転送」なら、選んだ形式にする曲も)
-        let target = match opts.convert_all_to {
-            Some(t) if t.should_convert(fmt, info.bitrate_kbps) => Some(t),
-            _ => fmt.needs_conversion().then_some(if fmt == Format::ConvertLossless { opts.lossless_to } else { opts.lossy_to }),
-        };
-        let target = shuffle_target(self.info.shuffle, fmt, target, opts);
+        let target = self.conversion_target(fmt, &info, opts);
+        let plan = target.map(|target| preconvert::ConversionPlan { target, sample_rate: info.sample_rate, afconvert: true });
+        let pre = pre.filter(|p| plan.as_ref().is_some_and(|plan| p.matches(plan)));
         let mut tmp_file = None;
-        let (source, final_fmt, props) = if let Some(target) = target {
-            // Mac の FLAC は OS 標準の afconvert で変換できる (ffmpeg が無くてもよい)
-            let afconvert = convert::afconvert_supports(src, target).then(convert::find_afconvert).flatten();
-            if afconvert.is_none() && ffmpeg.is_none() {
-                return Err(Error::Unsupported(t!(
-                    "{ext} の変換には ffmpeg が必要です (設定 → 変換 から自動で入れられます)",
-                    ext = src.extension().and_then(|e| e.to_str()).unwrap_or("?")
-                )));
-            }
-            let dir = std::env::temp_dir().join("zenpod");
-            fs::create_dir_all(&dir)?;
-            let out = dir.join(format!("{:016x}.{}", random_id(), target.ext()));
-            let converted = match (&afconvert, ffmpeg) {
-                (Some(af), ff) => match convert::convert_afconvert(af, src, &out, target, info.sample_rate) {
-                    Ok(()) => {
-                        fix_moov(ff, &out);
-                        Ok(())
-                    }
-                    // afconvert で失敗しても、ffmpeg があればそちらでやり直す
-                    Err(e) => match ff {
-                        Some(ff) => {
-                            log::warn!("afconvert: {e}");
-                            convert::convert(ff, src, &out, target, info.sample_rate)
-                        }
-                        None => Err(e),
-                    },
-                },
-                (None, Some(ff)) => convert::convert(ff, src, &out, target, info.sample_rate),
-                // tr: 訳さない (起きない前提の panic の文言)
-                (None, None) => unreachable!("直前で確かめた"),
-            };
+        // 変換しておいた一時ファイル (持ち主は呼び出し側なので消さない。ジャケットはその場で縮めてよい)
+        let (source, final_fmt, props) = if let (Some(pre), Some(target)) = (pre, target) {
+            (pre.path().to_path_buf(), target.format(), media::read_info(pre.path())?)
+        } else if let Some(target) = target {
+            let out = preconvert::temp_path(target.ext())?;
             // 変換や読み取りに失敗しても一時ファイルを残さない
-            let props = converted.and_then(|_| media::read_info(&out));
+            let props = convert_for_transfer(src, &out, target, info.sample_rate, true, ffmpeg).and_then(|_| media::read_info(&out));
             let props = match props {
                 Ok(p) => p,
                 Err(e) => {
@@ -524,7 +524,7 @@ impl Ipod {
         };
         // 埋め込みのジャケットを縮める (iPod OS は使わないので容量のため)。一時ファイルはその場で、元のファイルは写してから
         let source = match opts.shrink_artwork {
-            Some(max) if tmp_file.is_some() => {
+            Some(max) if tmp_file.is_some() || pre.is_some() => {
                 if let Err(e) = media::shrink_embedded_cover(&source, max) {
                     log::warn!("shrink artwork: {e}");
                 }
@@ -1912,6 +1912,39 @@ fn load_hash_info(root: &Path, info: &DeviceInfo, cdb_raw: Option<&[u8]>) -> Opt
         log::warn!("HashInfo: {e}");
     }
     Some(h)
+}
+
+/// `src` を転送する形式 (`target`) にして `out` に書く。Mac の FLAC は、`afconvert` なら OS 標準の afconvert で
+/// 変換できる (ffmpeg が無くてもよい。失敗したら ffmpeg があればそちらでやり直す)
+pub(crate) fn convert_for_transfer(
+    src: &Path,
+    out: &Path,
+    target: ConvertTarget,
+    sample_rate: u32,
+    afconvert: bool,
+    ffmpeg: Option<&Path>,
+) -> Result<()> {
+    let af = (afconvert && convert::afconvert_supports(src, target)).then(convert::find_afconvert).flatten();
+    match (af, ffmpeg) {
+        (Some(af), ff) => match convert::convert_afconvert(&af, src, out, target, sample_rate) {
+            Ok(()) => {
+                fix_moov(ff, out);
+                Ok(())
+            }
+            Err(e) => match ff {
+                Some(ff) => {
+                    log::warn!("afconvert: {e}");
+                    convert::convert(ff, src, out, target, sample_rate)
+                }
+                None => Err(e),
+            },
+        },
+        (None, Some(ff)) => convert::convert(ff, src, out, target, sample_rate),
+        (None, None) => Err(Error::Unsupported(t!(
+            "{ext} の変換には ffmpeg が必要です (設定 → 変換 から自動で入れられます)",
+            ext = src.extension().and_then(|e| e.to_str()).unwrap_or("?")
+        ))),
+    }
 }
 
 /// shuffle で再生できない形式の変換先。shuffle は AIFF を再生できず (iTunesSD に AIFF の種類が無い)、

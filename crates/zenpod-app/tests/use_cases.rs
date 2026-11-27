@@ -12,6 +12,12 @@ use zenpod_app::application::ports::*;
 use zenpod_app::application::{Deps, ZenPod};
 use zenpod_app::{AppError, AppResult};
 
+/// PATH にある ffmpeg (Windows は ffmpeg.exe)。無ければ ffmpeg を使うテストは飛ばす
+fn find_ffmpeg() -> Option<PathBuf> {
+    let name = if cfg!(windows) { "ffmpeg.exe" } else { "ffmpeg" };
+    std::env::var_os("PATH").and_then(|p| std::env::split_paths(&p).map(|d| d.join(name)).find(|f| f.is_file()))
+}
+
 /// テストで使う偽物のポートと、組み立てた `ZenPod`
 struct World {
     zen: ZenPod,
@@ -80,7 +86,7 @@ fn open_edit_playlists_and_eject_a_folder_ipod() {
 /// Rockbox の iPod を初めて開くと、データベースから埋めて先に一覧を出し、裏でファイルから読み直して反映する
 #[test]
 fn rockbox_first_open_fills_from_database_and_rereads() {
-    let Some(ff) = std::env::var_os("PATH").and_then(|p| std::env::split_paths(&p).map(|d| d.join("ffmpeg")).find(|f| f.is_file())) else {
+    let Some(ff) = find_ffmpeg() else {
         return;
     };
     let w = World::new();
@@ -140,7 +146,7 @@ fn transfer_rejects_empty_drop_and_frees_busy() {
 /// 別のディスクの同じ曲名の曲は重複にしない (Rockbox も番号を比べる)。ffmpeg がある環境だけで確かめる
 #[test]
 fn transfer_to_playlist_adds_duplicates() {
-    let Some(ff) = std::env::var_os("PATH").and_then(|p| std::env::split_paths(&p).map(|d| d.join("ffmpeg")).find(|f| f.is_file())) else {
+    let Some(ff) = find_ffmpeg() else {
         return;
     };
     for mode in [ipod_core::library::Mode::Ipod, ipod_core::library::Mode::Rockbox] {
@@ -199,6 +205,71 @@ fn transfer_to_playlist_adds_duplicates() {
     }
 }
 
+/// 変換して転送するときの時間 (Issue #29。先の曲をいくつか同時に変換する)。4 分の FLAC を 8 曲、
+/// AAC 256kbps にして iPod OS と Rockbox に送り、かかった時間を出す。
+/// `cargo test -p zenpod-app --release --test use_cases transfer_speed -- --ignored --nocapture`
+#[test]
+#[ignore]
+fn transfer_speed() {
+    let Some(ff) = find_ffmpeg() else {
+        return;
+    };
+    let w0 = World::new();
+    let src = w0.dir.path().join("pc");
+    std::fs::create_dir_all(&src).unwrap();
+    let paths: Vec<String> = (0..8)
+        .map(|i| {
+            let p = src.join(format!("{i:02}.flac"));
+            let ok = std::process::Command::new(&ff)
+                .args(["-v", "error", "-y", "-f", "lavfi", "-i", "anoisesrc=color=pink:d=240:amplitude=0.3", "-ac", "2", "-ar", "44100"])
+                .args(["-sample_fmt", "s16", "-metadata", &format!("title=曲 {i}"), "-metadata", "artist=アーティスト", "-metadata", "album=アルバム"])
+                .arg(&p)
+                .status()
+                .unwrap()
+                .success();
+            assert!(ok);
+            p.to_string_lossy().into_owned()
+        })
+        .collect();
+    for mode in [ipod_core::library::Mode::Ipod, ipod_core::library::Mode::Rockbox] {
+        let w = World::new();
+        let root = w.empty_ipod();
+        if mode == ipod_core::library::Mode::Rockbox {
+            std::fs::create_dir_all(root.join(".rockbox")).unwrap();
+            std::fs::write(root.join(".rockbox/rockbox-info.txt"), "Target: ipod6g\nVersion: v4.0\n").unwrap();
+        }
+        w.zen.devices.open(&root, Some(mode)).unwrap();
+        let opts =
+            serde_json::from_str(r#"{"skipDuplicates":true,"autoReading":false,"artwork":false,"losslessTo":"aac:256","convertAllTo":"aac:256"}"#).unwrap();
+        let started = std::time::Instant::now();
+        w.zen.transfer.start(&paths, None, &opts).unwrap();
+        while w.events.last_transfer().is_none() {
+            assert!(started.elapsed() < std::time::Duration::from_secs(600), "転送が終わらない");
+            std::thread::sleep(std::time::Duration::from_millis(50));
+        }
+        let done = w.events.last_transfer().unwrap();
+        eprintln!("{mode:?}: {} 曲 {:.1} 秒", done["added"], started.elapsed().as_secs_f64());
+        assert_eq!(done["added"].as_u64(), Some(8), "{mode:?} {done}");
+        assert_eq!(done["errors"].as_array().unwrap().len(), 0, "{done}");
+    }
+    // 途中で取り消しても、変換しておいた一時ファイルは残らない (変換中のものは終わってから消える)
+    let w = World::new();
+    w.zen.devices.open(&w.empty_ipod(), Some(ipod_core::library::Mode::Ipod)).unwrap();
+    let opts = serde_json::from_str(r#"{"skipDuplicates":true,"autoReading":false,"artwork":false,"losslessTo":"aac:256"}"#).unwrap();
+    w.zen.transfer.start(&paths, None, &opts).unwrap();
+    std::thread::sleep(std::time::Duration::from_secs(3));
+    w.zen.transfer.cancel();
+    while w.events.last_transfer().is_none() {
+        std::thread::sleep(std::time::Duration::from_millis(50));
+    }
+    std::thread::sleep(std::time::Duration::from_secs(10));
+    let left: Vec<_> = std::fs::read_dir(std::env::temp_dir().join("zenpod"))
+        .map(|d| d.flatten().map(|e| e.path()).filter(|p| p.extension().is_some_and(|e| e == "m4a")).collect())
+        .unwrap_or_default();
+    eprintln!("取り消し: {}", w.events.last_transfer().unwrap());
+    assert!(left.is_empty(), "一時ファイルが残った: {left:?}");
+}
+
 #[test]
 fn transfer_photos_and_videos() {
     let w = World::new();
@@ -212,7 +283,7 @@ fn transfer_photos_and_videos() {
         image::RgbImage::from_pixel(300, 200, image::Rgb([i * 100, 50, 50])).save(trip.join(format!("IMG_{i}.png"))).unwrap();
     }
     let mut paths = vec![trip.to_string_lossy().into_owned()];
-    let ff = std::env::var_os("PATH").and_then(|p| std::env::split_paths(&p).map(|d| d.join("ffmpeg")).find(|f| f.is_file()));
+    let ff = find_ffmpeg();
     if let Some(ff) = &ff {
         let v = w.dir.path().join("clip.mkv");
         let ok = std::process::Command::new(ff)

@@ -5,6 +5,7 @@ pub mod cover;
 pub mod details;
 pub mod fastread;
 pub mod ffinstall;
+pub mod preconvert;
 pub(crate) mod apesalvage;
 pub(crate) mod id3salvage;
 pub(crate) mod moovscan;

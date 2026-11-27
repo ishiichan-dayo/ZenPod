@@ -18,6 +18,7 @@ use super::ffmpeg::Ffmpeg;
 use super::pc_artwork::PcArtwork;
 use super::ports::EventSink;
 use super::session::LibrarySession;
+use super::transfer_ahead::Ahead;
 use crate::domain::export_name::{export_stem, unique_path};
 use crate::domain::id::{parse_ids, parse_opt_id};
 use crate::error::{AppError, AppResult};
@@ -150,6 +151,9 @@ impl Transfer {
         std::thread::spawn(move || {
             let mut summary = TransferSummary::default();
             let mut added_ids = Vec::new();
+            // 先の曲をいくつか同時に変換しておく (iPod への書き込みは 1 曲ずつ順に)
+            let audio = files.iter().map(|f| if let Item::Audio(p) = f { Some(p.clone()) } else { None }).collect();
+            let ahead = Ahead::start(audio, session.clone(), ffmpeg.clone(), opts, cancel.clone());
             for (i, item) in files.iter().enumerate() {
                 if cancel.load(Ordering::SeqCst) {
                     summary.cancelled = true;
@@ -172,8 +176,10 @@ impl Transfer {
                 let res: ipod_core::Result<&'static str> = match item {
                     Item::Audio(_) => {
                         emit("working", None, pc_artwork.thumbs_of(f).map(|(_, t)| t.small.clone()), None);
+                        // 変換しておいたものがあれば使う (無ければ今までどおり書き込むときに変換する)
+                        let pre = ahead.take(i);
                         let res = session
-                            .try_write(|lib| lib.add_file(f, ffmpeg.as_deref(), &opts))
+                            .try_write(|lib| lib.add_file_preconverted(f, ffmpeg.as_deref(), &opts, pre.as_ref()))
                             .unwrap_or(Err(ipod_core::Error::Disconnected));
                         res.map(|out| match out {
                             AddOutcome::Added { track, .. } => {
@@ -196,6 +202,7 @@ impl Transfer {
                         })
                     }
                     Item::Video(_) => {
+                        ahead.take(i);
                         emit("working", None, None, None);
                         // 変換の進み具合は 0.25 秒ごとまでに間引いて知らせる
                         let last = std::cell::Cell::new(std::time::Instant::now());
@@ -233,6 +240,7 @@ impl Transfer {
                         })()
                     }
                     Item::Photo { album: from_folder, .. } => {
+                        ahead.take(i);
                         emit("working", None, None, None);
                         let album = album.as_deref().or(from_folder.as_deref());
                         let res = session
@@ -266,6 +274,8 @@ impl Transfer {
                     }
                 }
             }
+            // 変換の係を止め、使わなかった一時ファイルを消す
+            drop(ahead);
             let rbdb = session.try_write(|lib| {
                 if let Some(pl) = playlist {
                     if let Err(e) = lib.add_to_playlist(pl, &added_ids) {

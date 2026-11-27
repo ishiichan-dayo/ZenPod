@@ -26,7 +26,7 @@ use crate::domain::audio::{Format, MediaKind};
 use crate::domain::playlist::{PlaylistView, SmartPreview};
 use crate::domain::track::{dup_key, same_number, AddOptions, AddOutcome, TagEdit, TrackTagEdit, TrackView};
 use crate::error::{Error, Result};
-use crate::media::{self, convert, cover};
+use crate::media::{self, convert, cover, preconvert};
 use crate::pc::folder::{self as pcfolder, PcTrack};
 use crate::smartpl::{self, EvalContext, Rules, SmartDef, SmartPrefs, SplTrack};
 
@@ -1191,30 +1191,67 @@ impl RockboxLib {
 
     /// 1 曲転送する (変換はしない。Rockbox が再生できない形式だけ変換する)
     pub fn add_file(&mut self, src: &Path, ffmpeg: Option<&Path>, opts: &AddOptions) -> Result<AddOutcome> {
-        let info = media::read_info(src)?;
-        // 重複: 曲名・アーティスト・アルバムが同じで、長さの差が 2 秒未満、番号がどちらにもあれば同じ (iPod OS と同じ)
+        self.add_file_preconverted(src, ffmpeg, opts, None)
+    }
+
+    /// 同じ曲 (Rockbox にあれば (ID, 曲名))。曲名・アーティスト・アルバムが同じで、長さの差が 2 秒未満、
+    /// 番号がどちらにもあれば同じ (iPod OS と同じ)。重複を調べない設定なら None
+    fn duplicate_for(&mut self, info: &media::MediaInfo, opts: &AddOptions) -> Option<(u64, String)> {
+        if !(opts.skip_duplicates || opts.replace_duplicates) {
+            return None;
+        }
         let key = dup_key(info.title.as_deref(), info.artist.as_deref(), info.album.as_deref());
-        let dup = if opts.skip_duplicates || opts.replace_duplicates {
-            let tracks = &self.tracks;
-            let index = self.dup_index.get_or_insert_with(|| {
-                let mut m: DupIndex = HashMap::new();
-                for t in tracks {
-                    let k = dup_key(Some(&t.view.title), Some(&t.view.artist), Some(&t.view.album));
-                    m.entry(k).or_default().push((t.id, t.view.duration_ms, (t.view.disc_nr, t.view.track_nr), t.view.title.clone()));
-                }
-                m
-            });
-            index
-                .get(&key)
-                .and_then(|v| {
-                    v.iter().find(|(_, d, nr, _)| {
-                        d.abs_diff(info.duration_ms) < 2000 && same_number(*nr, (info.disc_nr, info.track_nr))
-                    })
-                })
-                .map(|(id, _, _, title)| (*id, title.clone()))
-        } else {
-            None
-        };
+        let tracks = &self.tracks;
+        let index = self.dup_index.get_or_insert_with(|| {
+            let mut m: DupIndex = HashMap::new();
+            for t in tracks {
+                let k = dup_key(Some(&t.view.title), Some(&t.view.artist), Some(&t.view.album));
+                m.entry(k).or_default().push((t.id, t.view.duration_ms, (t.view.disc_nr, t.view.track_nr), t.view.title.clone()));
+            }
+            m
+        });
+        index
+            .get(&key)
+            .and_then(|v| {
+                v.iter()
+                    .find(|(_, d, nr, _)| d.abs_diff(info.duration_ms) < 2000 && same_number(*nr, (info.disc_nr, info.track_nr)))
+            })
+            .map(|(id, _, _, title)| (*id, title.clone()))
+    }
+
+    /// 変換先。Rockbox はたいていの形式を再生できるので、変換するのは「変換して転送」の曲と、再生できない形式だけ。
+    /// 「変換して転送」でも、Rockbox が再生できる非可逆の形式 (Ogg など) は MP3・AAC と同じく、ビットレートが高いときだけ
+    fn conversion_target(src: &Path, info: &media::MediaInfo, opts: &AddOptions) -> Option<crate::domain::audio::ConvertTarget> {
+        let ext = src.extension().map(|e| e.to_string_lossy().to_ascii_lowercase()).unwrap_or_default();
+        let needs = NEEDS_CONVERT.contains(&ext.as_str());
+        let forced = opts.convert_all_to.filter(|t| match media::classify(src) {
+            Ok(Format::ConvertLossy) if !needs => t.should_convert(Format::Mp3, info.bitrate_kbps),
+            Ok(f) => t.should_convert(f, info.bitrate_kbps),
+            Err(_) => false,
+        });
+        forced.or(needs.then_some(opts.lossy_to))
+    }
+
+    /// 転送の前に変換しておけるか (`media::preconvert`)。重複で送らない曲・変換の要らない曲は None
+    pub fn conversion_plan(&mut self, src: &Path, opts: &AddOptions) -> Result<Option<preconvert::ConversionPlan>> {
+        let info = media::read_info(src)?;
+        if self.duplicate_for(&info, opts).is_some() && !opts.replace_duplicates {
+            return Ok(None);
+        }
+        Ok(Self::conversion_target(src, &info, opts)
+            .map(|target| preconvert::ConversionPlan { target, sample_rate: info.sample_rate, afconvert: false }))
+    }
+
+    /// 1 曲転送する。`pre` に同じ変換をしておいた一時ファイルがあれば、変換せずにそれを写す
+    pub fn add_file_preconverted(
+        &mut self,
+        src: &Path,
+        ffmpeg: Option<&Path>,
+        opts: &AddOptions,
+        pre: Option<&preconvert::Preconverted>,
+    ) -> Result<AddOutcome> {
+        let info = media::read_info(src)?;
+        let dup = self.duplicate_for(&info, opts);
         if let Some((id, title)) = &dup
             && !opts.replace_duplicates
         {
@@ -1222,15 +1259,12 @@ impl RockboxLib {
         }
 
         let ext = src.extension().map(|e| e.to_string_lossy().to_ascii_lowercase()).unwrap_or_default();
-        // Rockbox はたいていの形式を再生できるので、変換するのは「変換して転送」の曲と、再生できない形式だけ。
-        // 「変換して転送」でも、Rockbox が再生できる非可逆の形式 (Ogg など) は MP3・AAC と同じく、ビットレートが高いときだけ
-        let needs = NEEDS_CONVERT.contains(&ext.as_str());
-        let forced = opts.convert_all_to.filter(|t| match media::classify(src) {
-            Ok(Format::ConvertLossy) if !needs => t.should_convert(Format::Mp3, info.bitrate_kbps),
-            Ok(f) => t.should_convert(f, info.bitrate_kbps),
-            Err(_) => false,
+        let convert_to = Self::conversion_target(src, &info, opts);
+        let pre = pre.filter(|p| {
+            convert_to.is_some_and(|target| {
+                p.matches(&preconvert::ConversionPlan { target, sample_rate: info.sample_rate, afconvert: false })
+            })
         });
-        let convert_to = forced.or(needs.then_some(opts.lossy_to));
         let size = fs::metadata(src)?.len();
         if size > u32::MAX as u64 {
             return Err(Error::Unsupported(t!("4GB を超えるファイルは転送できません")));
@@ -1255,8 +1289,9 @@ impl RockboxLib {
             _ => file_stem(&info, src),
         };
         let dest = unique_path(&dir, &stem, &out_ext);
-        let copied = match convert_to {
-            Some(target) => {
+        let copied = match (pre, convert_to) {
+            (Some(pre), Some(_)) => fs::copy(pre.path(), &dest).map(|_| ()).map_err(Error::from),
+            (None, Some(target)) => {
                 let ff = ffmpeg.ok_or_else(|| {
                     Error::Unsupported(t!(
                         "{ext} の変換には ffmpeg が必要です (設定 → 変換 から自動で入れられます)",
@@ -1265,7 +1300,7 @@ impl RockboxLib {
                 })?;
                 convert::convert(ff, src, &dest, target, info.sample_rate)
             }
-            None => {
+            (_, None) => {
                 // 埋め込みのジャケットを縮めるときは、PC で縮めた一時ファイルを送る
                 let shrunk = opts.shrink_artwork.and_then(|max| media::shrunk_copy(src, max));
                 let r = fs::copy(shrunk.as_deref().unwrap_or(src), &dest).map(|_| ()).map_err(Error::from);

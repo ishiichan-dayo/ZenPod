@@ -17,6 +17,7 @@ use crate::domain::photo::{PhotoLibrary, PhotoOutcome};
 use crate::domain::variants::VariantGroup;
 use crate::domain::video::{VideoEdit, VideoOptions, VideoOutcome, VideoView};
 use crate::media::video::{Prepared, Progress, VideoInfo, VideoTarget};
+use crate::media::preconvert::{ConversionPlan, Preconverted};
 use crate::error::{Error, Result};
 use crate::ipod::Ipod;
 use crate::pc::itunesxml::{ExportSmart, ImportCandidate, TrackMatcher, XmlLibrary, XmlPlaylist, XmlTrack, export_smart_playlists, m3u8_text};
@@ -321,13 +322,30 @@ impl Library {
         self.backend().playlists()
     }
     pub fn add_file(&mut self, src: &Path, ffmpeg: Option<&Path>, opts: &AddOptions) -> Result<AddOutcome> {
+        self.add_file_preconverted(src, ffmpeg, opts, None)
+    }
+    /// 転送の前に変換しておけるか (`media::preconvert`)。重複で送らない曲・変換の要らない曲は None
+    pub fn conversion_plan(&mut self, src: &Path, opts: &AddOptions) -> Result<Option<ConversionPlan>> {
+        match self {
+            Library::Ipod(l) => l.conversion_plan(src, opts),
+            Library::Rockbox(l) => l.conversion_plan(src, opts),
+        }
+    }
+    /// 1 曲転送する。`pre` に同じ変換をしておいた一時ファイルがあれば、変換せずにそれを使う
+    pub fn add_file_preconverted(
+        &mut self,
+        src: &Path,
+        ffmpeg: Option<&Path>,
+        opts: &AddOptions,
+        pre: Option<&Preconverted>,
+    ) -> Result<AddOutcome> {
         match self {
             Library::Ipod(l) => {
-                let r = l.add_file(src, ffmpeg, opts);
+                let r = l.add_file_preconverted(src, ffmpeg, opts, pre);
                 l.files_changed |= matches!(r, Ok(AddOutcome::Added { .. } | AddOutcome::Replaced { .. }));
                 r
             }
-            Library::Rockbox(l) => l.add_file(src, ffmpeg, opts),
+            Library::Rockbox(l) => l.add_file_preconverted(src, ffmpeg, opts, pre),
         }
     }
     pub fn remove_tracks(&mut self, ids: &[u64]) -> Result<usize> {

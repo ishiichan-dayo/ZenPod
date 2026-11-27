@@ -67,11 +67,18 @@ export function duplicatePolicy(): DuplicatePolicy {
 /** 転送の完了の知らせを受けた回数 (完了が add_paths の返事より先に届いたかを見分ける) */
 let transfersDone = 0;
 
+/** 設定の「転送するとき、いつも変換する」で選んだ形式 ("aac:256" など)。しないなら undefined (配布リポジトリの Issue #16) */
+export function alwaysConvertTo(): string | undefined {
+  const v = getStored("convertAlways");
+  return v && CONVERT_LOSSY.some(([k]) => k === v) ? v : undefined;
+}
+
 export async function startTransfer(
   paths: string[],
   playlistId: string | null,
   policy: DuplicatePolicy = duplicatePolicy(),
-  convertAllTo?: string,
+  // 省略すると設定の「いつも変換する」。null なら変換しない (ポッドキャストの同期)
+  convertAllTo: string | null | undefined = alwaysConvertTo(),
 ): Promise<boolean> {
   if (!state.snap) {
     toast(tr("iPod を接続してください"));
@@ -88,7 +95,7 @@ export async function startTransfer(
   // 初めての転送: これからの転送で埋め込み画像を縮小するかと、その大きさを選んでもらう (1 回だけ。設定の「転送」で変えられる)
   if (getStored("shrinkArtworkAsked") !== "1" && !(await askShrinkArtwork())) return false;
   // iPod OS は再生できない形式を変換して送る。変換がある転送では、変換先を確かめてもらう (「次回から確認しない」まで)。
-  // 「変換して転送」は形式を選んだばかりなので聞かない
+  // 「変換して転送」は形式を選んだばかりなので聞かない (設定の「いつも変換する」も形式を選んであるので聞かない)
   if (!isRockbox() && !convertAllTo && pref("confirmConvert")) {
     const n = await call<{ lossless: number; lossy: number }>("count_conversions", { paths });
     if (n && n.lossless + n.lossy > 0 && !(await confirmConvert(n))) return false;
@@ -106,7 +113,7 @@ export async function startTransfer(
       artworkSize: artSize(),
       losslessTo: getStored("convertLossless"),
       lossyTo: getStored("convertLossy"),
-      convertAllTo,
+      convertAllTo: convertAllTo ?? undefined,
       videoSize: getStored("videoSize") ?? "640",
       photoAlbum: dropPhotoAlbum(),
       videoPlacement: dropVideoPlacement(),

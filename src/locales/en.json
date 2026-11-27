@@ -1257,5 +1257,8 @@
   "iPod OS は曲に埋め込まれた画像を使わないので、縮小すると iPod の容量を節約できます。iPod の画面のアートワークは変わりません。": "The iPod OS doesn't use the artwork embedded in songs, so shrinking it saves space on your iPod. The artwork shown on the iPod doesn't change.",
   "縮小するのは iPod に入れるコピーだけで、PC の元のファイルは変わりません。": "Only the copies on your iPod are shrunk. The original files on your PC don't change.",
   "これからの転送すべてに使います。あとから設定の「転送」で変えられます。": "This is used for all transfers from now on. You can change it later in Settings → Transfer.",
-  "縮小しない": "Don't Shrink"
+  "縮小しない": "Don't Shrink",
+  "しない": "Don't Convert",
+  "転送するとき、いつも変換する": "Always Convert When Transferring",
+  "「いつも変換する」で形式を選ぶと、ドラッグ&ドロップなどふだんの転送でも「変換して転送」と同じように変換します (Rockbox でも)。可逆圧縮の曲はすべて、MP3・AAC などの曲は選んだビットレートより高いものだけ変換します。": "If you choose a format for “Always Convert When Transferring”, songs are converted the same way as with “Convert and Transfer” in every transfer, including drag and drop (also on Rockbox). Lossless songs are always converted, and MP3, AAC, and other songs only if their bit rate is higher than the one you chose."
 }

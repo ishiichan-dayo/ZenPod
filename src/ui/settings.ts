@@ -221,6 +221,11 @@ export async function openSettings() {
         <select id="set-conv-lossy" data-store="convertLossy">
           ${convertOptions(CONVERT_LOSSY, getStored("convertLossy") ?? "aac:256")}
         </select>
+        <label for="set-conv-always">${esc(tr("転送するとき、いつも変換する"))}</label>
+        <select id="set-conv-always" data-store="convertAlways">
+          <option value="off">${esc(tr("しない"))}</option>
+          ${convertOptions(CONVERT_LOSSY, getStored("convertAlways") ?? "off")}
+        </select>
         <label for="set-conv-video">${esc(tr("動画 (iPod OS)"))}</label>
         <select id="set-conv-video" data-store="videoSize">
           ${(
@@ -235,6 +240,7 @@ export async function openSettings() {
       </div>
       <div class="hint set-convert-hint">
         <p>${esc(tr("MP3 / AAC / ALAC / WAV / AIFF の曲は変換せずにそのまま転送します。容量は 4 分の曲 1 曲あたりの目安です。"))}</p>
+        <p>${esc(tr("「いつも変換する」で形式を選ぶと、ドラッグ&ドロップなどふだんの転送でも「変換して転送」と同じように変換します (Rockbox でも)。可逆圧縮の曲はすべて、MP3・AAC などの曲は選んだビットレートより高いものだけ変換します。"))}</p>
         <p>${esc(tr("動画は、iPod でそのまま再生できる形 (H.264 / MPEG-4・640×480 まで) ならそのまま送り、それ以外は大きさに収めて変換します。Rockbox には 320×240 の MPEG-2 にして送ります。"))}</p>
       </div>
       ${check("confirmConvert", tr("変換して転送する前に、変換後の形式を確認する"))}

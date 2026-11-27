@@ -62,7 +62,7 @@ async function sendEpisodeItems(items: { feed: PodFeed; ep: PodEpisode }[]): Pro
     return false;
   }
   // 同じ回がもう iPod にあれば送り直さない
-  const started = await startTransfer(r.done.map((d) => d.path), null, "skip");
+  const started = await startTransfer(r.done.map((d) => d.path), null, "skip", null);
   renderPodStatuses();
   return started;
 }

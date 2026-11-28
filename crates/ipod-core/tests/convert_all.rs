@@ -109,3 +109,53 @@ fn convert_all_to_aac() {
     }
     let _ = std::fs::remove_dir_all(&base);
 }
+
+/// Rockbox で「上書き」で送り直すと、同じ名前のまま入れ替わる (「曲名 (2)」にならない。配布リポジトリの Issue #30)。
+/// 変換して置く曲 (FLAC → AAC) と、そのまま置く曲 (MP3) の両方
+#[test]
+fn rockbox_replace_keeps_file_name() {
+    let Some(ffmpeg) = which_ffmpeg() else { return };
+    let base = std::env::temp_dir().join(format!("zenpod-rbreplace-{}", std::process::id()));
+    let _ = std::fs::remove_dir_all(&base);
+    let pc = base.join("pc");
+    std::fs::create_dir_all(&pc).unwrap();
+    let flac = pc.join("a.flac");
+    let mp3 = pc.join("b.mp3");
+    song(&ffmpeg, &flac, "flac", &["-c:a", "flac"]);
+    song(&ffmpeg, &mp3, "mp3", &["-c:a", "libmp3lame", "-b:a", "128k"]);
+    let rb = base.join("rockbox");
+    std::fs::create_dir_all(rb.join(".rockbox")).unwrap();
+    let opts = AddOptions { auto_reading: false, artwork: false, convert_all_to: Some(ConvertTarget::Aac { kbps: 128 }), ..Default::default() };
+    let replace = AddOptions { replace_duplicates: true, ..opts };
+    let mut lib = Library::open(&rb, Mode::Rockbox, None).unwrap();
+    for p in [&flac, &mp3] {
+        lib.add_file(p, Some(&ffmpeg), &opts).unwrap();
+    }
+    let files = |lib: &Library| {
+        let mut v: Vec<String> = lib
+            .tracks()
+            .into_iter()
+            .map(|t| lib.track_file(t.id.parse().unwrap()).unwrap().file_name().unwrap().to_string_lossy().into_owned())
+            .collect();
+        v.sort();
+        v
+    };
+    let before = files(&lib);
+    for p in [&flac, &mp3] {
+        let out = lib.add_file(p, Some(&ffmpeg), &replace).unwrap();
+        assert!(matches!(out, ipod_core::domain::track::AddOutcome::Replaced { .. }), "{out:?}");
+    }
+    lib.save().unwrap();
+    assert_eq!(files(&lib), before);
+    // 曲のフォルダに残っているのも同じファイルだけ (一時の名前のファイルが残らない)
+    let dir = lib.track_file(lib.tracks()[0].id.parse().unwrap()).unwrap().parent().unwrap().to_path_buf();
+    let mut on_disk: Vec<String> = std::fs::read_dir(&dir)
+        .unwrap()
+        .flatten()
+        .map(|e| e.file_name().to_string_lossy().into_owned())
+        .filter(|n| n.ends_with(".m4a") || n.ends_with(".mp3"))
+        .collect();
+    on_disk.sort();
+    assert_eq!(on_disk, before);
+    let _ = std::fs::remove_dir_all(&base);
+}

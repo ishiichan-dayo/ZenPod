@@ -415,6 +415,11 @@ fn lyrics_dest(lyrics: &Path, audio: &Path) -> PathBuf {
 }
 
 /// 同じ名前のファイルがあれば " (2)" などを付ける
+/// 同じファイルの名前か (iPod の FAT32 は大文字・小文字を区別しない)
+fn same_file_name(a: &Path, b: &Path) -> bool {
+    a.to_string_lossy().to_lowercase() == b.to_string_lossy().to_lowercase()
+}
+
 fn unique_path(dir: &Path, stem: &str, ext: &str) -> PathBuf {
     let p = dir.join(format!("{stem}.{ext}"));
     if !p.exists() {
@@ -1288,9 +1293,20 @@ impl RockboxLib {
             MediaKind::Music => crate::domain::layout::render(&self.layout, &fields, clean_name).pop().unwrap_or_default(),
             _ => file_stem(&info, src),
         };
-        let dest = unique_path(&dir, &stem, &out_ext);
+        // 置き換える曲が、新しい曲を置きたい名前にそのままあるときは、同じ名前で入れ替える
+        // (先に一時の名前に書き、古い曲を消してから名前を変える。そうしないと「曲名 (2)」になる。配布リポジトリの Issue #30)
+        let replaced_file = dup.as_ref().and_then(|(id, _)| self.track_file(*id));
+        let wanted = dir.join(format!("{stem}.{out_ext}"));
+        let same_name = replaced_file.as_ref().is_some_and(|p| same_file_name(p, &wanted));
+        let (dest, staging) = if same_name {
+            (wanted, Some(unique_path(&dir, &format!(".zenpod-new {stem}"), &out_ext)))
+        } else {
+            (unique_path(&dir, &stem, &out_ext), None)
+        };
+        // 書く先 (入れ替えるときは一時の名前)
+        let write_to = staging.clone().unwrap_or_else(|| dest.clone());
         let copied = match (pre, convert_to) {
-            (Some(pre), Some(_)) => fs::copy(pre.path(), &dest).map(|_| ()).map_err(Error::from),
+            (Some(pre), Some(_)) => fs::copy(pre.path(), &write_to).map(|_| ()).map_err(Error::from),
             (None, Some(target)) => {
                 let ff = ffmpeg.ok_or_else(|| {
                     Error::Unsupported(t!(
@@ -1298,12 +1314,12 @@ impl RockboxLib {
                         ext = ext
                     ))
                 })?;
-                convert::convert(ff, src, &dest, target, info.sample_rate)
+                convert::convert(ff, src, &write_to, target, info.sample_rate)
             }
             (_, None) => {
                 // 埋め込みのジャケットを縮めるときは、PC で縮めた一時ファイルを送る
                 let shrunk = opts.shrink_artwork.and_then(|max| media::shrunk_copy(src, max));
-                let r = fs::copy(shrunk.as_deref().unwrap_or(src), &dest).map(|_| ()).map_err(Error::from);
+                let r = fs::copy(shrunk.as_deref().unwrap_or(src), &write_to).map(|_| ()).map_err(Error::from);
                 if let Some(t) = shrunk {
                     let _ = fs::remove_file(t);
                 }
@@ -1311,12 +1327,12 @@ impl RockboxLib {
             }
         };
         if let Err(e) = copied {
-            let _ = fs::remove_file(&dest);
+            let _ = fs::remove_file(&write_to);
             return Err(e);
         }
         // 変換したファイルは iPod の上にあるので、そこで縮める (ジャケットの失敗で転送は止めない)
         if let (Some(max), Some(_)) = (opts.shrink_artwork, convert_to)
-            && let Err(e) = media::shrink_embedded_cover(&dest, max)
+            && let Err(e) = media::shrink_embedded_cover(&write_to, max)
         {
             log::warn!("shrink artwork: {e}");
         }
@@ -1344,6 +1360,12 @@ impl RockboxLib {
                 }
             }
             let _ = fs::remove_file(&p);
+            if let Some(tmp) = &staging
+                && let Err(e) = fs::rename(tmp, &dest)
+            {
+                let _ = fs::remove_file(tmp);
+                return Err(e.into());
+            }
             cleanup_dirs(self.root(), &self.layout, p.parent());
             if let Some(d) = p.parent() {
                 changed.insert(d.to_path_buf());

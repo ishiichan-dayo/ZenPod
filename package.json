@@ -2,7 +2,7 @@
   "name": "zenpod",
   "private": true,
   "license": "GPL-3.0-or-later",
-  "version": "2.12.6",
+  "version": "2.12.7",
   "type": "module",
   "scripts": {
     "dev": "vite",

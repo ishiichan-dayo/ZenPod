@@ -1260,5 +1260,6 @@
   "縮小しない": "Don't Shrink",
   "しない": "Don't Convert",
   "転送するとき、いつも変換する": "Always Convert When Transferring",
-  "「いつも変換する」で形式を選ぶと、ドラッグ&ドロップなどふだんの転送でも「変換して転送」と同じように変換します (Rockbox でも)。可逆圧縮の曲はすべて、MP3・AAC などの曲は選んだビットレートより高いものだけ変換します。": "If you choose a format for “Always Convert When Transferring”, songs are converted the same way as with “Convert and Transfer” in every transfer, including drag and drop (also on Rockbox). Lossless songs are always converted, and MP3, AAC, and other songs only if their bit rate is higher than the one you chose."
+  "「いつも変換する」で形式を選ぶと、ドラッグ&ドロップなどふだんの転送でも「変換して転送」と同じように変換します (Rockbox でも)。可逆圧縮の曲はすべて、MP3・AAC などの曲は選んだビットレートより高いものだけ変換します。": "If you choose a format for “Always Convert When Transferring”, songs are converted the same way as with “Convert and Transfer” in every transfer, including drag and drop (also on Rockbox). Lossless songs are always converted, and MP3, AAC, and other songs only if their bit rate is higher than the one you chose.",
+  "通信エラー: 転送が多すぎます": "Network error: too many redirects"
 }

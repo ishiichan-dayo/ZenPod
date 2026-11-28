@@ -626,6 +626,10 @@ fn make_agent(recv_body: Duration) -> ureq::Agent {
         .user_agent(USER_AGENT)
         // 429 / 503 の Retry-After を読むため、状態コードは自分で見る
         .http_status_as_error(false)
+        // 転送は `call_following` が自分でたどる。ureq に任せると、転送の応答はヘッダーの途中 (Location を見つけた所) で
+        // 次へ進むので、ヘッダーが分かれて届くと残りを chunked の本文として読み、
+        // "chunk expected crlf as next character" で失敗する (配布リポジトリの Issue #31。Cloudflare の配信の計測の転送で起きた)
+        .max_redirects(0)
         .build()
         .into()
 }
@@ -691,11 +695,7 @@ fn get(agent: &ureq::Agent, url: &str, headers: &[(&str, &str)], cancel: Option<
         return Err(wait_error(until - now));
     }
     for attempt in 0..2 {
-        let mut req = agent.get(url);
-        for (k, v) in headers {
-            req = req.header(*k, *v);
-        }
-        let resp = req.call().map_err(net_err)?;
+        let resp = call_following(agent, url, headers)?;
         let status = resp.status().as_u16();
         let retry_after = resp.headers().get("retry-after").and_then(|v| v.to_str().ok()).map(str::to_string);
         if status == 429 || (status == 503 && retry_after.is_some()) {
@@ -728,6 +728,56 @@ fn get(agent: &ureq::Agent, url: &str, headers: &[(&str, &str)], cancel: Option<
     }
     // tr: 訳さない (起きない前提の panic の文言)
     unreachable!("2 回目は必ず返す")
+}
+
+/// 転送 (301 / 302 / 303 / 307 / 308) をたどる回数の上限 (ポッドキャストの回は計測の転送が 8 段ほど重なることがある)
+const MAX_REDIRECTS: usize = 15;
+
+/// GET して、転送をたどった先の応答を返す。転送の応答の本文は読まない (空の chunked などで止まらないように)。
+/// 失敗したら、どこで失敗したかを zenpod.log に残す
+fn call_following(agent: &ureq::Agent, url: &str, headers: &[(&str, &str)]) -> Result<ureq::http::Response<ureq::Body>> {
+    let mut url = url.to_string();
+    for hop in 0..=MAX_REDIRECTS {
+        let mut req = agent.get(&url);
+        for (k, v) in headers {
+            req = req.header(*k, *v);
+        }
+        let resp = req.call().map_err(|e| {
+            log::warn!("podcast get failed at hop {hop}: {}: {e}", host_of(&url));
+            net_err(e)
+        })?;
+        let location = resp.headers().get("location").and_then(|v| v.to_str().ok()).map(str::to_string);
+        match (resp.status().as_u16(), location) {
+            (301 | 302 | 303 | 307 | 308, Some(loc)) if hop < MAX_REDIRECTS => url = resolve_location(&url, &loc),
+            (301 | 302 | 303 | 307 | 308, Some(_)) => {
+                log::warn!("podcast get: too many redirects: {}", host_of(&url));
+                return Err(Error::Other(t!("通信エラー: 転送が多すぎます")));
+            }
+            _ => return Ok(resp),
+        }
+    }
+    // tr: 訳さない (起きない前提の panic の文言)
+    unreachable!("上限の回で必ず返す")
+}
+
+/// 転送先 (Location) を、今の URL をもとに絶対の URL にする
+fn resolve_location(base: &str, loc: &str) -> String {
+    let loc = loc.trim();
+    let lower = loc.to_ascii_lowercase();
+    if lower.starts_with("http://") || lower.starts_with("https://") {
+        return loc.to_string();
+    }
+    let (scheme, rest) = base.split_once("://").unwrap_or(("https", base));
+    if let Some(l) = loc.strip_prefix("//") {
+        return format!("{scheme}://{l}");
+    }
+    let host = rest.split(['/', '?', '#']).next().unwrap_or("");
+    if loc.starts_with('/') {
+        return format!("{scheme}://{host}{loc}");
+    }
+    let path = rest[host.len()..].split(['?', '#']).next().unwrap_or("");
+    let dir = path.rfind('/').map_or("/", |i| &path[..=i]);
+    format!("{scheme}://{host}{dir}{loc}")
 }
 
 /// フィードを取ってきた結果
@@ -964,6 +1014,84 @@ fn ext_from(ep: &Episode) -> Option<&'static str> {
 
 #[cfg(test)]
 mod tests {
+
+    /// 手元の小さな HTTP サーバー。`routes` は パス → 応答 (状態行からの生の文字列。`{base}` は自分の URL)。
+    /// 接続ごとに要求を順に読み、続けて同じ接続で来る要求にも答える (keep-alive)
+    fn serve(routes: Vec<(&'static str, String)>) -> String {
+        use std::io::{BufRead, BufReader, Write};
+        let listener = std::net::TcpListener::bind("127.0.0.1:0").unwrap();
+        let base = format!("http://{}", listener.local_addr().unwrap());
+        let routes: Vec<(&str, String)> = routes.into_iter().map(|(p, r)| (p, r.replace("{base}", &base))).collect();
+        std::thread::spawn(move || {
+            for stream in listener.incoming().flatten() {
+                let routes = routes.clone();
+                std::thread::spawn(move || {
+                    let mut reader = BufReader::new(stream.try_clone().unwrap());
+                    let mut out = stream;
+                    loop {
+                        let mut line = String::new();
+                        if reader.read_line(&mut line).unwrap_or(0) == 0 {
+                            return;
+                        }
+                        let path = line.split(' ').nth(1).unwrap_or("").to_string();
+                        loop {
+                            let mut h = String::new();
+                            if reader.read_line(&mut h).unwrap_or(0) == 0 || h == "\r\n" {
+                                break;
+                            }
+                        }
+                        let resp = routes.iter().find(|(p, _)| *p == path).map(|(_, r)| r.clone());
+                        let resp = resp.unwrap_or_else(|| "HTTP/1.1 404 Not Found\r\nContent-Length: 0\r\n\r\n".into());
+                        // 応答を "|" で区切った所で、分けて少し遅らせて送る (本物の配信では本文が後のパケットで届くことがある)
+                        for (k, part) in resp.split('|').enumerate() {
+                            if k > 0 {
+                                let _ = out.flush();
+                                std::thread::sleep(std::time::Duration::from_millis(30));
+                            }
+                            if out.write_all(part.as_bytes()).is_err() {
+                                return;
+                            }
+                        }
+                    }
+                });
+            }
+        });
+        base
+    }
+
+    #[test]
+    fn redirect_locations() {
+        let r = super::resolve_location;
+        assert_eq!(r("https://a.com/x/y.mp3?q=1", "https://b.net/z"), "https://b.net/z");
+        assert_eq!(r("https://a.com/x/y.mp3", "HTTP://B.net/z"), "HTTP://B.net/z");
+        assert_eq!(r("http://a.com/x/y.mp3", "//cdn.b.net/z.mp3"), "http://cdn.b.net/z.mp3");
+        assert_eq!(r("https://a.com/x/y.mp3?q=/1", "/p/q.mp3"), "https://a.com/p/q.mp3");
+        assert_eq!(r("https://a.com/x/y.mp3?q=/1", "z.mp3"), "https://a.com/x/z.mp3");
+        assert_eq!(r("https://a.com", "z.mp3"), "https://a.com/z.mp3");
+    }
+
+    /// 転送 (302) の応答の本文が空の chunked (`0\r\n\r\n`) でも、転送先を読める (配布リポジトリの Issue #31。
+    /// Cloudflare の配信の計測 (podtrac など) がこの形で返す)
+    #[test]
+    fn redirect_with_empty_chunked_body() {
+        let body = "x".repeat(5000);
+        let other = serve(vec![(
+            "/file.mp3",
+            format!("HTTP/1.1 200 OK\r\nContent-Type: audio/mpeg\r\nContent-Length: {}\r\n\r\n{body}", body.len()),
+        )]);
+        let base = serve(vec![
+            // ヘッダーの途中で分かれて届く (Location の後に長いヘッダーが続く。Cloudflare の応答の形)
+            (
+                "/a",
+                "HTTP/1.1 302 Found\r\nLocation: {base}/b\r\nTransfer-Encoding: chunked\r\n|Report-To: {\"endpoints\":[{\"url\":\"https://a.nel.cloudflare.com/report\"}]}\r\nServer: cloudflare\r\n\r\n|0\r\n|\r\n".into(),
+            ),
+            ("/b", format!("HTTP/1.1 302 Found\r\nLocation: {other}/file.mp3\r\nTransfer-Encoding: chunked\r\n\r\n|0\r\n\r\n")),
+        ]);
+        for _ in 0..2 {
+            let resp = super::get(super::download_agent(), &format!("{base}/a"), &[], None).unwrap();
+            assert_eq!(resp.into_body().read_to_string().unwrap(), body);
+        }
+    }
     use super::*;
 
     const RSS: &str = r#"<?xml version="1.0" encoding="UTF-8"?>
